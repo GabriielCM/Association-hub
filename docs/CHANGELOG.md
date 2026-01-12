@@ -1,11 +1,63 @@
 ---
 document: changelog
-last_updated: 2026-01-10
+last_updated: 2026-01-11
 ---
 
 # Changelog
 
 Histórico de alterações na documentação do A-hub.
+
+---
+
+## [1.1.0] - 2026-01-11
+
+### Sistema de Pontos, Minha Carteira e PDV
+
+Documentação completa do sistema central de gamificação do A-hub.
+
+### Adicionado
+
+**Módulo Sistema de Pontos (06-sistema-pontos/):**
+- `spec.md` - Especificação completa com modelo de dados, fluxos e regras
+- `api.md` - Endpoints para saldo, histórico, transferências, Strava e ADM
+- `acceptance-criteria.md` - Critérios de aceitação detalhados
+- Integração com Strava (OAuth, sincronização manual, limite 5km/dia)
+- Sistema de rankings (pontos, eventos, Strava)
+- Configuração ADM (taxas, estorno, relatórios CSV)
+
+**Módulo Minha Carteira (05-minha-carteira/):**
+- `spec.md` - Especificação com telas, fluxos e componentes
+- `api.md` - Endpoints da carteira, scanner e transferência
+- `acceptance-criteria.md` - Critérios de aceitação
+- Scanner universal (detecta QR de check-in, transferência, PDV)
+- Design de carteira visual com QR pessoal
+- Fluxo de transferência com biometria
+
+**Módulo PDV - Novo (16-pdv/):**
+- `README.md` - Visão geral do sistema de pontos de venda
+- `spec.md` - Arquitetura, interface do display, fluxos
+- `api.md` - Endpoints para display e gestão ADM
+- `acceptance-criteria.md` - Critérios de aceitação
+- Sistema de kiosks com displays touchscreen
+- Gestão de estoque por PDV
+- Fluxo de pagamento via QR Code
+- Relatórios de vendas por PDV
+
+### Alterado
+
+- `06-sistema-pontos/README.md` - Atualizado com índice e visão geral completa
+- `05-minha-carteira/README.md` - Atualizado com índice e funcionalidades
+
+### Decisões de Negócio Documentadas
+
+- Nome da moeda: Association-points (customizável por associação)
+- Pontos não expiram
+- Transferências sem limite e sem valor mínimo
+- Confirmação de transações via biometria (Face ID / Touch ID)
+- Strava: sincronização manual, máximo 5km/dia pontuáveis
+- Taxas Strava: Corrida 10pts/km, Bike 5pts/km (configurável ADM)
+- PDV: usuário escaneia QR do display, liberação manual do produto
+- Rankings múltiplos: por pontos, eventos e atividades físicas
 
 ---
 
