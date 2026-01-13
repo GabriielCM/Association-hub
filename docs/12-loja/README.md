@@ -1,8 +1,9 @@
 ---
 module: loja
+document: README
 status: stub
 priority: phase2
-last_updated: 2026-01-10
+last_updated: 2026-01-12
 ---
 
 # Loja
@@ -32,13 +33,13 @@ Loja virtual para resgate de produtos e benefícios com pontos.
 
 ## Componentes
 
-[A preencher]
+_Será documentado quando o módulo for especificado._
 
 ---
 
 ## API
 
-[A preencher]
+_Será documentado quando o módulo for especificado._
 
 ---
 

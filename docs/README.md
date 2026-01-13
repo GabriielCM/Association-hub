@@ -1,13 +1,13 @@
 ---
 project: a-hub
-version: "1.1"
-last_updated: 2026-01-11
+version: "1.2"
+last_updated: 2026-01-12
 ---
 
 # A-hub - Documentação Técnica
 
-> **Versão:** 1.1
-> **Última atualização:** 11/01/2026
+> **Versão:** 1.2
+> **Última atualização:** 12/01/2026
 > **Status:** Em Desenvolvimento
 
 ---
@@ -56,14 +56,14 @@ O A-hub é um aplicativo mobile para associações que centraliza todas as funci
 | Sistema de Pontos | 🟡 Parcial | 🔴 MVP | [Ver](06-sistema-pontos/) |
 | Notificações | 🟡 Parcial | 🔴 MVP | [Ver](07-notificacoes/) |
 | Mensagens | 🟢 Completo | 🔴 MVP | [Ver](08-mensagens/) |
-| Espaços | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](09-espacos/) |
-| Reservas | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](10-reservas/) |
+| Espaços | 🟢 Completo | 🟡 Fase 2 | [Ver](09-espacos/) |
+| Reservas | 🟢 Completo | 🟡 Fase 2 | [Ver](10-reservas/) |
 | Pedidos | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](11-pedidos/) |
 | Loja | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](12-loja/) |
 | Rankings | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](13-rankings/) |
 | Suporte | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](14-suporte/) |
 | Jukebox | ⚪ Não Iniciado | 🟢 Nice to Have | [Ver](15-jukebox/) |
-| PDV | 🟡 Parcial | 🔴 MVP | [Ver](16-pdv/) |
+| PDV | 🟢 Completo | 🔴 MVP | [Ver](16-pdv/) |
 
 ---
 

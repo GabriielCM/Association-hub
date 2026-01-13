@@ -1,8 +1,9 @@
 ---
 module: notificacoes
+document: README
 status: partial
 priority: mvp
-last_updated: 2026-01-10
+last_updated: 2026-01-12
 ---
 
 # Notificações
@@ -63,13 +64,24 @@ Usuário pode desabilitar:
 
 ## Componentes
 
-[A preencher]
+_Será documentado quando o módulo for especificado._
 
 ---
 
 ## API
 
-[A preencher]
+_Será documentado quando o módulo for especificado._
+
+---
+
+## Módulos que Disparam Notificações
+
+| Módulo | Notificações |
+|--------|--------------|
+| [Mensagens](../08-mensagens/) | Nova mensagem, menção |
+| [Eventos](../04-eventos/) | Novo evento, lembrete, check-in |
+| [Reservas](../10-reservas/) | Aprovação, rejeição, fila de espera |
+| [Sistema de Pontos](../06-sistema-pontos/) | Pontos ganhos/gastos |
 
 ---
 

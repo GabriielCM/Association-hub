@@ -14,7 +14,8 @@ Registro de gap reviews realizados na documentação.
 
 | # | Data | Escopo | Status | Fases | Issues |
 |---|------|--------|--------|-------|--------|
-| [01](gap-review-01/) | 2026-01-11 | Documentação completa | Concluído | 3 | 6 |
+| [01](gap-review-01/) | 2026-01-11 | Documentação completa | ✅ Concluído | 3 | 6 |
+| [02](gap-review-02/) | 2026-01-12 | Pós-Espaços/Reservas | ✅ Concluído | 3 | 8 |
 
 ---
 

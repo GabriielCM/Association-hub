@@ -1,7 +1,9 @@
 ---
-section: shared
+module: shared
+document: README
 status: partial
-last_updated: 2026-01-10
+priority: mvp
+last_updated: 2026-01-12
 ---
 
 # Componentes e Padrões Compartilhados

@@ -1,8 +1,9 @@
 ---
 module: suporte
+document: README
 status: stub
 priority: phase2
-last_updated: 2026-01-10
+last_updated: 2026-01-12
 ---
 
 # Suporte
@@ -32,13 +33,13 @@ Canal de suporte e ajuda para usuários do aplicativo.
 
 ## Componentes
 
-[A preencher]
+_Será documentado quando o módulo for especificado._
 
 ---
 
 ## API
 
-[A preencher]
+_Será documentado quando o módulo for especificado._
 
 ---
 

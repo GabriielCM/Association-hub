@@ -1,8 +1,9 @@
 ---
-section: api
+module: api
 document: endpoints-reference
-status: partial
-last_updated: 2026-01-10
+status: complete
+priority: mvp
+last_updated: 2026-01-12
 ---
 
 # Referência de Endpoints
@@ -20,6 +21,8 @@ last_updated: 2026-01-10
 - [Eventos](#eventos)
 - [Badges](#badges)
 - [Display](#display)
+- [Espaços](#espaços)
+- [Reservas](#reservas)
 
 ---
 
@@ -173,9 +176,66 @@ last_updated: 2026-01-10
 
 ---
 
+## Espaços
+
+### Gestão de Espaços
+
+| Método | Endpoint | Descrição | Permissão |
+|--------|----------|-----------|-----------|
+| GET | `/api/v1/espacos` | Listar espaços | Autenticado |
+| GET | `/api/v1/espacos/:id` | Obter espaço | Autenticado |
+| POST | `/api/v1/espacos` | Criar espaço | ADM |
+| PUT | `/api/v1/espacos/:id` | Atualizar espaço | ADM |
+| DELETE | `/api/v1/espacos/:id` | Deletar espaço | ADM |
+
+### Operações de Espaço
+
+| Método | Endpoint | Descrição | Permissão |
+|--------|----------|-----------|-----------|
+| PATCH | `/api/v1/espacos/:id/status` | Alterar status | Gerente, ADM |
+| POST | `/api/v1/espacos/:id/bloqueios` | Bloquear datas | Gerente, ADM |
+| DELETE | `/api/v1/espacos/:id/bloqueios/:bloqueio_id` | Remover bloqueio | Gerente, ADM |
+| GET | `/api/v1/espacos/:id/disponibilidade` | Obter disponibilidade | Autenticado |
+| POST | `/api/v1/espacos/:id/imagens` | Upload de imagem | ADM |
+
+---
+
+## Reservas
+
+### Gestão de Reservas
+
+| Método | Endpoint | Descrição | Permissão |
+|--------|----------|-----------|-----------|
+| GET | `/api/v1/reservas` | Listar reservas | Gerente, ADM |
+| GET | `/api/v1/reservas/:id` | Obter reserva | Autenticado |
+| POST | `/api/v1/reservas` | Criar reserva | Autenticado |
+| GET | `/api/v1/reservas/minhas` | Minhas reservas | Autenticado |
+| GET | `/api/v1/reservas/pendentes` | Reservas pendentes | Gerente, ADM |
+
+### Aprovação e Cancelamento
+
+| Método | Endpoint | Descrição | Permissão |
+|--------|----------|-----------|-----------|
+| POST | `/api/v1/reservas/:id/aprovar` | Aprovar reserva | Gerente, ADM |
+| POST | `/api/v1/reservas/:id/rejeitar` | Rejeitar reserva | Gerente, ADM |
+| POST | `/api/v1/reservas/:id/cancelar` | Cancelar reserva | Autenticado |
+
+### Fila de Espera
+
+| Método | Endpoint | Descrição | Permissão |
+|--------|----------|-----------|-----------|
+| POST | `/api/v1/reservas/fila` | Entrar na fila | Autenticado |
+| DELETE | `/api/v1/reservas/fila/:id` | Sair da fila | Autenticado |
+| POST | `/api/v1/reservas/fila/:id/confirmar` | Confirmar vaga | Autenticado |
+| GET | `/api/v1/reservas/fila/posicao` | Minha posição na fila | Autenticado |
+
+---
+
 ## Relacionados
 
 - [Dashboard API](../01-dashboard/api.md)
 - [Perfil API](../02-perfil/api.md)
 - [Carteirinha API](../03-carteirinha/api.md)
 - [Eventos API](../04-eventos/api.md)
+- [Espaços API](../09-espacos/api.md)
+- [Reservas API](../10-reservas/api.md)

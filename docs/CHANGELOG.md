@@ -1,11 +1,69 @@
 ---
+module: projeto
 document: changelog
-last_updated: 2026-01-11
+status: complete
+priority: mvp
+last_updated: 2026-01-12
 ---
 
 # Changelog
 
 Histórico de alterações na documentação do A-hub.
+
+---
+
+## [1.2.0] - 2026-01-12
+
+### Módulos Espaços e Reservas
+
+Documentação completa do sistema de espaços físicos e reservas do A-hub.
+
+### Adicionado
+
+**Módulo Espaços (09-espacos/):**
+- `README.md` - Atualizado de stub para completo
+- `spec.md` - Especificação com CRUD, configurações e estados
+- `api.md` - Endpoints para gestão de espaços e disponibilidade
+- `acceptance-criteria.md` - Critérios de aceitação detalhados
+- Campos configuráveis: nome, descrição, galeria, capacidade, taxa
+- Período de reserva configurável (dia/turno/hora)
+- Antecedência mín/máx configurável por espaço
+- Intervalo entre locações do mesmo usuário
+- Bloqueio de espaços relacionados
+- Estados: Ativo, Manutenção, Inativo
+- Bloqueio de datas específicas
+
+**Módulo Reservas (10-reservas/):**
+- `README.md` - Atualizado de stub para completo
+- `spec.md` - Fluxo completo de reservas com aprovação
+- `api.md` - Endpoints para reservas, aprovação e fila de espera
+- `acceptance-criteria.md` - Critérios de aceitação detalhados
+- Fluxo: Funcionário solicita, Gerente/ADM aprova
+- Reserva pendente bloqueia data até deliberação
+- Expiração automática se não aprovada até a data
+- Fila de espera com notificação de vaga
+- Privacidade total (não exibe quem reservou)
+- Estados: Pendente, Aprovado, Rejeitado, Cancelado, Expirado, Concluído
+
+### Alterado
+
+- `docs/README.md` - Atualizado status de Espaços e Reservas para Completo
+- Versão atualizada para 1.2
+
+### Decisões de Negócio Documentadas
+
+- Tipos de espaços: Áreas de lazer (churrasqueira, salão, quadra, piscina)
+- Papéis: Funcionário (solicita), Gerente (aprova), ADM (administra)
+- Custo: Opcional por espaço (ADM define)
+- Período: Configurável por espaço (dia inteiro, turno ou hora)
+- Aprovação: Fluxo simples (sem justificativa obrigatória)
+- Notificações: Básicas (apenas aprovação/rejeição)
+- Sistema de pontos: Não integra
+- Carteirinha: Não integra
+- Feed social: Mostra apenas "espaço ocupado" (privacidade)
+- Funcionamento offline: Não suportado
+- Fila de espera: Máximo 10 pessoas, 24h para confirmar vaga
+- Cancelamento: Até 24h antes para funcionário, qualquer momento para ADM
 
 ---
 

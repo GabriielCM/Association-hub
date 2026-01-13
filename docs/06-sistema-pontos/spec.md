@@ -3,7 +3,7 @@ module: sistema-pontos
 document: spec
 status: complete
 priority: mvp
-last_updated: 2026-01-11
+last_updated: 2026-01-12
 ---
 
 # Sistema de Pontos - Especificação
@@ -27,6 +27,7 @@ last_updated: 2026-01-11
 11. [Performance e Cache](#11-performance-e-cache)
 12. [Segurança](#12-segurança)
 13. [Métricas de Sucesso](#13-métricas-de-sucesso)
+14. [Módulos que Integram](#14-módulos-que-integram)
 
 ---
 
@@ -661,6 +662,41 @@ Usuário pode desativar categorias específicas:
 | Usuários que fizeram check-in | > 60% por evento |
 | Usuários com Strava conectado | > 30% |
 | Transferências entre usuários | > 20/semana |
+
+---
+
+## 14. Módulos que Integram
+
+O Sistema de Pontos é central para a gamificação do A-hub. Os seguintes módulos integram ou integrarão com este sistema:
+
+### 14.1 Módulos MVP
+
+| Módulo | Integração | Status |
+|--------|------------|--------|
+| [Eventos](../04-eventos/) | Check-in gera pontos | 🟢 Implementado |
+| [Minha Carteira](../05-minha-carteira/) | Interface de saldo e transferências | 🟢 Implementado |
+| [PDV](../16-pdv/) | Pagamento com pontos em kiosks | 🟢 Implementado |
+
+### 14.2 Módulos Fase 2
+
+| Módulo | Integração Prevista | Status |
+|--------|---------------------|--------|
+| [Pedidos](../11-pedidos/) | Pagamento com pontos no bar/restaurante | ⚪ Não Iniciado |
+| [Loja](../12-loja/) | Resgate de produtos e benefícios | ⚪ Não Iniciado |
+| [Rankings](../13-rankings/) | Exibição de rankings por pontos | ⚪ Não Iniciado |
+
+### 14.3 Módulos Nice to Have
+
+| Módulo | Integração Prevista | Status |
+|--------|---------------------|--------|
+| [Jukebox](../15-jukebox/) | Pagar para sugerir/pular músicas | ⚪ Não Iniciado |
+
+### 14.4 Módulos que NÃO Integram
+
+| Módulo | Motivo |
+|--------|--------|
+| [Espaços](../09-espacos/) | Reservas não usam sistema de pontos |
+| [Reservas](../10-reservas/) | Custo é opcional e definido pelo ADM (não usa pontos) |
 
 ---
 

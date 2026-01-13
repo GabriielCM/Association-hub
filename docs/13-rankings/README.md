@@ -1,8 +1,9 @@
 ---
 module: rankings
+document: README
 status: stub
 priority: phase2
-last_updated: 2026-01-10
+last_updated: 2026-01-12
 ---
 
 # Rankings
@@ -32,13 +33,13 @@ Sistema de rankings e leaderboards para gamificação.
 
 ## Componentes
 
-[A preencher]
+_Será documentado quando o módulo for especificado._
 
 ---
 
 ## API
 
-[A preencher]
+_Será documentado quando o módulo for especificado._
 
 ---
 
