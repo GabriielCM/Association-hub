@@ -1,13 +1,13 @@
 ---
 project: a-hub
-version: "1.2"
-last_updated: 2026-01-12
+version: "1.4"
+last_updated: 2026-01-13
 ---
 
 # A-hub - Documentação Técnica
 
-> **Versão:** 1.2
-> **Última atualização:** 12/01/2026
+> **Versão:** 1.4
+> **Última atualização:** 13/01/2026
 > **Status:** Em Desenvolvimento
 
 ---
@@ -58,8 +58,8 @@ O A-hub é um aplicativo mobile para associações que centraliza todas as funci
 | Mensagens | 🟢 Completo | 🔴 MVP | [Ver](08-mensagens/) |
 | Espaços | 🟢 Completo | 🟡 Fase 2 | [Ver](09-espacos/) |
 | Reservas | 🟢 Completo | 🟡 Fase 2 | [Ver](10-reservas/) |
-| Pedidos | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](11-pedidos/) |
-| Loja | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](12-loja/) |
+| Pedidos | 🟢 Completo | 🟡 Fase 2 | [Ver](11-pedidos/) |
+| Loja | 🟢 Completo | 🟡 Fase 2 | [Ver](12-loja/) |
 | Rankings | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](13-rankings/) |
 | Suporte | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](14-suporte/) |
 | Jukebox | ⚪ Não Iniciado | 🟢 Nice to Have | [Ver](15-jukebox/) |

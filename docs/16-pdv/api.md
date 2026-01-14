@@ -3,7 +3,7 @@ module: pdv
 document: api
 status: complete
 priority: mvp
-last_updated: 2026-01-11
+last_updated: 2026-01-13
 ---
 
 # PDV - API
@@ -15,9 +15,10 @@ last_updated: 2026-01-11
 ## Índice
 
 1. [Display (Interface Kiosk)](#1-display-interface-kiosk)
-2. [ADM (Gestão)](#2-adm-gestão)
-3. [Webhooks](#3-webhooks)
-4. [Códigos de Erro](#4-códigos-de-erro)
+2. [App (Pagamento Usuário)](#2-app-pagamento-usuário)
+3. [ADM (Gestão)](#3-adm-gestão)
+4. [Webhooks](#4-webhooks)
+5. [Códigos de Erro](#5-códigos-de-erro)
 
 ---
 
@@ -66,6 +67,7 @@ Retorna catálogo de produtos do PDV.
         "description": "Água mineral sem gás",
         "image_url": "https://...",
         "price_points": 10,
+        "price_money": 5.00,
         "category": "Bebidas",
         "stock": 24,
         "is_available": true
@@ -76,13 +78,18 @@ Retorna catálogo de produtos do PDV.
         "description": "Suco natural",
         "image_url": "https://...",
         "price_points": 12,
+        "price_money": 6.00,
         "category": "Bebidas",
         "stock": 0,
         "is_available": false
       }
     ],
     "categories": ["Bebidas", "Snacks"],
-    "updated_at": "2026-01-11T10:00:00Z"
+    "points_config": {
+      "points_to_money_rate": 0.50,
+      "cashback_percent": 5.0
+    },
+    "updated_at": "2026-01-13T10:00:00Z"
   }
 }
 ```
@@ -124,23 +131,28 @@ Cria um novo checkout e gera QR Code.
         "product_id": "uuid",
         "name": "Água Mineral 500ml",
         "quantity": 1,
-        "unit_price": 10,
-        "total_price": 10
+        "unit_price_points": 10,
+        "unit_price_money": 5.00,
+        "total_points": 10,
+        "total_money": 5.00
       },
       {
         "product_id": "uuid",
         "name": "Refrigerante Cola",
         "quantity": 2,
-        "unit_price": 15,
-        "total_price": 30
+        "unit_price_points": 15,
+        "unit_price_money": 7.50,
+        "total_points": 30,
+        "total_money": 15.00
       }
     ],
-    "total": 40,
+    "total_points": 40,
+    "total_money": 20.00,
     "qr_code_url": "https://api.ahub.com.br/qr/checkout/abc123",
     "qr_code_data": "eyJ0eXBlIjoicGR2X3BheW1lbnQiLC...",
     "status": "pending",
-    "created_at": "2026-01-11T10:30:00Z",
-    "expires_at": "2026-01-11T10:35:00Z"
+    "created_at": "2026-01-13T10:30:00Z",
+    "expires_at": "2026-01-13T10:35:00Z"
   }
 }
 ```
@@ -180,8 +192,22 @@ Verifica status de um checkout (polling do display).
   "data": {
     "code": "abc123",
     "status": "pending",
-    "expires_at": "2026-01-11T10:35:00Z",
+    "expires_at": "2026-01-13T10:35:00Z",
     "seconds_remaining": 180
+  }
+}
+```
+
+**Response 200 (Aguardando PIX):**
+
+```json
+{
+  "data": {
+    "code": "abc123",
+    "status": "awaiting_pix",
+    "payment_method": "money",
+    "pix_expires_at": "2026-01-13T10:36:00Z",
+    "seconds_remaining": 240
   }
 }
 ```
@@ -193,10 +219,30 @@ Verifica status de um checkout (polling do display).
   "data": {
     "code": "abc123",
     "status": "paid",
-    "paid_at": "2026-01-11T10:31:00Z",
+    "payment_method": "points",
+    "paid_at": "2026-01-13T10:31:00Z",
     "paid_by": {
       "name": "João Silva"
-    }
+    },
+    "cashback_earned": 0
+  }
+}
+```
+
+**Response 200 (Pago com PIX):**
+
+```json
+{
+  "data": {
+    "code": "abc123",
+    "status": "paid",
+    "payment_method": "money",
+    "paid_at": "2026-01-13T10:32:00Z",
+    "paid_by": {
+      "name": "João Silva"
+    },
+    "total_money": 20.00,
+    "cashback_earned": 1
   }
 }
 ```
@@ -227,14 +273,227 @@ Cancela um checkout pendente.
   "data": {
     "code": "abc123",
     "status": "cancelled",
-    "cancelled_at": "2026-01-11T10:32:00Z"
+    "cancelled_at": "2026-01-13T10:32:00Z"
   }
 }
 ```
 
 ---
 
-## 2. ADM (Gestão)
+## 2. App (Pagamento Usuário)
+
+Endpoints usados pelo app mobile para processar pagamentos de PDV.
+
+### GET /wallet/pdv/checkout/:code
+
+Retorna detalhes do checkout para o app (após escanear QR do display).
+
+**Autenticação:** Bearer Token (JWT)
+
+**Response 200:**
+
+```json
+{
+  "data": {
+    "checkout_id": "uuid",
+    "code": "abc123",
+    "pdv": {
+      "id": "uuid",
+      "name": "Geladeira - Sede",
+      "location": "Corredor Principal"
+    },
+    "items": [
+      {
+        "product_id": "uuid",
+        "name": "Água Mineral 500ml",
+        "image_url": "https://...",
+        "quantity": 1,
+        "unit_price_points": 10,
+        "unit_price_money": 5.00,
+        "total_points": 10,
+        "total_money": 5.00
+      },
+      {
+        "product_id": "uuid",
+        "name": "Refrigerante Cola",
+        "image_url": "https://...",
+        "quantity": 2,
+        "unit_price_points": 15,
+        "unit_price_money": 7.50,
+        "total_points": 30,
+        "total_money": 15.00
+      }
+    ],
+    "total_points": 40,
+    "total_money": 20.00,
+    "user_balance": 350,
+    "cashback_preview": 1,
+    "status": "pending",
+    "expires_at": "2026-01-13T10:35:00Z",
+    "seconds_remaining": 180
+  }
+}
+```
+
+| Campo | Descrição |
+|-------|-----------|
+| `user_balance` | Saldo de pontos do usuário |
+| `cashback_preview` | Pontos de cashback se pagar com PIX |
+
+---
+
+### POST /wallet/pdv/checkout/:code/pay
+
+Paga checkout com pontos.
+
+**Autenticação:** Bearer Token (JWT)
+
+**Request Body:**
+
+```json
+{
+  "payment_method": "points",
+  "biometric_token": "token-from-device"
+}
+```
+
+**Response 200:**
+
+```json
+{
+  "data": {
+    "success": true,
+    "checkout_code": "abc123",
+    "payment_method": "points",
+    "total_points": 40,
+    "new_balance": 310,
+    "transaction_id": "uuid",
+    "paid_at": "2026-01-13T10:31:00Z"
+  }
+}
+```
+
+**Response 400 (Saldo insuficiente):**
+
+```json
+{
+  "error": {
+    "code": "INSUFFICIENT_BALANCE",
+    "message": "Saldo insuficiente",
+    "details": {
+      "required": 40,
+      "available": 25
+    }
+  }
+}
+```
+
+---
+
+### POST /wallet/pdv/checkout/:code/pix
+
+Inicia pagamento PIX para checkout.
+
+**Autenticação:** Bearer Token (JWT)
+
+**Request Body:**
+
+```json
+{
+  "payment_method": "money"
+}
+```
+
+**Response 200:**
+
+```json
+{
+  "data": {
+    "checkout_code": "abc123",
+    "payment_method": "money",
+    "total_money": 20.00,
+    "cashback_preview": 1,
+    "pix": {
+      "qr_code": "00020126580014br.gov.bcb.pix...",
+      "qr_code_base64": "data:image/png;base64,iVBORw0KG...",
+      "copy_paste": "00020126580014br.gov.bcb.pix...",
+      "expires_at": "2026-01-13T10:36:00Z",
+      "seconds_remaining": 300
+    },
+    "stripe_payment_intent_id": "pi_xxx"
+  }
+}
+```
+
+---
+
+### GET /wallet/pdv/checkout/:code/pix/status
+
+Verifica status do pagamento PIX (polling do app).
+
+**Autenticação:** Bearer Token (JWT)
+
+**Response 200 (Aguardando):**
+
+```json
+{
+  "data": {
+    "status": "awaiting_payment",
+    "expires_at": "2026-01-13T10:36:00Z",
+    "seconds_remaining": 180
+  }
+}
+```
+
+**Response 200 (Pago):**
+
+```json
+{
+  "data": {
+    "status": "paid",
+    "paid_at": "2026-01-13T10:32:00Z",
+    "total_money": 20.00,
+    "cashback_earned": 1,
+    "cashback_transaction_id": "uuid",
+    "new_balance": 351
+  }
+}
+```
+
+**Response 200 (Expirado):**
+
+```json
+{
+  "data": {
+    "status": "expired",
+    "message": "PIX expirado. Tente novamente."
+  }
+}
+```
+
+---
+
+### POST /wallet/pdv/checkout/:code/cancel
+
+Cancela checkout pelo app (antes de pagar).
+
+**Autenticação:** Bearer Token (JWT)
+
+**Response 200:**
+
+```json
+{
+  "data": {
+    "success": true,
+    "checkout_code": "abc123",
+    "status": "cancelled"
+  }
+}
+```
+
+---
+
+## 3. ADM (Gestão)
 
 ### GET /admin/pdv
 
@@ -564,27 +823,72 @@ Relatório de vendas do PDV.
 
 ---
 
-## 3. Webhooks
+## 4. Webhooks
 
-### Webhook de Pagamento Confirmado
+### Webhook de Aguardando PIX
 
-Enviado ao display quando um checkout é pago.
+Enviado ao display quando usuário escolhe pagar com PIX.
 
-**Event:** `checkout.paid`
+**Event:** `checkout.awaiting_pix`
 
 **Payload:**
 
 ```json
 {
-  "event": "checkout.paid",
-  "timestamp": "2026-01-11T10:31:00Z",
+  "event": "checkout.awaiting_pix",
+  "timestamp": "2026-01-13T10:31:00Z",
   "data": {
     "checkout_code": "abc123",
     "pdv_id": "uuid",
+    "payment_method": "money",
+    "total_money": 20.00,
+    "pix_expires_at": "2026-01-13T10:36:00Z"
+  }
+}
+```
+
+---
+
+### Webhook de Pagamento Confirmado
+
+Enviado ao display quando um checkout é pago (pontos ou PIX).
+
+**Event:** `checkout.paid`
+
+**Payload (Pontos):**
+
+```json
+{
+  "event": "checkout.paid",
+  "timestamp": "2026-01-13T10:31:00Z",
+  "data": {
+    "checkout_code": "abc123",
+    "pdv_id": "uuid",
+    "payment_method": "points",
     "paid_by": {
       "name": "João Silva"
     },
-    "total": 25
+    "total_points": 40,
+    "cashback_earned": 0
+  }
+}
+```
+
+**Payload (PIX):**
+
+```json
+{
+  "event": "checkout.paid",
+  "timestamp": "2026-01-13T10:32:00Z",
+  "data": {
+    "checkout_code": "abc123",
+    "pdv_id": "uuid",
+    "payment_method": "money",
+    "paid_by": {
+      "name": "João Silva"
+    },
+    "total_money": 20.00,
+    "cashback_earned": 1
   }
 }
 ```
@@ -613,7 +917,7 @@ Enviado quando estoque atinge limite (< 5 unidades).
 
 ---
 
-## 4. Códigos de Erro
+## 5. Códigos de Erro
 
 ### Códigos do Display
 
@@ -627,6 +931,22 @@ Enviado quando estoque atinge limite (< 5 unidades).
 | `CHECKOUT_EXPIRED` | 400 | Checkout expirado |
 | `CHECKOUT_ALREADY_PAID` | 400 | Checkout já pago |
 | `INVALID_API_KEY` | 401 | API Key inválida |
+
+### Códigos do App (Pagamento)
+
+| Código | HTTP | Descrição |
+|--------|------|-----------|
+| `CHECKOUT_NOT_FOUND` | 404 | Checkout não encontrado |
+| `CHECKOUT_EXPIRED` | 400 | Checkout expirado |
+| `CHECKOUT_ALREADY_PAID` | 400 | Checkout já pago |
+| `INSUFFICIENT_BALANCE` | 400 | Saldo de pontos insuficiente |
+| `BIOMETRIC_REQUIRED` | 400 | Token biométrico não enviado |
+| `BIOMETRIC_INVALID` | 401 | Token biométrico inválido |
+| `PIX_CREATION_FAILED` | 500 | Falha ao criar PIX no Stripe |
+| `PIX_EXPIRED` | 400 | PIX expirado |
+| `PIX_ALREADY_PAID` | 400 | PIX já pago |
+| `PAYMENT_METHOD_INVALID` | 400 | Método deve ser 'points' ou 'money' |
+| `MIXED_PAYMENT_NOT_ALLOWED` | 400 | PDV não aceita pagamento misto |
 
 ### Códigos do ADM
 
@@ -644,3 +964,4 @@ Enviado quando estoque atinge limite (< 5 unidades).
 - [Especificação](spec.md) - Arquitetura e fluxos
 - [Critérios de Aceitação](acceptance-criteria.md) - Checklist
 - [Minha Carteira - API](../05-minha-carteira/api.md) - Pagamento no app
+- [Loja - API](../12-loja/api.md) - Comparação de pagamentos

@@ -3,12 +3,149 @@ module: projeto
 document: changelog
 status: complete
 priority: mvp
-last_updated: 2026-01-12
+last_updated: 2026-01-13
 ---
 
 # Changelog
 
 Histórico de alterações na documentação do A-hub.
+
+---
+
+## [1.4.0] - 2026-01-13
+
+### Integração PIX no PDV
+
+Extensão do sistema de pagamento PIX (Stripe) para o módulo PDV, permitindo que usuários paguem com pontos OU PIX em compras nos kiosks.
+
+### Adicionado
+
+**Módulo PDV (16-pdv/):**
+- Fluxo completo de pagamento via PIX nos displays
+- Preço dual em produtos (pontos E R$)
+- QR Code PIX dinâmico via Stripe
+- Tela "Aguardando PIX" no display
+- Cashback em compras via PIX
+- Webhooks para confirmação de pagamento PIX
+- Novos endpoints de API para pagamento PIX
+
+**Módulo Sistema de Pontos (06-sistema-pontos/):**
+- Novo source `pdv_cashback` (credit) - Cashback de compras no PDV via PIX
+- Modelo `PointsGlobalConfig` para configuração de taxa de conversão e cashback
+- Configurações globais no painel ADM (taxa de conversão, % cashback)
+- Notificações de cashback (Loja e PDV)
+
+**Módulo Loja (12-loja/):**
+- Campo `allow_mixed_payment` no modelo de Produto
+- Tabela de regras de pagamento misto (Loja vs PDV)
+
+### Alterado
+
+- `docs/16-pdv/spec.md` - Adicionada seção completa de pagamento PIX
+- `docs/16-pdv/api.md` - Novos endpoints de pagamento PIX no app
+- `docs/16-pdv/acceptance-criteria.md` - Critérios de aceitação para PIX
+- `docs/12-loja/spec.md` - Flag `allow_mixed_payment` no modelo de dados
+- `docs/06-sistema-pontos/spec.md` - Modelo PointsGlobalConfig e source pdv_cashback
+- Versão atualizada para 1.4
+
+### Decisões de Negócio Documentadas
+
+- **PDV**: Pagamento APENAS pontos OU PIX (nunca misto)
+- **Loja**: Pagamento pontos, PIX, ou misto (configurável por produto)
+- **Taxa de conversão**: Global, definida pelo ADM (ex: 1 ponto = R$ 0,50)
+- **Cashback**: Percentual global para compras com dinheiro/PIX (Loja e PDV)
+- **Expiração PIX**: 5 minutos (mesmo do QR do display)
+- **Webhook Stripe**: Confirmação automática de pagamento PIX
+- **Feedback no display**: Status em tempo real durante pagamento PIX
+
+---
+
+## [1.3.0] - 2026-01-13
+
+### Módulos Loja e Pedidos
+
+Documentação completa do sistema de e-commerce e histórico de pedidos do A-hub.
+
+### Adicionado
+
+**Módulo Loja (12-loja/):**
+- `README.md` - Atualizado de stub para completo
+- `spec.md` - Especificação completa com modelo de dados detalhado
+- `api.md` - Endpoints REST para catálogo, carrinho, checkout e ADM
+- `acceptance-criteria.md` - 188 critérios de aceitação
+
+Funcionalidades documentadas:
+- Catálogo com categorias customizáveis pelo ADM
+- Produtos com variações (SKU separado por tamanho/cor)
+- Galeria de imagens por produto
+- Três tipos: físico, voucher e serviço
+- Pagamento: apenas pontos, apenas dinheiro (Stripe PIX) ou misto
+- Carrinho com reserva de estoque (30 minutos)
+- Compra direta ou via carrinho
+- Sistema de favoritos
+- Avaliações com moderação (1-5 estrelas + comentário)
+- Preço promocional temporário
+- Produtos em destaque (curado pelo ADM)
+- Produtos exclusivos por plano de associação
+- Limite de compra por usuário configurável
+- Cashback percentual em compras com dinheiro
+- Vouchers com validade configurável
+- Retirada via QR Code
+- Dashboard ADM com relatórios e exportação CSV
+
+**Módulo Pedidos (11-pedidos/):**
+- `README.md` - Atualizado de stub para completo
+- `spec.md` - Especificação com modelo de dados e fluxos
+- `api.md` - Endpoints para histórico, vouchers e gestão ADM
+- `acceptance-criteria.md` - 125 critérios de aceitação
+
+Funcionalidades documentadas:
+- Histórico unificado Loja + PDV
+- Mesmo nível de detalhe para ambas as fontes
+- Timeline de status (Pendente → Confirmado → Pronto → Concluído)
+- QR Code de retirada para produtos físicos
+- Comprovante digital completo
+- Gestão de vouchers (código, validade, uso)
+- Dashboard ADM com pedidos pendentes
+- Ações em lote (atualizar status)
+- Scanner QR para confirmar retirada
+- Cancelamento com estorno automático de pontos
+- Relatórios com exportação CSV
+
+**Integração Sistema de Pontos:**
+- Novo source `shop_cashback` (credit) - Cashback de compras na Loja
+
+### Alterado
+
+- `docs/README.md` - Atualizado status de Loja e Pedidos para Completo
+- `docs/06-sistema-pontos/spec.md` - Adicionado source `shop_cashback`
+- Versão atualizada para 1.3
+
+### Decisões de Negócio Documentadas
+
+- Tipos de produto: físico, voucher e serviço
+- Entrega: físicos = retirada presencial, digitais = automático
+- Pagamento: pontos, dinheiro (Stripe PIX) ou misto (configurável por produto)
+- Estoque: configurável por item (limitado ou ilimitado)
+- Categorias: customizáveis pelo ADM
+- Variações: SKU separado com estoque independente
+- Carrinho: opção de compra direta + carrinho
+- Limite por usuário: configurável por produto
+- Promoções: apenas preço promocional temporário
+- Destaques: curado pelo ADM
+- Exclusividade: por tipo de associado/plano
+- Descrição: campos estruturados (curta, longa, especificações)
+- Favoritos: lista simples sem notificação
+- Reviews: com moderação (1-5 estrelas + comentário)
+- Cashback: percentual configurável
+- Vouchers: validade configurável, uso via código no app
+- Ordenação: recentes, preço, mais vendidos, alfabético
+- Ponto de retirada: único (sede principal)
+- Histórico de pedidos: completo (Loja + PDV unificados)
+- Status: fluxo simples (Pendente → Confirmado → Pronto → Concluído)
+- Cancelamento: apenas por ADM com estorno automático
+- Comprovante: digital completo (apenas visualização)
+- Dashboard ADM: completo com relatórios
 
 ---
 

@@ -3,7 +3,7 @@ module: sistema-pontos
 document: spec
 status: complete
 priority: mvp
-last_updated: 2026-01-12
+last_updated: 2026-01-13
 ---
 
 # Sistema de Pontos - Especificação
@@ -125,6 +125,8 @@ O Sistema de Pontos é o mecanismo central de gamificação do A-hub, permitindo
 | `daily_post` | credit | Primeiro post do dia no feed |
 | `admin_grant` | credit | Crédito manual pelo ADM |
 | `transfer_received` | credit | Recebimento de transferência |
+| `shop_cashback` | credit | Cashback de compra na Loja (pagamento em dinheiro) |
+| `pdv_cashback` | credit | Cashback de compra no PDV (pagamento via PIX) |
 | `shop_purchase` | debit | Compra na loja |
 | `jukebox_payment` | debit | Pagamento no jukebox |
 | `pdv_purchase` | debit | Compra em PDV (kiosk) |
@@ -154,6 +156,34 @@ O Sistema de Pontos é o mecanismo central de gamificação do A-hub, permitindo
 | `unit` | String | Unidade de medida (km, unidade, etc.) |
 | `max_daily` | Integer | Limite diário (null = sem limite) |
 | `is_active` | Boolean | Se a fonte está ativa |
+
+### 2.5 PointsGlobalConfig (Configuração Global)
+
+```json
+{
+  "id": "uuid",
+  "points_to_money_rate": 0.50,
+  "cashback_percent": 5.0,
+  "updated_at": "2026-01-13T00:00:00Z",
+  "updated_by": "admin-uuid"
+}
+```
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `points_to_money_rate` | Decimal | Taxa de conversão: 1 ponto = R$ X,XX |
+| `cashback_percent` | Decimal | Percentual de cashback em compras com dinheiro/PIX |
+| `updated_at` | DateTime | Data da última atualização |
+| `updated_by` | UUID | ADM que fez a alteração |
+
+> **Uso:**
+> - **Loja:** Calcula preço em R$ quando produto aceita dinheiro
+> - **PDV:** Calcula preço em R$ para opção PIX
+> - **Cashback:** Percentual aplicado em compras com dinheiro/PIX (Loja e PDV)
+>
+> **Exemplo:** Com `points_to_money_rate: 0.50` e `cashback_percent: 5.0`:
+> - Produto de 100 pts = R$ 50,00
+> - Compra de R$ 50,00 via PIX = 2,50 pts de cashback (arredondado para 2 ou 3 pts)
 
 ---
 
@@ -511,6 +541,8 @@ O Sistema de Pontos é o mecanismo central de gamificação do A-hub, permitindo
 
 ### 8.1 Painel de Configuração
 
+#### Configurações por Fonte
+
 | Configuração | Tipo | Padrão |
 |--------------|------|--------|
 | Pontos por check-in (padrão) | Integer | 50 |
@@ -520,6 +552,18 @@ O Sistema de Pontos é o mecanismo central de gamificação do A-hub, permitindo
 | Strava - Tipos ativos | Array | Run, Ride, Walk |
 | Post do dia pts | Integer | 5 |
 | Post do dia ativo | Boolean | true |
+
+#### Configurações Globais (Loja + PDV)
+
+| Configuração | Tipo | Padrão | Descrição |
+|--------------|------|--------|-----------|
+| Taxa de conversão | Decimal | 0.50 | 1 ponto = R$ X,XX |
+| Cashback % | Decimal | 5.0 | % de cashback em compras PIX/dinheiro |
+
+> **Impacto das Configurações Globais:**
+> - **Taxa de conversão:** Define o preço em R$ de produtos na Loja e PDV
+> - **Cashback:** Percentual creditado ao usuário em compras via PIX/dinheiro
+> - Afeta tanto a Loja (source: `shop_cashback`) quanto o PDV (source: `pdv_cashback`)
 
 ### 8.2 Ações ADM
 
@@ -562,14 +606,17 @@ O Sistema de Pontos é o mecanismo central de gamificação do A-hub, permitindo
 | Post do dia | Toast animado |
 | Transferência recebida | Push + Toast |
 | Crédito ADM | Push + Toast |
+| Cashback (Loja/PDV) | Toast + destaque na tela de sucesso |
 
 ### 9.3 Feedback de Gasto
 
 | Ação | Tipo de Feedback |
 |------|------------------|
-| Compra na loja | Confirmação + novo saldo |
+| Compra na loja (pontos) | Confirmação + novo saldo |
+| Compra na loja (PIX/dinheiro) | Confirmação + cashback ganho |
 | Pagamento jukebox | Confirmação rápida |
-| Pagamento PDV | Confirmação + QR validado |
+| Pagamento PDV (pontos) | Confirmação + QR validado |
+| Pagamento PDV (PIX) | Confirmação + cashback ganho |
 | Transferência enviada | Confirmação + destinatário |
 
 ---
@@ -583,6 +630,8 @@ O Sistema de Pontos é o mecanismo central de gamificação do A-hub, permitindo
 | Recebeu pontos (evento) | "+{amount} pontos!" | "Check-in em {evento}" |
 | Recebeu pontos (Strava) | "+{amount} pontos!" | "Atividade física sincronizada" |
 | Recebeu transferência | "+{amount} pontos!" | "{nome} transferiu pontos para você" |
+| Recebeu cashback (Loja) | "+{amount} pontos!" | "Cashback da sua compra na Loja" |
+| Recebeu cashback (PDV) | "+{amount} pontos!" | "Cashback da sua compra no PDV" |
 | Gastou pontos | "-{amount} pontos" | "Compra em {destino}" |
 
 ### 10.2 Configuração de Notificações
