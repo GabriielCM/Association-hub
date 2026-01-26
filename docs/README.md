@@ -1,13 +1,15 @@
 ---
-project: a-hub
-version: "1.1"
-last_updated: 2026-01-11
+section: a-hub
+document: index
+status: complete
+priority: mvp
+last_updated: 2026-01-14
 ---
 
 # A-hub - Documentação Técnica
 
-> **Versão:** 1.1
-> **Última atualização:** 11/01/2026
+> **Versão:** 1.5
+> **Última atualização:** 14/01/2026
 > **Status:** Em Desenvolvimento
 
 ---
@@ -39,6 +41,7 @@ O A-hub é um aplicativo mobile para associações que centraliza todas as funci
 | [Suporte](14-suporte/) | Central de suporte |
 | [Jukebox](15-jukebox/) | Sistema de música |
 | [PDV](16-pdv/) | Pontos de venda (kiosks) |
+| [Assinaturas](17-assinaturas/) | Planos premium com mutadores de benefícios |
 | [Compartilhados](shared/) | Design system, autenticação, acessibilidade |
 | [API](api/) | Documentação de endpoints |
 
@@ -52,18 +55,19 @@ O A-hub é um aplicativo mobile para associações que centraliza todas as funci
 | Perfil | 🟢 Completo | 🔴 MVP | [Ver](02-perfil/) |
 | Carteirinha | 🟢 Completo | 🔴 MVP | [Ver](03-carteirinha/) |
 | Eventos | 🟢 Completo | 🔴 MVP | [Ver](04-eventos/) |
-| Minha Carteira | 🟢 Completo | 🔴 MVP | [Ver](05-minha-carteira/) |
-| Sistema de Pontos | 🟢 Completo | 🔴 MVP | [Ver](06-sistema-pontos/) |
+| Minha Carteira | 🟡 Parcial | 🔴 MVP | [Ver](05-minha-carteira/) |
+| Sistema de Pontos | 🟡 Parcial | 🔴 MVP | [Ver](06-sistema-pontos/) |
 | Notificações | 🟡 Parcial | 🔴 MVP | [Ver](07-notificacoes/) |
-| Mensagens | ⚪ Não Iniciado | 🔴 MVP | [Ver](08-mensagens/) |
-| Espaços | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](09-espacos/) |
-| Reservas | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](10-reservas/) |
-| Pedidos | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](11-pedidos/) |
-| Loja | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](12-loja/) |
+| Mensagens | 🟢 Completo | 🔴 MVP | [Ver](08-mensagens/) |
+| Espaços | 🟢 Completo | 🟡 Fase 2 | [Ver](09-espacos/) |
+| Reservas | 🟢 Completo | 🟡 Fase 2 | [Ver](10-reservas/) |
+| Pedidos | 🟢 Completo | 🟡 Fase 2 | [Ver](11-pedidos/) |
+| Loja | 🟢 Completo | 🟡 Fase 2 | [Ver](12-loja/) |
 | Rankings | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](13-rankings/) |
 | Suporte | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](14-suporte/) |
 | Jukebox | ⚪ Não Iniciado | 🟢 Nice to Have | [Ver](15-jukebox/) |
 | PDV | 🟢 Completo | 🔴 MVP | [Ver](16-pdv/) |
+| Assinaturas | 🟢 Completo | 🟡 Fase 2 | [Ver](17-assinaturas/) |
 
 ---
 
@@ -73,8 +77,8 @@ O A-hub é um aplicativo mobile para associações que centraliza todas as funci
 - [Tipos de Usuários](00-overview/user-types.md) - Common User, ADM, Display
 
 ### Funcionalidades Core
-- [Feed Social](01-dashboard/spec.md#feed-de-usuários) - Posts, enquetes, comentários
-- [Stories](01-dashboard/spec.md#stories-de-usuários) - Conteúdo efêmero
+- [Feed Social](01-dashboard/spec.md#feed) - Posts, enquetes, comentários
+- [Stories](01-dashboard/spec.md#stories) - Conteúdo efêmero
 - [Sistema de Check-in](04-eventos/checkin-system.md) - QR Code dinâmico
 - [Carteirinha Digital](03-carteirinha/spec.md) - Identificação e benefícios
 

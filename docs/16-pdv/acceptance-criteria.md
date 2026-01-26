@@ -3,7 +3,7 @@ module: pdv
 document: acceptance-criteria
 status: complete
 priority: mvp
-last_updated: 2026-01-11
+last_updated: 2026-01-13
 ---
 
 # PDV - Critérios de Aceitação
@@ -17,9 +17,10 @@ last_updated: 2026-01-11
 1. [Interface do Display](#1-interface-do-display)
 2. [Fluxo de Compra](#2-fluxo-de-compra)
 3. [Integração com App](#3-integração-com-app)
-4. [Gestão de Estoque](#4-gestão-de-estoque)
-5. [Painel ADM](#5-painel-adm)
-6. [Validação Final](#6-validação-final)
+4. [Pagamento PIX](#4-pagamento-pix)
+5. [Gestão de Estoque](#5-gestão-de-estoque)
+6. [Painel ADM](#6-painel-adm)
+7. [Validação Final](#7-validação-final)
 
 ---
 
@@ -37,7 +38,8 @@ last_updated: 2026-01-11
 ### 1.2 Catálogo de Produtos
 
 - [ ] Produtos são exibidos em grid
-- [ ] Cada produto mostra foto, nome e preço
+- [ ] Cada produto mostra foto, nome, preço em pontos E em R$
+- [ ] Preço em R$ é calculado via taxa global
 - [ ] Produtos esgotados mostram "Esgotado" (não clicável)
 - [ ] Categorias organizam produtos
 - [ ] Botão de carrinho mostra contador de itens
@@ -48,23 +50,35 @@ last_updated: 2026-01-11
 - [ ] Lista de itens selecionados
 - [ ] Quantidade pode ser alterada (+/-)
 - [ ] Item pode ser removido
-- [ ] Total é calculado corretamente
+- [ ] Total em pontos é calculado corretamente
+- [ ] Total em R$ é calculado corretamente
 - [ ] Botão "Gerar QR" inicia checkout
 - [ ] Botão "Cancelar" limpa carrinho
 
 ### 1.4 Tela de QR Code
 
 - [ ] QR Code é exibido grande e legível
-- [ ] Total é exibido abaixo do QR
+- [ ] Total em pontos E em R$ é exibido
+- [ ] Mensagem "Pague com Pontos ou PIX" é visível
 - [ ] Timer de expiração é exibido
 - [ ] Mensagem "Aguardando pagamento" é visível
 - [ ] Animação de loading indica espera
 - [ ] Botão "Cancelar" está disponível
 
-### 1.5 Tela de Sucesso
+### 1.5 Tela de Aguardando PIX
+
+- [ ] Exibida quando usuário escolhe PIX no app
+- [ ] Mensagem "Aguardando pagamento PIX..." é visível
+- [ ] Total em R$ é exibido
+- [ ] Timer de expiração do PIX é exibido
+- [ ] Animação indica espera
+- [ ] Botão "Cancelar" está disponível
+
+### 1.6 Tela de Sucesso
 
 - [ ] Animação de confirmação (✓)
 - [ ] Mensagem "Pagamento Confirmado"
+- [ ] Se PIX: exibe "+X pts de cashback"
 - [ ] Instrução para retirar produto
 - [ ] Auto-retorno ao idle em 5 segundos
 
@@ -117,23 +131,26 @@ last_updated: 2026-01-11
 - [ ] Detalhes do checkout são carregados
 - [ ] Nome do PDV é exibido
 - [ ] Lista de itens é exibida
-- [ ] Total é exibido
+- [ ] Total em pontos E em R$ é exibido
 
-### 3.2 Confirmação
+### 3.2 Escolha de Método de Pagamento
 
-- [ ] Saldo atual é exibido
+- [ ] Duas opções são exibidas: "Pagar com Pontos" e "Pagar com PIX"
+- [ ] Saldo atual de pontos é exibido
+- [ ] Preview de cashback é exibido na opção PIX
+- [ ] Pagamento misto NÃO é oferecido (diferente da Loja)
+
+### 3.3 Pagamento com Pontos
+
 - [ ] Saldo após pagamento é exibido
 - [ ] Botão de biometria funciona
 - [ ] Fallback para PIN funciona
-
-### 3.3 Processamento
-
 - [ ] Pagamento processa em < 3 segundos
 - [ ] Pontos são debitados
 - [ ] Transação é registrada
 - [ ] Estoque é atualizado
 
-### 3.4 Feedback
+### 3.4 Feedback (Pontos)
 
 - [ ] Tela de sucesso no app
 - [ ] Novo saldo é exibido
@@ -148,29 +165,87 @@ last_updated: 2026-01-11
 
 ---
 
-## 4. Gestão de Estoque
+## 4. Pagamento PIX
 
-### 4.1 Exibição
+### 4.1 Geração do PIX
+
+- [ ] Ao escolher PIX, QR Code é gerado via Stripe
+- [ ] QR Code PIX é exibido no app
+- [ ] Código Copia e Cola disponível
+- [ ] Valor em R$ é exibido
+- [ ] Timer de expiração (5 min) é exibido
+- [ ] Display recebe webhook e mostra "Aguardando PIX..."
+
+### 4.2 Pagamento no Banco
+
+- [ ] QR Code pode ser escaneado por app de banco
+- [ ] Código Copia e Cola funciona
+- [ ] Pagamento é processado pelo banco
+- [ ] Stripe envia webhook de confirmação
+
+### 4.3 Confirmação
+
+- [ ] Backend recebe webhook do Stripe
+- [ ] Checkout marcado como pago
+- [ ] Estoque é debitado
+- [ ] Cashback é calculado
+- [ ] Cashback é creditado na carteira do usuário
+- [ ] Transação de cashback é registrada
+- [ ] Display recebe webhook de confirmação
+- [ ] App mostra tela de sucesso
+
+### 4.4 Feedback (PIX)
+
+- [ ] Novo saldo (com cashback) é exibido no app
+- [ ] Pontos de cashback são destacados
+- [ ] Display mostra confirmação
+
+### 4.5 Expiração do PIX
+
+- [ ] Timer decrementa corretamente
+- [ ] Ao expirar, app mostra mensagem
+- [ ] Usuário pode tentar novamente
+- [ ] Display volta ao início
+
+### 4.6 Cancelamento
+
+- [ ] Botão "Cancelar" funciona
+- [ ] PIX pendente é cancelado
+- [ ] Display volta ao início
+- [ ] App volta à tela inicial
+
+### 4.7 Cashback
+
+- [ ] Cashback calculado com taxa global
+- [ ] Cashback arredondado corretamente
+- [ ] Source `pdv_cashback` na transação
+- [ ] Saldo atualizado imediatamente
+
+---
+
+## 5. Gestão de Estoque
+
+### 5.1 Exibição
 
 - [ ] Estoque atual é exibido por produto
 - [ ] Produtos esgotados são destacados
 - [ ] Estoque baixo (< 5) tem alerta
 - [ ] Total de produtos é exibido
 
-### 4.2 Reposição
+### 5.2 Reposição
 
 - [ ] ADM pode alterar estoque
 - [ ] Campo aceita valores válidos (≥ 0)
 - [ ] Motivo pode ser registrado
 - [ ] Alteração é salva corretamente
 
-### 4.3 Débito Automático
+### 5.3 Débito Automático
 
 - [ ] Estoque é debitado após pagamento
 - [ ] Quantidade debitada corresponde à compra
 - [ ] Produto fica indisponível quando estoque = 0
 
-### 4.4 Alertas
+### 5.4 Alertas
 
 - [ ] Alerta de estoque baixo é enviado
 - [ ] Alerta de produto esgotado é enviado
@@ -178,29 +253,29 @@ last_updated: 2026-01-11
 
 ---
 
-## 5. Painel ADM
+## 6. Painel ADM
 
-### 5.1 Lista de PDVs
+### 6.1 Lista de PDVs
 
 - [ ] Todos os PDVs são listados
 - [ ] Status (ativo/inativo) é exibido
 - [ ] Estatísticas resumidas por PDV
 - [ ] Botões de ação funcionam
 
-### 5.2 Criar PDV
+### 6.2 Criar PDV
 
 - [ ] Formulário de criação funciona
 - [ ] Nome e localização são obrigatórios
 - [ ] API Key e Secret são gerados
 - [ ] PDV é criado como inativo
 
-### 5.3 Editar PDV
+### 6.3 Editar PDV
 
 - [ ] Dados são carregados
 - [ ] Alterações são salvas
 - [ ] Status pode ser alterado
 
-### 5.4 Gestão de Produtos
+### 6.4 Gestão de Produtos
 
 - [ ] Produtos do PDV são listados
 - [ ] Produto pode ser adicionado
@@ -208,7 +283,7 @@ last_updated: 2026-01-11
 - [ ] Produto pode ser removido
 - [ ] Preço em pontos é obrigatório
 
-### 5.5 Relatórios
+### 6.5 Relatórios
 
 - [ ] Relatório de vendas é gerado
 - [ ] Filtro por período funciona
@@ -220,17 +295,21 @@ last_updated: 2026-01-11
 
 ---
 
-## 6. Validação Final
+## 7. Validação Final
 
-### 6.1 Funcional (End-to-End)
+### 7.1 Funcional (End-to-End)
 
-- [ ] Fluxo completo: Display → App → Pagamento → Sucesso
-- [ ] Estoque é debitado corretamente
-- [ ] Pontos são debitados corretamente
-- [ ] Transação é registrada no histórico
-- [ ] Display recebe confirmação
+- [ ] Fluxo completo com PONTOS: Display → App → Pontos → Sucesso
+- [ ] Fluxo completo com PIX: Display → App → PIX → Webhook → Sucesso
+- [ ] Estoque é debitado corretamente (ambos métodos)
+- [ ] Pontos são debitados corretamente (pagamento com pontos)
+- [ ] PIX é confirmado via webhook Stripe (pagamento com PIX)
+- [ ] Cashback é creditado corretamente (pagamento com PIX)
+- [ ] Transação é registrada no histórico (ambos métodos)
+- [ ] Display recebe confirmação (ambos métodos)
+- [ ] Pagamento misto é rejeitado
 
-### 6.2 Performance
+### 7.2 Performance
 
 | Operação | Meta | Status |
 |----------|------|--------|
@@ -238,31 +317,39 @@ last_updated: 2026-01-11
 | Gerar checkout/QR | < 1s | [ ] |
 | Verificar status (polling) | < 500ms | [ ] |
 | Notificar display (webhook) | < 2s | [ ] |
-| Processar pagamento | < 3s | [ ] |
+| Processar pagamento (pontos) | < 3s | [ ] |
+| Gerar QR PIX (Stripe) | < 2s | [ ] |
+| Webhook PIX (Stripe → Display) | < 3s | [ ] |
 
-### 6.3 Resiliência
+### 7.3 Resiliência
 
 - [ ] Display funciona com catálogo cacheado offline
 - [ ] Checkout requer conexão (mensagem clara)
 - [ ] Retry automático em falhas de rede
 - [ ] Webhook tem retry em caso de falha
 
-### 6.4 Segurança
+### 7.4 Segurança
 
 - [ ] API Key autentica display corretamente
-- [ ] QR Code expira em 5 minutos
+- [ ] QR Code do display expira em 5 minutos
+- [ ] QR Code PIX expira em 5 minutos
 - [ ] QR Code não pode ser reutilizado
-- [ ] Biometria é obrigatória no app
+- [ ] Biometria é obrigatória no app (pagamento com pontos)
 - [ ] Transação é atômica
+- [ ] Webhook Stripe é validado (assinatura)
+- [ ] PIX não expõe dados sensíveis do usuário
 
-### 6.5 Consistência
+### 7.5 Consistência
 
 - [ ] Estoque nunca fica negativo
-- [ ] Checkout expirado não pode ser pago
+- [ ] Checkout expirado não pode ser pago (pontos ou PIX)
+- [ ] PIX expirado não pode ser pago
 - [ ] Produto esgotado não pode ser comprado
-- [ ] Saldo insuficiente bloqueia pagamento
+- [ ] Saldo insuficiente bloqueia pagamento (pontos)
+- [ ] Cashback não é creditado se PIX falhar
+- [ ] Pagamento misto é sempre rejeitado no PDV
 
-### 6.6 Acessibilidade do Display
+### 7.6 Acessibilidade do Display
 
 - [ ] Touch targets ≥ 48x48px
 - [ ] Contraste adequado

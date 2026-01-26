@@ -2,7 +2,7 @@
 section: shared
 document: accessibility
 status: complete
-last_updated: 2026-01-10
+last_updated: 2026-01-15
 ---
 
 # Acessibilidade
@@ -112,6 +112,16 @@ last_updated: 2026-01-10
 - [ ] Teste de contraste
 - [ ] Navegação por teclado
 - [ ] Zoom até 200%
+
+---
+
+## Internacionalização (i18n)
+
+- Idioma único: Português Brasileiro (PT-BR)
+- Suporte a textos dinâmicos (expansão de 30-40% para futuro)
+- Formatação de datas e números: locale pt-BR
+- Direção de leitura: LTR
+- Sem previsão de RTL ou múltiplos idiomas no MVP
 
 ---
 

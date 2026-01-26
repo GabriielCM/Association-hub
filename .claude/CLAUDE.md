@@ -11,20 +11,39 @@ O A-hub é um projeto de **documentação de produto** para um aplicativo mobile
 ```
 docs/
 ├── README.md              # Portal principal com status de todos os módulos
-├── CHANGELOG.md           # Histórico de alterações
+├── CHANGELOG.md           # Histórico de alterações (versão atual: 1.5.0)
 ├── 00-overview/           # Visão geral do produto
 ├── 01-dashboard/          # Feed social, stories, acessos rápidos (MVP - Completo)
 ├── 02-perfil/             # Perfil do usuário (MVP - Completo)
 ├── 03-carteirinha/        # Carteirinha digital, QR Code, benefícios (MVP - Completo)
 ├── 04-eventos/            # Eventos, check-in, display (MVP - Completo)
-├── 05-minha-carteira/     # Scanner QR Code (MVP - Stub)
-├── 06-sistema-pontos/     # Gamificação (MVP - Parcial)
+├── 05-minha-carteira/     # Carteira de pontos, QR pessoal (MVP - Completo)
+├── 06-sistema-pontos/     # Gamificação, rankings, Strava (MVP - Completo)
 ├── 07-notificacoes/       # Notificações (MVP - Parcial)
-├── 08-mensagens/          # Chat (MVP - Stub)
-├── 09-15-*/               # Módulos Fase 2 e Nice to Have (Stubs)
+├── 08-mensagens/          # Chat (MVP - Completo)
+├── 09-espacos/            # Espaços físicos da associação (Fase 2 - Completo)
+├── 10-reservas/           # Sistema de reservas (Fase 2 - Completo)
+├── 11-pedidos/            # Histórico unificado (Fase 2 - Completo)
+├── 12-loja/               # E-commerce (Fase 2 - Completo)
+├── 13-rankings/           # Rankings (Fase 2 - Stub)
+├── 14-suporte/            # Suporte (Fase 2 - Stub)
+├── 15-jukebox/            # Jukebox (Nice to Have - Stub)
+├── 16-pdv/                # Ponto de Venda / Displays (MVP - Completo)
+├── 17-assinaturas/        # Planos premium (Fase 2 - Completo)
 ├── shared/                # Design system, acessibilidade, performance
-└── api/                   # Documentação de endpoints
+└── api/                   # Documentação centralizada de endpoints
 ```
+
+### Arquivos Shared (docs/shared/)
+
+| Arquivo | Descrição |
+|---------|-----------|
+| design-system.md | Cores, tipografia, componentes UI |
+| authentication.md | Fluxos de autenticação |
+| accessibility.md | Conformidade WCAG 2.1 AA |
+| performance.md | Requisitos de performance |
+| conventions.md | Convenções de documentação |
+| responsiveness.md | Breakpoints e adaptações |
 
 ## Padrões Obrigatórios
 
@@ -41,7 +60,18 @@ last_updated: YYYY-MM-DD
 ```
 
 ### Estrutura de Módulo
-Cada módulo deve conter: `README.md`, `spec.md`, `api.md`, `acceptance-criteria.md`
+
+**Arquivos obrigatórios:**
+- `README.md` - Índice e visão geral
+- `spec.md` - Especificação técnica completa
+- `api.md` - Endpoints da API
+- `acceptance-criteria.md` - Checklist de aceitação
+
+**Arquivos opcionais (conforme necessidade):**
+- `components.md` - Componentes UI específicos
+- `benefits.md` - Benefícios/recursos específicos
+- `qr-code.md` - Especificações de QR Code
+- Outros conforme contexto do módulo
 
 ### Links Internos
 Usar caminhos relativos: `[Link](../outro-modulo/doc.md)`
@@ -110,3 +140,33 @@ Fazer **20 perguntas de descoberta** organizadas em 5 categorias:
 ## Idioma
 
 Conteúdo em **português brasileiro**. Nomes de arquivos e pastas em **inglês**.
+
+## Manutenção da Documentação
+
+### Gap Review
+
+Usar o skill `/gap-review` periodicamente para:
+- Identificar inconsistências entre módulos
+- Verificar links quebrados
+- Validar status dos módulos
+- Detectar informações desatualizadas
+
+### Versionamento
+
+A documentação segue versionamento semântico no CHANGELOG.md:
+- **Major**: Mudanças estruturais significativas
+- **Minor**: Novos módulos ou features completas
+- **Patch**: Correções e ajustes menores
+
+Versão atual: verificar `docs/CHANGELOG.md`
+
+## Decisões de Negócio Documentadas
+
+| Área | Decisão |
+|------|---------|
+| Moeda | Association-points (nome customizável por associação) |
+| Pagamento Loja | Pontos, PIX ou misto (configurável por produto) |
+| Pagamento PDV | APENAS pontos OU PIX (nunca misto) |
+| Limite planos | Máximo 3 assinaturas ativas por usuário |
+| Descontos | Não acumulam com promoções (usa o maior) |
+| Cashback | Percentual global configurável por associação |

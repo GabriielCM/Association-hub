@@ -3,7 +3,7 @@ module: sistema-pontos
 document: spec
 status: complete
 priority: mvp
-last_updated: 2026-01-11
+last_updated: 2026-01-14
 ---
 
 # Sistema de Pontos - Especificação
@@ -27,6 +27,8 @@ last_updated: 2026-01-11
 11. [Performance e Cache](#11-performance-e-cache)
 12. [Segurança](#12-segurança)
 13. [Métricas de Sucesso](#13-métricas-de-sucesso)
+14. [Módulos que Integram](#14-módulos-que-integram)
+15. [Multiplicadores de Assinatura](#15-multiplicadores-de-assinatura)
 
 ---
 
@@ -124,6 +126,8 @@ O Sistema de Pontos é o mecanismo central de gamificação do A-hub, permitindo
 | `daily_post` | credit | Primeiro post do dia no feed |
 | `admin_grant` | credit | Crédito manual pelo ADM |
 | `transfer_received` | credit | Recebimento de transferência |
+| `shop_cashback` | credit | Cashback de compra na Loja (pagamento em dinheiro) |
+| `pdv_cashback` | credit | Cashback de compra no PDV (pagamento via PIX) |
 | `shop_purchase` | debit | Compra na loja |
 | `jukebox_payment` | debit | Pagamento no jukebox |
 | `pdv_purchase` | debit | Compra em PDV (kiosk) |
@@ -153,6 +157,34 @@ O Sistema de Pontos é o mecanismo central de gamificação do A-hub, permitindo
 | `unit` | String | Unidade de medida (km, unidade, etc.) |
 | `max_daily` | Integer | Limite diário (null = sem limite) |
 | `is_active` | Boolean | Se a fonte está ativa |
+
+### 2.5 PointsGlobalConfig (Configuração Global)
+
+```json
+{
+  "id": "uuid",
+  "points_to_money_rate": 0.50,
+  "cashback_percent": 5.0,
+  "updated_at": "2026-01-13T00:00:00Z",
+  "updated_by": "admin-uuid"
+}
+```
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `points_to_money_rate` | Decimal | Taxa de conversão: 1 ponto = R$ X,XX |
+| `cashback_percent` | Decimal | Percentual de cashback em compras com dinheiro/PIX |
+| `updated_at` | DateTime | Data da última atualização |
+| `updated_by` | UUID | ADM que fez a alteração |
+
+> **Uso:**
+> - **Loja:** Calcula preço em R$ quando produto aceita dinheiro
+> - **PDV:** Calcula preço em R$ para opção PIX
+> - **Cashback:** Percentual aplicado em compras com dinheiro/PIX (Loja e PDV)
+>
+> **Exemplo:** Com `points_to_money_rate: 0.50` e `cashback_percent: 5.0`:
+> - Produto de 100 pts = R$ 50,00
+> - Compra de R$ 50,00 via PIX = 2,50 pts de cashback (arredondado para 2 ou 3 pts)
 
 ---
 
@@ -510,6 +542,8 @@ O Sistema de Pontos é o mecanismo central de gamificação do A-hub, permitindo
 
 ### 8.1 Painel de Configuração
 
+#### Configurações por Fonte
+
 | Configuração | Tipo | Padrão |
 |--------------|------|--------|
 | Pontos por check-in (padrão) | Integer | 50 |
@@ -519,6 +553,18 @@ O Sistema de Pontos é o mecanismo central de gamificação do A-hub, permitindo
 | Strava - Tipos ativos | Array | Run, Ride, Walk |
 | Post do dia pts | Integer | 5 |
 | Post do dia ativo | Boolean | true |
+
+#### Configurações Globais (Loja + PDV)
+
+| Configuração | Tipo | Padrão | Descrição |
+|--------------|------|--------|-----------|
+| Taxa de conversão | Decimal | 0.50 | 1 ponto = R$ X,XX |
+| Cashback % | Decimal | 5.0 | % de cashback em compras PIX/dinheiro |
+
+> **Impacto das Configurações Globais:**
+> - **Taxa de conversão:** Define o preço em R$ de produtos na Loja e PDV
+> - **Cashback:** Percentual creditado ao usuário em compras via PIX/dinheiro
+> - Afeta tanto a Loja (source: `shop_cashback`) quanto o PDV (source: `pdv_cashback`)
 
 ### 8.2 Ações ADM
 
@@ -561,14 +607,17 @@ O Sistema de Pontos é o mecanismo central de gamificação do A-hub, permitindo
 | Post do dia | Toast animado |
 | Transferência recebida | Push + Toast |
 | Crédito ADM | Push + Toast |
+| Cashback (Loja/PDV) | Toast + destaque na tela de sucesso |
 
 ### 9.3 Feedback de Gasto
 
 | Ação | Tipo de Feedback |
 |------|------------------|
-| Compra na loja | Confirmação + novo saldo |
+| Compra na loja (pontos) | Confirmação + novo saldo |
+| Compra na loja (PIX/dinheiro) | Confirmação + cashback ganho |
 | Pagamento jukebox | Confirmação rápida |
-| Pagamento PDV | Confirmação + QR validado |
+| Pagamento PDV (pontos) | Confirmação + QR validado |
+| Pagamento PDV (PIX) | Confirmação + cashback ganho |
 | Transferência enviada | Confirmação + destinatário |
 
 ---
@@ -582,6 +631,8 @@ O Sistema de Pontos é o mecanismo central de gamificação do A-hub, permitindo
 | Recebeu pontos (evento) | "+{amount} pontos!" | "Check-in em {evento}" |
 | Recebeu pontos (Strava) | "+{amount} pontos!" | "Atividade física sincronizada" |
 | Recebeu transferência | "+{amount} pontos!" | "{nome} transferiu pontos para você" |
+| Recebeu cashback (Loja) | "+{amount} pontos!" | "Cashback da sua compra na Loja" |
+| Recebeu cashback (PDV) | "+{amount} pontos!" | "Cashback da sua compra no PDV" |
 | Gastou pontos | "-{amount} pontos" | "Compra em {destino}" |
 
 ### 10.2 Configuração de Notificações
@@ -664,6 +715,97 @@ Usuário pode desativar categorias específicas:
 
 ---
 
+## 14. Módulos que Integram
+
+O Sistema de Pontos é central para a gamificação do A-hub. Os seguintes módulos integram ou integrarão com este sistema:
+
+### 14.1 Módulos MVP
+
+| Módulo | Integração | Status |
+|--------|------------|--------|
+| [Eventos](../04-eventos/) | Check-in gera pontos | 🟢 Implementado |
+| [Minha Carteira](../05-minha-carteira/) | Interface de saldo e transferências | 🟢 Implementado |
+| [PDV](../16-pdv/) | Pagamento com pontos em kiosks | 🟢 Implementado |
+
+### 14.2 Módulos Fase 2
+
+| Módulo | Integração Prevista | Status |
+|--------|---------------------|--------|
+| [Pedidos](../11-pedidos/) | Pagamento com pontos no bar/restaurante | ⚪ Não Iniciado |
+| [Loja](../12-loja/) | Resgate de produtos e benefícios | ⚪ Não Iniciado |
+| [Rankings](../13-rankings/) | Exibição de rankings por pontos | ⚪ Não Iniciado |
+
+### 14.3 Módulos Nice to Have
+
+| Módulo | Integração Prevista | Status |
+|--------|---------------------|--------|
+| [Jukebox](../15-jukebox/) | Pagar para sugerir/pular músicas | ⚪ Não Iniciado |
+
+### 14.4 Módulos que NÃO Integram
+
+| Módulo | Motivo |
+|--------|--------|
+| [Espaços](../09-espacos/) | Reservas não usam sistema de pontos |
+| [Reservas](../10-reservas/) | Custo é opcional e definido pelo ADM (não usa pontos) |
+
+---
+
+## 15. Multiplicadores de Assinatura
+
+> **Integração com [Assinaturas](../17-assinaturas/)**
+
+O módulo de Assinaturas permite que associados com planos premium tenham multiplicadores de pontos em diversas fontes.
+
+### 15.1 Como Funcionam os Multiplicadores
+
+Usuários com assinatura ativa têm seus pontos multiplicados conforme configuração do plano:
+
+| Fonte | Cálculo | Exemplo |
+|-------|---------|---------|
+| Check-in Eventos | `pontos_evento × mutador` | 50 pts × 1.5 = 75 pts |
+| Strava | `(km × pts/km) × mutador` | (5km × 10) × 1.5 = 75 pts |
+| Primeiro Post | `pontos_post × mutador` | 5 pts × 2.0 = 10 pts |
+
+### 15.2 Regras de Aplicação
+
+1. **Verificação em tempo real:** Ao calcular pontos, sistema verifica se usuário tem assinatura ativa
+2. **Mutador do plano:** Cada plano define seus mutadores (configurável pelo ADM)
+3. **Limites mantidos:** Multiplicadores NÃO afetam limites diários (ex: 5km Strava)
+4. **Registro transparente:** Transação registra o valor FINAL (já multiplicado)
+
+### 15.3 Implementação
+
+```typescript
+// Pseudocódigo para cálculo de pontos
+function calcularPontos(userId: string, fonteBase: number, fonte: string): number {
+  const subscription = getUserSubscription(userId);
+
+  if (!subscription || subscription.status !== 'active') {
+    return fonteBase; // Sem assinatura = sem multiplicador
+  }
+
+  const mutador = subscription.plan.mutators[`points_${fonte}`] || 1.0;
+  return Math.round(fonteBase * mutador);
+}
+
+// Exemplo de uso no check-in
+const pontosEvento = 50;
+const pontosFinais = calcularPontos(userId, pontosEvento, 'events');
+// Com mutador 1.5x: 75 pontos
+```
+
+### 15.4 Considerações
+
+- **Perda de assinatura:** Próximas transações usam multiplicador 1.0x
+- **Troca de plano:** Novos mutadores aplicam imediatamente
+- **Histórico:** Transações passadas não são recalculadas
+
+### 15.5 Configuração no ADM
+
+Os mutadores são definidos por plano no módulo de [Assinaturas](../17-assinaturas/spec.md#mutadores-de-benefícios).
+
+---
+
 ## Relacionados
 
 - [API](api.md) - Documentação de endpoints
@@ -671,3 +813,4 @@ Usuário pode desativar categorias específicas:
 - [Minha Carteira](../05-minha-carteira/) - Interface do usuário
 - [PDV](../16-pdv/) - Sistema de kiosks
 - [Eventos - Check-in](../04-eventos/checkin-system.md) - Integração
+- [Assinaturas](../17-assinaturas/) - Multiplicadores de pontos

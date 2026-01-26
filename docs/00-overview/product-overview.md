@@ -1,6 +1,8 @@
 ---
 section: overview
 document: product-overview
+status: complete
+priority: mvp
 last_updated: 2026-01-10
 ---
 

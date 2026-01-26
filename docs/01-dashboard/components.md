@@ -3,7 +3,7 @@ module: dashboard
 document: components
 status: complete
 priority: mvp
-last_updated: 2026-01-10
+last_updated: 2026-01-14
 ---
 
 # Dashboard - Componentes UI
@@ -257,9 +257,10 @@ last_updated: 2026-01-10
 5. Reservas (📅)
 6. Pedidos (🍔)
 7. Loja (🛒)
-8. Rankings (🏆)
-9. Jukebox (🎵)
-10. Suporte (💬)
+8. Assinaturas (⭐) - [Ver módulo](../17-assinaturas/)
+9. Rankings (🏆)
+10. Jukebox (🎵)
+11. Suporte (💬)
 
 **Quantidade Visível:**
 - Mobile: 3.5-4 ícones visíveis
@@ -415,6 +416,7 @@ Seu  João     Maria     Pedro
 
 **Header:**
 - Avatar + nome do autor
+- **Verificado Dourado:** Ícone ✓ dourado ao lado do nome se autor tem [assinatura ativa](../17-assinaturas/)
 - Tempo desde publicação
 - Botão fechar (×)
 - Menu (⋮) - opções: denunciar, compartilhar
@@ -525,6 +527,7 @@ Seu  João     Maria     Pedro
 
 **Header do Post:**
 - Avatar (36x36px) + nome do autor
+- **Verificado Dourado:** Ícone ✓ dourado ao lado do nome se autor tem [assinatura ativa](../17-assinaturas/)
 - Tempo desde publicação (relativo: "há 2h")
 - Menu de opções (⋮) no canto direito
 

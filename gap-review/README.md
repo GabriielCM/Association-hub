@@ -1,7 +1,7 @@
 ---
 project: a-hub
 document: gap-review-index
-last_updated: 2026-01-11
+last_updated: 2026-01-14
 ---
 
 # Gap Reviews - A-hub
@@ -12,9 +12,11 @@ Registro de gap reviews realizados na documentação.
 
 ## Reviews
 
-| # | Data | Escopo | Status | Fases |
-|---|------|--------|--------|-------|
-| [01](gap-review-01/) | 2026-01-11 | [a definir] | Em andamento | - |
+| # | Data | Escopo | Status | Fases | Issues |
+|---|------|--------|--------|-------|--------|
+| [01](gap-review-01/) | 2026-01-11 | Documentação completa | ✅ Concluído | 3 | 6 |
+| [02](gap-review-02/) | 2026-01-12 | Pós-Espaços/Reservas | ✅ Concluído | 3 | 8 |
+| [03](gap-review-03/) | 2026-01-14 | Documentação completa | 🟡 Em análise | 5 | 27 |
 
 ---
 

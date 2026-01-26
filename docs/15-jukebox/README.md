@@ -1,8 +1,9 @@
 ---
 module: jukebox
+document: README
 status: stub
 priority: nice-to-have
-last_updated: 2026-01-10
+last_updated: 2026-01-12
 ---
 
 # Jukebox
@@ -32,13 +33,13 @@ Sistema de jukebox digital para controle de música no ambiente da associação.
 
 ## Componentes
 
-[A preencher]
+_Será documentado quando o módulo for especificado._
 
 ---
 
 ## API
 
-[A preencher]
+_Será documentado quando o módulo for especificado._
 
 ---
 

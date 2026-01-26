@@ -3,7 +3,7 @@ module: perfil
 document: spec
 status: complete
 priority: mvp
-last_updated: 2026-01-10
+last_updated: 2026-01-14
 ---
 
 # Perfil do Usuário - Especificação
@@ -64,7 +64,15 @@ Página de perfil do usuário exibindo informações pessoais, badges, posts e e
 
 **Elementos:**
 - Nome social (24px, bold)
+- **Verificado Dourado:** Ícone ✓ dourado ao lado do nome se usuário tem [assinatura ativa](../17-assinaturas/)
 - @username (16px, cinza)
+
+**Verificado Dourado:**
+- Ícone: Círculo com check (✓) dourado (#FFD700)
+- Tamanho: 20x20px
+- Posição: À direita do nome
+- Dinâmico: Reflete status atual da assinatura
+- Não ocultável pelo usuário
 
 **Regras:**
 - Nome social: 3-50 caracteres

@@ -1,11 +1,263 @@
 ---
+module: projeto
 document: changelog
-last_updated: 2026-01-11
+status: complete
+priority: mvp
+last_updated: 2026-01-14
 ---
 
 # Changelog
 
 Histórico de alterações na documentação do A-hub.
+
+---
+
+## [1.5.0] - 2026-01-14
+
+### Módulo de Assinaturas
+
+Sistema completo de assinaturas premium que permite ao ADM criar planos com mutadores de benefícios. Assinantes ganham multiplicadores de pontos, descontos em compras e locações, cashback ampliado e verificado dourado visual.
+
+### Adicionado
+
+**Novo Módulo Assinaturas (17-assinaturas/):**
+- `README.md` - Visão geral e links rápidos
+- `spec.md` - Especificação completa com modelos de dados
+- `api.md` - 15+ endpoints para usuário e ADM
+- `acceptance-criteria.md` - 58 critérios de aceitação
+
+**Funcionalidades documentadas:**
+- Até 3 planos simultâneos (exclusivos por associado)
+- Mutadores de pontos: eventos (1.5x), Strava (1.5x), posts (2.0x)
+- Descontos percentuais: Loja, PDV e Espaços
+- Cashback ampliado (substitui base)
+- Verificado dourado em posts, stories e perfil
+- Vitrine pública de planos
+- Gestão ADM: criar, editar, desativar planos
+- Suspender/reativar assinaturas por ADM
+- Dashboard de relatórios para ADM
+- Histórico de assinaturas do usuário
+
+**Integração com Convênios:**
+- Público-alvo de convênios (Todos, Assinantes, Não-assinantes, Planos específicos)
+- Convênios bloqueados com cadeado para não elegíveis
+- Campos `eligible_audiences`, `eligible_plans`, `show_locked_for_ineligible`
+
+### Alterado
+
+- `docs/README.md` - Adicionado módulo 17-assinaturas na lista (v1.5)
+- `docs/03-carteirinha/benefits.md` - Seção de público-alvo de convênios
+- `docs/06-sistema-pontos/spec.md` - Seção 15 sobre multiplicadores de assinatura
+- `docs/01-dashboard/components.md` - Assinaturas no Acessos Rápidos + verificado dourado em posts/stories
+- `docs/02-perfil/spec.md` - Verificado dourado no header do perfil
+- `docs/12-loja/spec.md` - Seção 10.4 sobre descontos de assinatura
+- `docs/16-pdv/spec.md` - Seção 7.3 sobre descontos de assinatura
+- `docs/10-reservas/spec.md` - Integração com assinaturas para desconto em locações
+
+### Decisões de Negócio Documentadas
+
+- **Limite de planos:** Máximo 3 ativos
+- **Exclusividade:** 1 assinatura por associado
+- **Cobrança:** Externa (fora do sistema) - ADM suspende manualmente
+- **Cancelamento:** Livre, benefícios até fim do período
+- **Troca de plano:** Efeito imediato
+- **Edição de plano:** Aplica imediatamente a todos os assinantes
+- **Verificado dourado:** Dinâmico (some ao perder assinatura)
+- **Descontos:** Não acumulam com promoções (usa o maior)
+- **Cashback:** Substitui base (não soma)
+- **Limites diários:** Mantidos (mutadores não afetam limite de 5km Strava)
+
+---
+
+## [1.4.0] - 2026-01-13
+
+### Integração PIX no PDV
+
+Extensão do sistema de pagamento PIX (Stripe) para o módulo PDV, permitindo que usuários paguem com pontos OU PIX em compras nos kiosks.
+
+### Adicionado
+
+**Módulo PDV (16-pdv/):**
+- Fluxo completo de pagamento via PIX nos displays
+- Preço dual em produtos (pontos E R$)
+- QR Code PIX dinâmico via Stripe
+- Tela "Aguardando PIX" no display
+- Cashback em compras via PIX
+- Webhooks para confirmação de pagamento PIX
+- Novos endpoints de API para pagamento PIX
+
+**Módulo Sistema de Pontos (06-sistema-pontos/):**
+- Novo source `pdv_cashback` (credit) - Cashback de compras no PDV via PIX
+- Modelo `PointsGlobalConfig` para configuração de taxa de conversão e cashback
+- Configurações globais no painel ADM (taxa de conversão, % cashback)
+- Notificações de cashback (Loja e PDV)
+
+**Módulo Loja (12-loja/):**
+- Campo `allow_mixed_payment` no modelo de Produto
+- Tabela de regras de pagamento misto (Loja vs PDV)
+
+### Alterado
+
+- `docs/16-pdv/spec.md` - Adicionada seção completa de pagamento PIX
+- `docs/16-pdv/api.md` - Novos endpoints de pagamento PIX no app
+- `docs/16-pdv/acceptance-criteria.md` - Critérios de aceitação para PIX
+- `docs/12-loja/spec.md` - Flag `allow_mixed_payment` no modelo de dados
+- `docs/06-sistema-pontos/spec.md` - Modelo PointsGlobalConfig e source pdv_cashback
+- Versão atualizada para 1.4
+
+### Decisões de Negócio Documentadas
+
+- **PDV**: Pagamento APENAS pontos OU PIX (nunca misto)
+- **Loja**: Pagamento pontos, PIX, ou misto (configurável por produto)
+- **Taxa de conversão**: Global, definida pelo ADM (ex: 1 ponto = R$ 0,50)
+- **Cashback**: Percentual global para compras com dinheiro/PIX (Loja e PDV)
+- **Expiração PIX**: 5 minutos (mesmo do QR do display)
+- **Webhook Stripe**: Confirmação automática de pagamento PIX
+- **Feedback no display**: Status em tempo real durante pagamento PIX
+
+---
+
+## [1.3.0] - 2026-01-13
+
+### Módulos Loja e Pedidos
+
+Documentação completa do sistema de e-commerce e histórico de pedidos do A-hub.
+
+### Adicionado
+
+**Módulo Loja (12-loja/):**
+- `README.md` - Atualizado de stub para completo
+- `spec.md` - Especificação completa com modelo de dados detalhado
+- `api.md` - Endpoints REST para catálogo, carrinho, checkout e ADM
+- `acceptance-criteria.md` - 188 critérios de aceitação
+
+Funcionalidades documentadas:
+- Catálogo com categorias customizáveis pelo ADM
+- Produtos com variações (SKU separado por tamanho/cor)
+- Galeria de imagens por produto
+- Três tipos: físico, voucher e serviço
+- Pagamento: apenas pontos, apenas dinheiro (Stripe PIX) ou misto
+- Carrinho com reserva de estoque (30 minutos)
+- Compra direta ou via carrinho
+- Sistema de favoritos
+- Avaliações com moderação (1-5 estrelas + comentário)
+- Preço promocional temporário
+- Produtos em destaque (curado pelo ADM)
+- Produtos exclusivos por plano de associação
+- Limite de compra por usuário configurável
+- Cashback percentual em compras com dinheiro
+- Vouchers com validade configurável
+- Retirada via QR Code
+- Dashboard ADM com relatórios e exportação CSV
+
+**Módulo Pedidos (11-pedidos/):**
+- `README.md` - Atualizado de stub para completo
+- `spec.md` - Especificação com modelo de dados e fluxos
+- `api.md` - Endpoints para histórico, vouchers e gestão ADM
+- `acceptance-criteria.md` - 125 critérios de aceitação
+
+Funcionalidades documentadas:
+- Histórico unificado Loja + PDV
+- Mesmo nível de detalhe para ambas as fontes
+- Timeline de status (Pendente → Confirmado → Pronto → Concluído)
+- QR Code de retirada para produtos físicos
+- Comprovante digital completo
+- Gestão de vouchers (código, validade, uso)
+- Dashboard ADM com pedidos pendentes
+- Ações em lote (atualizar status)
+- Scanner QR para confirmar retirada
+- Cancelamento com estorno automático de pontos
+- Relatórios com exportação CSV
+
+**Integração Sistema de Pontos:**
+- Novo source `shop_cashback` (credit) - Cashback de compras na Loja
+
+### Alterado
+
+- `docs/README.md` - Atualizado status de Loja e Pedidos para Completo
+- `docs/06-sistema-pontos/spec.md` - Adicionado source `shop_cashback`
+- Versão atualizada para 1.3
+
+### Decisões de Negócio Documentadas
+
+- Tipos de produto: físico, voucher e serviço
+- Entrega: físicos = retirada presencial, digitais = automático
+- Pagamento: pontos, dinheiro (Stripe PIX) ou misto (configurável por produto)
+- Estoque: configurável por item (limitado ou ilimitado)
+- Categorias: customizáveis pelo ADM
+- Variações: SKU separado com estoque independente
+- Carrinho: opção de compra direta + carrinho
+- Limite por usuário: configurável por produto
+- Promoções: apenas preço promocional temporário
+- Destaques: curado pelo ADM
+- Exclusividade: por tipo de associado/plano
+- Descrição: campos estruturados (curta, longa, especificações)
+- Favoritos: lista simples sem notificação
+- Reviews: com moderação (1-5 estrelas + comentário)
+- Cashback: percentual configurável
+- Vouchers: validade configurável, uso via código no app
+- Ordenação: recentes, preço, mais vendidos, alfabético
+- Ponto de retirada: único (sede principal)
+- Histórico de pedidos: completo (Loja + PDV unificados)
+- Status: fluxo simples (Pendente → Confirmado → Pronto → Concluído)
+- Cancelamento: apenas por ADM com estorno automático
+- Comprovante: digital completo (apenas visualização)
+- Dashboard ADM: completo com relatórios
+
+---
+
+## [1.2.0] - 2026-01-12
+
+### Módulos Espaços e Reservas
+
+Documentação completa do sistema de espaços físicos e reservas do A-hub.
+
+### Adicionado
+
+**Módulo Espaços (09-espacos/):**
+- `README.md` - Atualizado de stub para completo
+- `spec.md` - Especificação com CRUD, configurações e estados
+- `api.md` - Endpoints para gestão de espaços e disponibilidade
+- `acceptance-criteria.md` - Critérios de aceitação detalhados
+- Campos configuráveis: nome, descrição, galeria, capacidade, taxa
+- Período de reserva configurável (dia/turno/hora)
+- Antecedência mín/máx configurável por espaço
+- Intervalo entre locações do mesmo usuário
+- Bloqueio de espaços relacionados
+- Estados: Ativo, Manutenção, Inativo
+- Bloqueio de datas específicas
+
+**Módulo Reservas (10-reservas/):**
+- `README.md` - Atualizado de stub para completo
+- `spec.md` - Fluxo completo de reservas com aprovação
+- `api.md` - Endpoints para reservas, aprovação e fila de espera
+- `acceptance-criteria.md` - Critérios de aceitação detalhados
+- Fluxo: Funcionário solicita, Gerente/ADM aprova
+- Reserva pendente bloqueia data até deliberação
+- Expiração automática se não aprovada até a data
+- Fila de espera com notificação de vaga
+- Privacidade total (não exibe quem reservou)
+- Estados: Pendente, Aprovado, Rejeitado, Cancelado, Expirado, Concluído
+
+### Alterado
+
+- `docs/README.md` - Atualizado status de Espaços e Reservas para Completo
+- Versão atualizada para 1.2
+
+### Decisões de Negócio Documentadas
+
+- Tipos de espaços: Áreas de lazer (churrasqueira, salão, quadra, piscina)
+- Papéis: Funcionário (solicita), Gerente (aprova), ADM (administra)
+- Custo: Opcional por espaço (ADM define)
+- Período: Configurável por espaço (dia inteiro, turno ou hora)
+- Aprovação: Fluxo simples (sem justificativa obrigatória)
+- Notificações: Básicas (apenas aprovação/rejeição)
+- Sistema de pontos: Não integra
+- Carteirinha: Não integra
+- Feed social: Mostra apenas "espaço ocupado" (privacidade)
+- Funcionamento offline: Não suportado
+- Fila de espera: Máximo 10 pessoas, 24h para confirmar vaga
+- Cancelamento: Até 24h antes para funcionário, qualquer momento para ADM
 
 ---
 
