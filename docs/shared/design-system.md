@@ -2,7 +2,7 @@
 section: shared
 document: design-system
 status: complete
-last_updated: 2026-01-12
+last_updated: 2026-01-15
 ---
 
 # Design System
@@ -81,7 +81,9 @@ linear-gradient(135deg, #06B6D4 0%, #8B5CF6 100%)
 
 **Inter** - Fonte principal para todo o app
 
-```
+```css
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 ```
 
@@ -167,6 +169,8 @@ box-shadow: inset 4px 4px 8px #0f0f1a, inset -4px -4px 8px #252542;
 box-shadow: 12px 12px 24px #0f0f1a, -12px -12px 24px #252542;
 ```
 
+> **Nota:** Testar sombras em displays variados. Em monitores com baixo contraste, considerar aumentar a diferença entre as cores de sombra.
+
 ---
 
 ## Ícones
@@ -174,6 +178,11 @@ box-shadow: 12px 12px 24px #0f0f1a, -12px -12px 24px #252542;
 ### Biblioteca
 
 **Phosphor Icons** - https://phosphoricons.com/
+
+**Instalação:**
+```bash
+npm install @phosphor-icons/react@^2.0.0
+```
 
 ### Estilos Disponíveis
 

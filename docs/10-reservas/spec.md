@@ -3,7 +3,7 @@ module: reservas
 document: spec
 status: complete
 priority: phase2
-last_updated: 2026-01-12
+last_updated: 2026-01-14
 ---
 
 # Reservas - Especificação
@@ -460,6 +460,33 @@ Você tem 24h para confirmar.
 **Publica:**
 - Estado de ocupação (sem identificar usuário)
 - Formato: card simples com espaço e data
+
+### Assinaturas
+
+> **Integração com [Assinaturas](../17-assinaturas/)**
+
+Usuários com assinatura ativa podem ter desconto na locação de espaços.
+
+**Como funciona:**
+
+1. Ao confirmar reserva, sistema verifica assinatura do usuário
+2. Se ativa, aplica `discount_spaces` do plano ao valor
+3. Desconto é exibido na tela de confirmação
+
+**Exemplo:**
+```
+Espaço: Salão de Festas
+Valor/hora: R$ 100,00
+Reserva: 4 horas = R$ 400,00
+Desconto do plano: 15%
+Valor final: R$ 340,00
+```
+
+**Regras:**
+- Aplica a TODOS os espaços
+- Desconto visível na confirmação de reserva
+- Histórico registra valor com desconto
+- ADM vê o desconto aplicado no painel
 
 ---
 

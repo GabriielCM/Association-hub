@@ -1,6 +1,8 @@
 ---
 section: api
+document: index
 status: complete
+priority: mvp
 last_updated: 2026-01-12
 ---
 

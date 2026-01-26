@@ -1,7 +1,9 @@
 ---
 section: overview
 document: roadmap
-last_updated: 2026-01-10
+status: partial
+priority: mvp
+last_updated: 2026-01-15
 ---
 
 # Roadmap
@@ -43,7 +45,7 @@ last_updated: 2026-01-10
 | Stories | 🟢 Spec Completa | Conteúdo efêmero 24h |
 | [Carteirinha](../03-carteirinha/) | 🟢 Spec Completa | Identificação, QR Code, benefícios |
 | [Notificações](../07-notificacoes/) | 🟡 Parcial | Push notifications |
-| [Mensagens](../08-mensagens/) | ⚪ Não Iniciado | DMs entre usuários |
+| [Mensagens](../08-mensagens/) | 🟡 Parcial | DMs entre usuários |
 
 ### Funcionalidades Core
 
@@ -70,11 +72,15 @@ last_updated: 2026-01-10
 | Módulo | Status | Descrição |
 |--------|--------|-----------|
 | [Eventos](../04-eventos/) | 🟢 Spec Completa | Gestão completa de eventos |
-| [Espaços](../09-espacos/) | ⚪ Não Iniciado | Cadastro de espaços físicos |
-| [Reservas](../10-reservas/) | ⚪ Não Iniciado | Sistema de reservas |
-| [Pedidos](../11-pedidos/) | ⚪ Não Iniciado | Pedidos bar/restaurante |
-| [Loja](../12-loja/) | ⚪ Não Iniciado | Loja de produtos |
+| [Espaços](../09-espacos/) | 🟢 Spec Completa | Cadastro de espaços físicos |
+| [Reservas](../10-reservas/) | 🟢 Spec Completa | Sistema de reservas |
+| [Pedidos](../11-pedidos/) | 🟢 Spec Completa | Pedidos bar/restaurante |
+| [Loja](../12-loja/) | 🟢 Spec Completa | Loja de produtos |
+| [Minha Carteira](../05-minha-carteira/) | 🟡 Parcial | Scanner QR, transferências |
+| [PDV](../16-pdv/) | 🟢 Spec Completa | Ponto de venda self-service |
+| [Assinaturas](../17-assinaturas/) | 🟢 Spec Completa | Planos de assinatura |
 | [Rankings](../13-rankings/) | ⚪ Não Iniciado | Sistema de rankings |
+| [Suporte](../14-suporte/) | ⚪ Não Iniciado | Atendimento ao usuário |
 
 ### Funcionalidades
 

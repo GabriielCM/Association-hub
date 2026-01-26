@@ -1,8 +1,9 @@
 ---
 section: shared
 document: authentication
-status: partial
-last_updated: 2026-01-10
+status: stub
+priority: mvp
+last_updated: 2026-01-15
 ---
 
 # Autenticação & Segurança
@@ -35,7 +36,7 @@ Ver detalhes em [Tipos de Usuários](../00-overview/user-types.md)
 
 - JWT para autenticação de API
 - Refresh token para renovação automática
-- Sessão expira após [X dias] de inatividade
+- Sessão expira após 30 dias de inatividade
 
 ---
 

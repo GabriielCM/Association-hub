@@ -3,7 +3,7 @@ module: loja
 document: spec
 status: complete
 priority: phase2
-last_updated: 2026-01-13
+last_updated: 2026-01-14
 ---
 
 # Loja - Especificação
@@ -1080,6 +1080,37 @@ Response:
 ```
 
 Usado para validar `eligible_plans` do produto.
+
+### 10.4 Assinaturas (Descontos)
+
+> **Integração com [Assinaturas](../17-assinaturas/)**
+
+Usuários com assinatura ativa podem ter desconto nos produtos da Loja.
+
+**Como funciona:**
+
+1. No checkout, sistema verifica assinatura do usuário
+2. Se ativa, aplica `discount_store` do plano
+3. Desconto é exibido no carrinho e checkout
+
+**Exemplo:**
+```
+Produto: R$ 100,00 (ou 200 pts)
+Desconto do plano: 10%
+Preço final: R$ 90,00 (ou 180 pts)
+```
+
+**Regras:**
+- Aplica a TODOS os produtos
+- Desconto em pontos E em dinheiro
+- NÃO acumula com promoções (usa o maior desconto)
+- Visível na interface: "Desconto de assinante: -10%"
+
+**Cashback:**
+
+Assinantes também podem ter cashback ampliado:
+- Sistema usa o MAIOR entre: cashback base, cashback do plano, cashback promocional
+- Não soma - apenas substitui se for maior
 
 ---
 

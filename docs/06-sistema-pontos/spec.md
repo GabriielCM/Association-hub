@@ -3,7 +3,7 @@ module: sistema-pontos
 document: spec
 status: complete
 priority: mvp
-last_updated: 2026-01-13
+last_updated: 2026-01-14
 ---
 
 # Sistema de Pontos - Especificação
@@ -28,6 +28,7 @@ last_updated: 2026-01-13
 12. [Segurança](#12-segurança)
 13. [Métricas de Sucesso](#13-métricas-de-sucesso)
 14. [Módulos que Integram](#14-módulos-que-integram)
+15. [Multiplicadores de Assinatura](#15-multiplicadores-de-assinatura)
 
 ---
 
@@ -749,6 +750,62 @@ O Sistema de Pontos é central para a gamificação do A-hub. Os seguintes módu
 
 ---
 
+## 15. Multiplicadores de Assinatura
+
+> **Integração com [Assinaturas](../17-assinaturas/)**
+
+O módulo de Assinaturas permite que associados com planos premium tenham multiplicadores de pontos em diversas fontes.
+
+### 15.1 Como Funcionam os Multiplicadores
+
+Usuários com assinatura ativa têm seus pontos multiplicados conforme configuração do plano:
+
+| Fonte | Cálculo | Exemplo |
+|-------|---------|---------|
+| Check-in Eventos | `pontos_evento × mutador` | 50 pts × 1.5 = 75 pts |
+| Strava | `(km × pts/km) × mutador` | (5km × 10) × 1.5 = 75 pts |
+| Primeiro Post | `pontos_post × mutador` | 5 pts × 2.0 = 10 pts |
+
+### 15.2 Regras de Aplicação
+
+1. **Verificação em tempo real:** Ao calcular pontos, sistema verifica se usuário tem assinatura ativa
+2. **Mutador do plano:** Cada plano define seus mutadores (configurável pelo ADM)
+3. **Limites mantidos:** Multiplicadores NÃO afetam limites diários (ex: 5km Strava)
+4. **Registro transparente:** Transação registra o valor FINAL (já multiplicado)
+
+### 15.3 Implementação
+
+```typescript
+// Pseudocódigo para cálculo de pontos
+function calcularPontos(userId: string, fonteBase: number, fonte: string): number {
+  const subscription = getUserSubscription(userId);
+
+  if (!subscription || subscription.status !== 'active') {
+    return fonteBase; // Sem assinatura = sem multiplicador
+  }
+
+  const mutador = subscription.plan.mutators[`points_${fonte}`] || 1.0;
+  return Math.round(fonteBase * mutador);
+}
+
+// Exemplo de uso no check-in
+const pontosEvento = 50;
+const pontosFinais = calcularPontos(userId, pontosEvento, 'events');
+// Com mutador 1.5x: 75 pontos
+```
+
+### 15.4 Considerações
+
+- **Perda de assinatura:** Próximas transações usam multiplicador 1.0x
+- **Troca de plano:** Novos mutadores aplicam imediatamente
+- **Histórico:** Transações passadas não são recalculadas
+
+### 15.5 Configuração no ADM
+
+Os mutadores são definidos por plano no módulo de [Assinaturas](../17-assinaturas/spec.md#mutadores-de-benefícios).
+
+---
+
 ## Relacionados
 
 - [API](api.md) - Documentação de endpoints
@@ -756,3 +813,4 @@ O Sistema de Pontos é central para a gamificação do A-hub. Os seguintes módu
 - [Minha Carteira](../05-minha-carteira/) - Interface do usuário
 - [PDV](../16-pdv/) - Sistema de kiosks
 - [Eventos - Check-in](../04-eventos/checkin-system.md) - Integração
+- [Assinaturas](../17-assinaturas/) - Multiplicadores de pontos

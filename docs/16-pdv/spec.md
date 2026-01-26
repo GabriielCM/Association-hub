@@ -3,7 +3,7 @@ module: pdv
 document: spec
 status: complete
 priority: mvp
-last_updated: 2026-01-13
+last_updated: 2026-01-14
 ---
 
 # PDV - Especificação
@@ -694,6 +694,39 @@ Compras com PIX geram cashback em pontos.
   - `checkout_awaiting_pix` → Mostra "Aguardando PIX..."
   - `checkout_paid` → Mostra "Pagamento Confirmado"
 - Atualiza tela em tempo real
+
+---
+
+### 7.3 Integração com Assinaturas
+
+> **Integração com [Assinaturas](../17-assinaturas/)**
+
+Usuários com assinatura ativa podem ter desconto nos produtos do PDV.
+
+**Como funciona:**
+
+1. Ao escanear QR do PDV, app verifica assinatura do usuário
+2. Se ativa, aplica `discount_pdv` do plano ao preço
+3. Preço com desconto é exibido na confirmação
+
+**Exemplo:**
+```
+Produto: 10 pts (R$ 5,00)
+Desconto do plano: 10%
+Preço final: 9 pts (R$ 4,50)
+```
+
+**Regras:**
+- Aplica a TODOS os produtos do PDV
+- Desconto visível na tela de confirmação do app
+- Display do PDV mostra preço cheio (sem desconto)
+- Desconto calculado no app, não no display
+
+**Cashback (PIX):**
+
+Assinantes com pagamento via PIX podem ter cashback ampliado:
+- Sistema usa o MAIOR entre: cashback base e cashback do plano
+- Não soma - apenas substitui se for maior
 
 ---
 

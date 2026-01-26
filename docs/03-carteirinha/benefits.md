@@ -3,7 +3,7 @@ module: carteirinha
 document: benefits
 status: complete
 priority: mvp
-last_updated: 2026-01-10
+last_updated: 2026-01-14
 ---
 
 # Carteirinha - Benefícios e Convênios
@@ -216,6 +216,48 @@ Outros: 🟤 Marrom
 
 ---
 
+## Público-Alvo de Convênios
+
+> **Integração com [Assinaturas](../17-assinaturas/)**
+
+### Públicos Disponíveis
+
+Com o módulo de Assinaturas, convênios podem ser restritos por público-alvo:
+
+| Público | Código | Descrição |
+|---------|--------|-----------|
+| Todos | `all` | Qualquer associado |
+| Assinantes | `subscribers` | Apenas quem tem assinatura ativa |
+| Não-assinantes | `non_subscribers` | Apenas quem NÃO tem assinatura |
+| Planos específicos | `specific_plans` | Apenas assinantes de planos específicos |
+
+### Configuração por Convênio
+
+O ADM pode definir para cada convênio:
+- **Públicos elegíveis:** Seleção múltipla de públicos
+- **Planos específicos:** Se "Assinantes" selecionado, pode restringir a planos específicos
+- **Mostrar bloqueado:** Se não elegíveis veem o convênio com cadeado
+
+### Exibição para Não Elegíveis
+
+**Se `show_locked_for_ineligible = true`:**
+```
+┌─────────────────────────────────────┐
+│ [Logo] 🔒 Restaurante Exemplo      │
+│ [Alimentação]                       │
+│                                     │
+│ Benefício exclusivo para           │
+│ assinantes do plano Gold           │
+│                                     │
+│ [Assinar para desbloquear →]       │
+└─────────────────────────────────────┘
+```
+
+**Se `show_locked_for_ineligible = false`:**
+- Convênio não aparece na lista
+
+---
+
 ## Estrutura de Dados - Parceiro
 
 ```json
@@ -251,7 +293,11 @@ Outros: 🟤 Marrom
     "sunday": "11:00-22:00"
   },
   "is_new": false,
-  "added_at": "2024-01-01T00:00:00Z"
+  "added_at": "2024-01-01T00:00:00Z",
+
+  "eligible_audiences": ["all"],
+  "eligible_plans": [],
+  "show_locked_for_ineligible": true
 }
 ```
 

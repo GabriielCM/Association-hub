@@ -3,12 +3,69 @@ module: projeto
 document: changelog
 status: complete
 priority: mvp
-last_updated: 2026-01-13
+last_updated: 2026-01-14
 ---
 
 # Changelog
 
 Histórico de alterações na documentação do A-hub.
+
+---
+
+## [1.5.0] - 2026-01-14
+
+### Módulo de Assinaturas
+
+Sistema completo de assinaturas premium que permite ao ADM criar planos com mutadores de benefícios. Assinantes ganham multiplicadores de pontos, descontos em compras e locações, cashback ampliado e verificado dourado visual.
+
+### Adicionado
+
+**Novo Módulo Assinaturas (17-assinaturas/):**
+- `README.md` - Visão geral e links rápidos
+- `spec.md` - Especificação completa com modelos de dados
+- `api.md` - 15+ endpoints para usuário e ADM
+- `acceptance-criteria.md` - 58 critérios de aceitação
+
+**Funcionalidades documentadas:**
+- Até 3 planos simultâneos (exclusivos por associado)
+- Mutadores de pontos: eventos (1.5x), Strava (1.5x), posts (2.0x)
+- Descontos percentuais: Loja, PDV e Espaços
+- Cashback ampliado (substitui base)
+- Verificado dourado em posts, stories e perfil
+- Vitrine pública de planos
+- Gestão ADM: criar, editar, desativar planos
+- Suspender/reativar assinaturas por ADM
+- Dashboard de relatórios para ADM
+- Histórico de assinaturas do usuário
+
+**Integração com Convênios:**
+- Público-alvo de convênios (Todos, Assinantes, Não-assinantes, Planos específicos)
+- Convênios bloqueados com cadeado para não elegíveis
+- Campos `eligible_audiences`, `eligible_plans`, `show_locked_for_ineligible`
+
+### Alterado
+
+- `docs/README.md` - Adicionado módulo 17-assinaturas na lista (v1.5)
+- `docs/03-carteirinha/benefits.md` - Seção de público-alvo de convênios
+- `docs/06-sistema-pontos/spec.md` - Seção 15 sobre multiplicadores de assinatura
+- `docs/01-dashboard/components.md` - Assinaturas no Acessos Rápidos + verificado dourado em posts/stories
+- `docs/02-perfil/spec.md` - Verificado dourado no header do perfil
+- `docs/12-loja/spec.md` - Seção 10.4 sobre descontos de assinatura
+- `docs/16-pdv/spec.md` - Seção 7.3 sobre descontos de assinatura
+- `docs/10-reservas/spec.md` - Integração com assinaturas para desconto em locações
+
+### Decisões de Negócio Documentadas
+
+- **Limite de planos:** Máximo 3 ativos
+- **Exclusividade:** 1 assinatura por associado
+- **Cobrança:** Externa (fora do sistema) - ADM suspende manualmente
+- **Cancelamento:** Livre, benefícios até fim do período
+- **Troca de plano:** Efeito imediato
+- **Edição de plano:** Aplica imediatamente a todos os assinantes
+- **Verificado dourado:** Dinâmico (some ao perder assinatura)
+- **Descontos:** Não acumulam com promoções (usa o maior)
+- **Cashback:** Substitui base (não soma)
+- **Limites diários:** Mantidos (mutadores não afetam limite de 5km Strava)
 
 ---
 
