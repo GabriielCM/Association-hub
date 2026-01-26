@@ -1,8 +1,9 @@
 ---
 module: sistema-pontos
+document: README
 status: partial
 priority: mvp
-last_updated: 2026-01-10
+last_updated: 2026-01-11
 ---
 
 # Sistema de Pontos
@@ -11,67 +12,104 @@ last_updated: 2026-01-10
 
 ---
 
-**Status:** 🟡 Parcial
+**Status:** 🟡 Em Especificação
 **Prioridade:** 🔴 MVP
 
 ---
 
 ## Visão Geral
 
-Sistema de gamificação através de pontos que podem ser ganhos e gastos no aplicativo.
+Sistema central de gamificação do A-hub que permite aos associados acumular e gastar pontos (Association-points). Os pontos são a moeda única do aplicativo, utilizados para recompensas, transferências entre usuários e pagamentos em PDVs.
 
 ---
 
-## Formas de Ganhar Pontos
+## Documentação
 
-- [ ] Check-in em eventos
-- [ ] Participação em enquetes
-- [ ] Posts no feed
-- [ ] Indicação de novos membros
-- [ ] Consumo no bar/restaurante
-- [ ] [A definir]
-
----
-
-## Formas de Gastar Pontos
-
-- [ ] Descontos na loja
-- [ ] Reserva de espaços premium
-- [ ] Itens exclusivos
-- [ ] [A definir]
+| Documento | Descrição |
+|-----------|-----------|
+| [Especificação](spec.md) | Visão completa do sistema, modelo de dados, fluxos |
+| [API](api.md) | Endpoints para saldo, histórico, transferências, Strava |
+| [Critérios de Aceitação](acceptance-criteria.md) | Checklist de validação e testes |
 
 ---
 
-## Integração com Eventos
+## Fontes de Pontos
 
-- Check-in realizado → Pontos creditados automaticamente
-- Atualiza saldo em tempo real
-- Histórico de transações registra fonte
-- **Rollback:** Se evento cancelado após check-ins, pontos NÃO são retirados
-
----
-
-## Componentes
-
-[A preencher]
+| Fonte | Descrição | Configuração |
+|-------|-----------|--------------|
+| Check-in em eventos | Crédito imediato ao fazer check-in | Por evento (ADM) |
+| Integração Strava | Atividades físicas convertidas em pontos | Por tipo de atividade (ADM) |
+| Primeiro post do dia | Bônus diário por engajamento no feed | Valor configurável (ADM) |
 
 ---
 
-## API
+## Consumo de Pontos
 
-[A preencher]
+| Destino | Descrição |
+|---------|-----------|
+| [Loja](../12-loja/) | Resgate de produtos e benefícios |
+| [Jukebox](../15-jukebox/) | Seleção de músicas em eventos |
+| [PDV](../16-pdv/) | Pagamento em kiosks (ex: geladeira) |
+| Transferência | Envio de pontos para outros associados |
+
+---
+
+## Funcionalidades Principais
+
+- **Saldo em tempo real** - Visível no dashboard, perfil e carteira
+- **Histórico completo** - Filtros por período, tipo e fonte
+- **Transferências** - Via QR da carteirinha, busca ou recentes
+- **Integração Strava** - OAuth permanente, sync manual, limite 5km/dia
+- **Rankings** - Por pontos totais, eventos e atividades físicas
+- **Notificações push** - Recebimento, gasto e lembretes
+
+---
+
+## Integrações
+
+### Strava
+- Conexão via OAuth 2.0 permanente
+- Sincronização manual pelo usuário
+- Limite: 5km pontuáveis por dia
+- Taxas padrão: Corrida 10pts/km, Bike 5pts/km
+- Tipos de atividade configuráveis pelo ADM
+
+### Eventos
+- Check-in credita pontos imediatamente
+- Celebração em tela cheia
+- Pontos por evento configuráveis
+
+### Dashboard
+- Card de saldo com acesso rápido
+- Toast de celebração para ganhos
+
+---
+
+## Configuração ADM
+
+- Taxas de conversão por fonte
+- Ativação/desativação de fontes
+- Estorno manual de transações
+- Relatórios completos (CSV + gráficos)
+- Crédito/débito manual
 
 ---
 
 ## Dependências
 
-- [Eventos](../04-eventos/) - Distribuição de pontos via check-in
-- [Dashboard](../01-dashboard/) - Exibição do saldo
+| Módulo | Relação |
+|--------|---------|
+| [Eventos](../04-eventos/) | Distribuição de pontos via check-in |
+| [Dashboard](../01-dashboard/) | Exibição do saldo e card de pontos |
+| [Minha Carteira](../05-minha-carteira/) | Interface de gestão de pontos |
+| [Notificações](../07-notificacoes/) | Push de recebimento e gasto |
 
 ---
 
 ## Relacionados
 
-- [Dashboard - Card Pontos](../01-dashboard/components.md)
-- [Minha Carteira](../05-minha-carteira/)
-- [Loja](../12-loja/)
+- [Minha Carteira](../05-minha-carteira/) - Interface do usuário
+- [PDV](../16-pdv/) - Pagamento em kiosks
+- [Loja](../12-loja/) - Resgate de produtos
+- [Jukebox](../15-jukebox/) - Pagamento para músicas
+- [Rankings](../13-rankings/) - Leaderboards de pontos
