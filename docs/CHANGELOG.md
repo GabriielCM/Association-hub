@@ -3,12 +3,126 @@ module: projeto
 document: changelog
 status: complete
 priority: mvp
-last_updated: 2026-01-14
+last_updated: 2026-01-26
 ---
 
 # Changelog
 
 Histórico de alterações na documentação do A-hub.
+
+---
+
+## [1.7.0] - 2026-01-26
+
+### Módulo de Notificações
+
+Sistema completo de notificações centralizado para manter usuários informados sobre atividades relevantes no app. Suporta push notifications (FCM/APNs), notificações in-app, agrupamento de notificações similares (batching), configuração por categoria e modo Não Perturbe.
+
+### Adicionado
+
+**Módulo Notificações (07-notificacoes/):**
+- `README.md` - Atualizado de parcial para completo
+- `spec.md` - Especificação completa com modelos de dados, 5 telas e 4 fluxos
+- `api.md` - 15+ endpoints REST e eventos WebSocket
+- `acceptance-criteria.md` - 176 critérios de aceitação
+
+**Funcionalidades documentadas:**
+
+*Sistema de Notificações:*
+- 27 tipos de notificação em 5 categorias (Social, Eventos, Pontos, Reservas, Sistema)
+- Push notifications via FCM (Android) e APNs (iOS)
+- Notificações in-app com badge e Central de Notificações
+- Agrupamento (batching) de notificações similares em janela de 1 hora
+- Configuração de push e in-app separados por categoria
+- Modo Não Perturbe com horário e dias configuráveis
+- Deep links para navegação contextual
+- Histórico de até 500 notificações mais recentes
+
+*Central de Notificações:*
+- Lista agrupada por período (Hoje, Ontem, Esta semana, etc.)
+- Filtros por categoria com contador de não lidas
+- Swipe para marcar como lida ou deletar
+- Marcar todas como lidas (por categoria ou todas)
+- Pull-to-refresh e scroll infinito
+
+*Real-time:*
+- WebSocket para recebimento instantâneo
+- Eventos: notification.new, notification.read, notification.deleted
+- Atualização de badge em tempo real
+- Sincronização de configurações entre dispositivos
+
+### Alterado
+
+- `docs/README.md` - Status de Notificações atualizado para Completo
+- Versão atualizada para 1.7
+
+### Decisões de Negócio Documentadas
+
+- **Retenção:** Permanente (limite 500 mais recentes)
+- **Agrupamento:** Sim, notificações similares em janela de 1 hora
+- **Configuração:** Por categoria (5 categorias), não por tipo individual
+- **Não Perturbe:** Sim, com horário e dias da semana configuráveis
+- **Sons:** Padrão do sistema operacional
+- **Offline:** Push funciona, lista sincroniza ao reconectar
+- **Sistema de Pontos:** NÃO integra (notificações não geram pontos)
+
+---
+
+## [1.6.0] - 2026-01-26
+
+### Módulo de Suporte
+
+Sistema completo de suporte ao usuário com múltiplos canais de atendimento: tickets categorizados, chat ao vivo 24/7 e FAQ básico. Inclui captura automática de erros do app.
+
+### Adicionado
+
+**Novo Módulo Suporte (14-suporte/):**
+- `README.md` - Atualizado de stub para completo
+- `spec.md` - Especificação completa com modelos de dados, 10 telas e 4 fluxos
+- `api.md` - 30+ endpoints para usuário, chat e ADM
+- `acceptance-criteria.md` - 216 critérios de aceitação
+
+**Funcionalidades documentadas:**
+
+*Para Usuários:*
+- Tickets categorizados (Bug, Sugestão, Dúvida)
+- Chat ao vivo 24/7 com fila de espera
+- FAQ básico com busca e accordion
+- Anexos até 5 arquivos (10MB cada)
+- Avaliação 1-5 estrelas após resolução
+- Tickets automáticos em crash (captura device info)
+- Notificações push + in-app para atualizações
+
+*Para Administradores:*
+- Lista de tickets com filtros por status e categoria
+- Responder e gerenciar status de tickets
+- Visualização de device info em tickets automáticos
+- CRUD de FAQ com reordenação drag-and-drop
+- Fila de chat ao vivo
+- Aceitar, atender e transferir chats
+
+**Real-time:**
+- WebSocket para atualizações de tickets
+- WebSocket para chat ao vivo
+- Posição na fila atualizada em tempo real
+- Indicador "digitando" no chat
+
+### Alterado
+
+- `docs/README.md` - Status de Suporte atualizado para Completo
+- Versão atualizada para 1.6
+
+### Decisões de Negócio Documentadas
+
+- **Categorias:** Fixas (Bug, Sugestão, Dúvida) - ADM não pode criar
+- **Prioridades:** NÃO (todos tickets tratados igualmente)
+- **Integração Pontos:** NÃO
+- **Limite Anexos:** 5 por mensagem, 10MB cada
+- **Chat:** 24/7 disponível com fila de espera
+- **Avaliação:** 1-5 estrelas + comentário opcional
+- **Ticket Automático:** Crash captura stack trace, device info, versão app
+- **Métricas ADM:** Básico (lista com filtros, sem dashboard avançado)
+- **FAQ:** Básico (perguntas frequentes, sem base de conhecimento completa)
 
 ---
 
