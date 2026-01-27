@@ -3,13 +3,13 @@ section: a-hub
 document: index
 status: complete
 priority: mvp
-last_updated: 2026-01-14
+last_updated: 2026-01-26
 ---
 
 # A-hub - Documentação Técnica
 
-> **Versão:** 1.5
-> **Última atualização:** 14/01/2026
+> **Versão:** 1.7
+> **Última atualização:** 26/01/2026
 > **Status:** Em Desenvolvimento
 
 ---
@@ -57,14 +57,14 @@ O A-hub é um aplicativo mobile para associações que centraliza todas as funci
 | Eventos | 🟢 Completo | 🔴 MVP | [Ver](04-eventos/) |
 | Minha Carteira | 🟡 Parcial | 🔴 MVP | [Ver](05-minha-carteira/) |
 | Sistema de Pontos | 🟡 Parcial | 🔴 MVP | [Ver](06-sistema-pontos/) |
-| Notificações | 🟡 Parcial | 🔴 MVP | [Ver](07-notificacoes/) |
+| Notificações | 🟢 Completo | 🔴 MVP | [Ver](07-notificacoes/) |
 | Mensagens | 🟢 Completo | 🔴 MVP | [Ver](08-mensagens/) |
 | Espaços | 🟢 Completo | 🟡 Fase 2 | [Ver](09-espacos/) |
 | Reservas | 🟢 Completo | 🟡 Fase 2 | [Ver](10-reservas/) |
 | Pedidos | 🟢 Completo | 🟡 Fase 2 | [Ver](11-pedidos/) |
 | Loja | 🟢 Completo | 🟡 Fase 2 | [Ver](12-loja/) |
 | Rankings | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](13-rankings/) |
-| Suporte | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](14-suporte/) |
+| Suporte | 🟢 Completo | 🟡 Fase 2 | [Ver](14-suporte/) |
 | Jukebox | ⚪ Não Iniciado | 🟢 Nice to Have | [Ver](15-jukebox/) |
 | PDV | 🟢 Completo | 🔴 MVP | [Ver](16-pdv/) |
 | Assinaturas | 🟢 Completo | 🟡 Fase 2 | [Ver](17-assinaturas/) |
