@@ -6,28 +6,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 O A-hub é um projeto de **documentação de produto** para um aplicativo mobile de associações. Não há código-fonte - apenas especificações técnicas em Markdown organizadas em `docs/`.
 
+**Versão atual:** 1.8.0
+
+## Roadmap de Implementação
+
+O roadmap completo para code agents está em `docs/00-overview/roadmap.md`.
+
+**Ordem de implementação (9 fases):**
+1. **Fase 0:** Infraestrutura (Auth, Design System, API, WebSocket)
+2. **Fase 1:** Core (Sistema de Pontos + Assinaturas)
+3. **Fase 2:** Identidade (Perfil + Carteirinha + Minha Carteira)
+4. **Fase 3:** Engajamento (Eventos)
+5. **Fase 4:** Comunicação (Notificações + Mensagens) - paralelo
+6. **Fase 5:** Transações (PDV + Loja) - paralelo
+7. **Fase 6:** Locações (Espaços + Reservas) - paralelo
+8. **Fase 7:** Unificação (Pedidos + Suporte + Rankings)
+9. **Fase 8:** Agregador (Dashboard)
+
+**Exclusão:** Módulo 15-jukebox NÃO será implementado nesta versão.
+
 ## Estrutura de Documentação
 
 ```
 docs/
 ├── README.md              # Portal principal com status de todos os módulos
-├── CHANGELOG.md           # Histórico de alterações (versão atual: 1.5.0)
-├── 00-overview/           # Visão geral do produto
+├── CHANGELOG.md           # Histórico de alterações (versão atual: 1.8.0)
+├── 00-overview/           # Visão geral do produto + ROADMAP
 ├── 01-dashboard/          # Feed social, stories, acessos rápidos (MVP - Completo)
 ├── 02-perfil/             # Perfil do usuário (MVP - Completo)
 ├── 03-carteirinha/        # Carteirinha digital, QR Code, benefícios (MVP - Completo)
 ├── 04-eventos/            # Eventos, check-in, display (MVP - Completo)
-├── 05-minha-carteira/     # Carteira de pontos, QR pessoal (MVP - Completo)
-├── 06-sistema-pontos/     # Gamificação, rankings, Strava (MVP - Completo)
-├── 07-notificacoes/       # Notificações (MVP - Parcial)
+├── 05-minha-carteira/     # Carteira de pontos, QR pessoal (MVP - Parcial)
+├── 06-sistema-pontos/     # Gamificação, rankings, Strava (MVP - Parcial)
+├── 07-notificacoes/       # Notificações (MVP - Completo)
 ├── 08-mensagens/          # Chat (MVP - Completo)
 ├── 09-espacos/            # Espaços físicos da associação (Fase 2 - Completo)
 ├── 10-reservas/           # Sistema de reservas (Fase 2 - Completo)
 ├── 11-pedidos/            # Histórico unificado (Fase 2 - Completo)
 ├── 12-loja/               # E-commerce (Fase 2 - Completo)
 ├── 13-rankings/           # Rankings (Fase 2 - Stub)
-├── 14-suporte/            # Suporte (Fase 2 - Stub)
-├── 15-jukebox/            # Jukebox (Nice to Have - Stub)
+├── 14-suporte/            # Suporte (Fase 2 - Completo)
+├── 15-jukebox/            # Jukebox (Nice to Have - NÃO IMPLEMENTAR)
 ├── 16-pdv/                # Ponto de Venda / Displays (MVP - Completo)
 ├── 17-assinaturas/        # Planos premium (Fase 2 - Completo)
 ├── shared/                # Design system, acessibilidade, performance
@@ -170,3 +189,20 @@ Versão atual: verificar `docs/CHANGELOG.md`
 | Limite planos | Máximo 3 assinaturas ativas por usuário |
 | Descontos | Não acumulam com promoções (usa o maior) |
 | Cashback | Percentual global configurável por associação |
+| Strava | Máximo 5km/dia pontuáveis |
+| Pontos | Não expiram |
+| Jukebox | NÃO será implementado nesta versão |
+
+## Dependências Críticas
+
+**Sistema de Pontos é o CORE:**
+- Praticamente todos os módulos de transação dependem dele
+- Deve ser implementado primeiro (Fase 1)
+
+**Dashboard é o AGREGADOR:**
+- Integra todos os outros módulos
+- Deve ser implementado por último (Fase 8)
+
+**Assinaturas entra cedo:**
+- Fornece multiplicadores que afetam Pontos, Loja, PDV e Espaços
+- Implementar junto com Sistema de Pontos evita retrabalho

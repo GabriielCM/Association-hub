@@ -3,12 +3,55 @@ module: projeto
 document: changelog
 status: complete
 priority: mvp
-last_updated: 2026-01-26
+last_updated: 2026-01-27
 ---
 
 # Changelog
 
 Histórico de alterações na documentação do A-hub.
+
+---
+
+## [1.8.0] - 2026-01-27
+
+### Roadmap de Implementação para Code Agents
+
+Reestruturação completa do roadmap de implementação, otimizado para desenvolvimento com code agents (Cursor, Claude Code, etc.).
+
+### Adicionado
+
+**Roadmap (00-overview/roadmap.md):**
+- Roadmap de 9 fases com ordem lógica de implementação
+- Mapa de dependências entre módulos
+- Recomendações específicas para code agents
+- MVP mínimo para restrição de tempo
+- Decisões de negócio críticas consolidadas
+
+**Estrutura de Fases:**
+- Fase 0: Infraestrutura Base (Autenticação, Design System, API, WebSocket)
+- Fase 1: Core (Sistema de Pontos + Assinaturas)
+- Fase 2: Identidade (Perfil + Carteirinha + Minha Carteira)
+- Fase 3: Engajamento (Eventos)
+- Fase 4: Comunicação (Notificações + Mensagens) - paralelo
+- Fase 5: Transações (PDV + Loja) - paralelo
+- Fase 6: Locações (Espaços + Reservas) - paralelo
+- Fase 7: Unificação (Pedidos + Suporte + Rankings)
+- Fase 8: Agregador (Dashboard)
+
+**Insights Principais:**
+- Sistema de Pontos é o CORE - todos os módulos de transação dependem dele
+- Dashboard é o AGREGADOR - deve ser implementado por último
+- Assinaturas entra cedo por fornecer multiplicadores
+- Diferença PDV vs Loja: PDV nunca permite pagamento misto
+
+### Alterado
+
+- `docs/00-overview/roadmap.md` - Reestruturado completamente
+- Status do roadmap alterado de `partial` para `complete`
+
+### Decisão de Negócio
+
+- **Jukebox (15-jukebox):** NÃO será implementado nesta versão
 
 ---
 
