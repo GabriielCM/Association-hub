@@ -3,13 +3,13 @@ section: a-hub
 document: index
 status: complete
 priority: mvp
-last_updated: 2026-01-27
+last_updated: 2026-01-28
 ---
 
 # A-hub - Documentação Técnica
 
-> **Versão:** 1.8
-> **Última atualização:** 27/01/2026
+> **Versão:** 1.9
+> **Última atualização:** 28/01/2026
 > **Status:** Em Desenvolvimento
 
 ---
@@ -63,7 +63,7 @@ O A-hub é um aplicativo mobile para associações que centraliza todas as funci
 | Reservas | 🟢 Completo | 🟡 Fase 2 | [Ver](10-reservas/) |
 | Pedidos | 🟢 Completo | 🟡 Fase 2 | [Ver](11-pedidos/) |
 | Loja | 🟢 Completo | 🟡 Fase 2 | [Ver](12-loja/) |
-| Rankings | ⚪ Não Iniciado | 🟡 Fase 2 | [Ver](13-rankings/) |
+| Rankings | 🟢 Completo | 🟡 Fase 2 | [Ver](13-rankings/) |
 | Suporte | 🟢 Completo | 🟡 Fase 2 | [Ver](14-suporte/) |
 | Jukebox | ⚪ Não Iniciado | 🟢 Nice to Have | [Ver](15-jukebox/) |
 | PDV | 🟢 Completo | 🔴 MVP | [Ver](16-pdv/) |

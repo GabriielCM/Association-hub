@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 O A-hub é um projeto de **documentação de produto** para um aplicativo mobile de associações. Não há código-fonte - apenas especificações técnicas em Markdown organizadas em `docs/`.
 
-**Versão atual:** 1.8.0
+**Versão atual:** 1.9.0
 
 ## Roadmap de Implementação
 
@@ -30,7 +30,7 @@ O roadmap completo para code agents está em `docs/00-overview/roadmap.md`.
 ```
 docs/
 ├── README.md              # Portal principal com status de todos os módulos
-├── CHANGELOG.md           # Histórico de alterações (versão atual: 1.8.0)
+├── CHANGELOG.md           # Histórico de alterações (versão atual: 1.9.0)
 ├── 00-overview/           # Visão geral do produto + ROADMAP
 ├── 01-dashboard/          # Feed social, stories, acessos rápidos (MVP - Completo)
 ├── 02-perfil/             # Perfil do usuário (MVP - Completo)
@@ -44,7 +44,7 @@ docs/
 ├── 10-reservas/           # Sistema de reservas (Fase 2 - Completo)
 ├── 11-pedidos/            # Histórico unificado (Fase 2 - Completo)
 ├── 12-loja/               # E-commerce (Fase 2 - Completo)
-├── 13-rankings/           # Rankings (Fase 2 - Stub)
+├── 13-rankings/           # Rankings (Fase 2 - Completo)
 ├── 14-suporte/            # Suporte (Fase 2 - Completo)
 ├── 15-jukebox/            # Jukebox (Nice to Have - NÃO IMPLEMENTAR)
 ├── 16-pdv/                # Ponto de Venda / Displays (MVP - Completo)

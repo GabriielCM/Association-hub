@@ -3,12 +3,76 @@ module: projeto
 document: changelog
 status: complete
 priority: mvp
-last_updated: 2026-01-27
+last_updated: 2026-01-28
 ---
 
 # Changelog
 
 Histórico de alterações na documentação do A-hub.
+
+---
+
+## [1.9.0] - 2026-01-28
+
+### Módulo de Rankings
+
+Sistema completo de rankings e leaderboards com badges automáticas para pódio. Classifica usuários em 3 categorias baseadas na origem dos pontos: Posts, Eventos e Strava.
+
+### Adicionado
+
+**Módulo Rankings (13-rankings/):**
+- `README.md` - Atualizado de stub para completo
+- `spec.md` - Especificação completa com modelo de dados, interface e fluxos
+- `api.md` - 11 endpoints (5 usuário + 6 ADM) + WebSocket events
+- `acceptance-criteria.md` - 80+ critérios de aceitação em 9 categorias
+- `badges.md` - Sistema completo de badges de pódio
+
+**Funcionalidades documentadas:**
+
+*Rankings:*
+- 3 categorias: Posts, Eventos, Strava
+- 2 períodos: Mensal (reset dia 1) e All-time
+- Top 10 + posição do usuário logado
+- Atualização em tempo real via WebSocket
+- Desempate por timestamp (primeiro a atingir)
+- Acesso via carrossel de acesso rápido no Dashboard
+
+*Sistema de Badges:*
+- 18 tipos (3 categorias × 2 períodos × 3 posições)
+- Concessão automática ao entrar no Top 3
+- Remoção automática ao sair do pódio
+- Configuração visual completa pelo ADM (nome, ícone, cores, descrição)
+- Máximo 3 badges visíveis no header do perfil
+- Seleção de quais badges exibir
+- Timeline de histórico de conquistas no perfil
+
+*Integração com Perfil:*
+- Aba Rankings com posições em todas as categorias
+- Timeline de histórico de badges
+- Badges de ranking junto com outras badges
+
+*Gestão ADM:*
+- CRUD de badges com preview em 3 contextos
+- Upload de ícone (PNG/SVG, máx 512KB)
+- Ativar/desativar categorias e períodos
+
+### Alterado
+
+- `docs/README.md` - Status de Rankings atualizado para Completo
+- Versão atualizada para 1.9
+
+### Decisões de Negócio Documentadas
+
+- **Categorias:** Posts (daily_post), Eventos (event_checkin), Strava (strava_activity)
+- **Períodos:** Mensal + All-time (sem weekly)
+- **Badges:** 18 tipos, configuração visual completa pelo ADM
+- **Ciclo badge:** Remove automaticamente ao perder posição
+- **Desempate:** Primeiro a atingir (timestamp)
+- **Notificações:** Não notifica entrada/saída do pódio
+- **Histórico:** Timeline completa no perfil
+- **Atualização:** Tempo real
+- **Listagem:** Top 10 + posição do usuário logado
+- **Multiplicadores:** Não afetam categorização (apenas valor final)
 
 ---
 
