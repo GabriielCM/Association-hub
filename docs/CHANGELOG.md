@@ -3,12 +3,189 @@ module: projeto
 document: changelog
 status: complete
 priority: mvp
-last_updated: 2026-01-28
+last_updated: 2026-01-31
 ---
 
 # Changelog
 
 Histórico de alterações na documentação do A-hub.
+
+---
+
+## [1.12.0] - 2026-01-31
+
+### Pré-requisitos de Setup
+
+Documento prático e consolidado listando tudo que precisa ser instalado e configurado para que o Claude Code construa a aplicação A-hub.
+
+### Adicionado
+
+**Novo Documento Setup Requirements (shared/setup-requirements.md):**
+
+- Checklist de programas obrigatórios com comandos de instalação (Windows/macOS)
+- Lista de CLIs específicas (NestJS, Expo, EAS, Stripe, Firebase)
+- Guia de criação de contas em serviços externos com links diretos
+- Template completo de variáveis de ambiente (.env) para backend, mobile e web
+- Configuração de MCPs recomendados para Claude Code
+- Checklist final de verificação do ambiente
+- Resumo de custos por serviço (desenvolvimento vs produção)
+
+**Contas Documentadas:**
+
+- AWS (Access Keys, configuração CLI)
+- Vercel (integração GitHub)
+- Expo/EAS (Access Token)
+- Stripe (API Keys modo teste, webhooks)
+- Strava (OAuth credentials)
+- Firebase (Service Account)
+- GitHub (SSH Key)
+
+**Variáveis de Ambiente:**
+
+- Template .env completo para apps/api
+- Template .env para apps/mobile
+- Template .env.local para apps/web
+- Comandos para geração de secrets JWT
+
+### Alterado
+
+- `docs/shared/README.md` - Adicionado link para Setup Requirements
+- Versão atualizada para 1.12
+
+---
+
+## [1.11.0] - 2026-01-29
+
+### Configuração Claude Code
+
+Documentação completa da configuração necessária do Claude Code para um agente implementar o projeto A-hub, incluindo MCPs, plugins, hooks e skills customizados.
+
+### Adicionado
+
+**Novo Documento Claude Code Setup (shared/claude-code-setup.md):**
+
+- Especificação de MCPs existentes e ideais/hipotéticos
+- Configuração de plugins (frontend-design, code-review, context7)
+- Hooks customizados (pre-commit, post-edit, pre-push)
+- Skills/commands documentados (existentes e futuros)
+- Checklist de instalação do ambiente
+
+**MCPs Existentes Documentados:**
+
+- Context7 (documentação de bibliotecas)
+- GitHub MCP (PRs, issues, branches)
+- Filesystem MCP (leitura/escrita)
+- PostgreSQL MCP (queries SQL)
+
+**MCPs Ideais/Hipotéticos Listados:**
+
+- Redis, Prisma, AWS SDK, Terraform
+- NestJS, Expo, Next.js
+- Stripe, Strava, Firebase
+- Socket.io
+
+**Skills Documentados:**
+
+- `/gap-review` (existente)
+- `/module-create`, `/component-create`, `/api-endpoint` (futuros)
+- `/migration-create`, `/test-generate`, `/deploy-check` (futuros)
+
+**Hooks Especificados:**
+
+- Pre-commit: typecheck, lint, test, coverage
+- Post-edit: changelog-reminder, version-sync
+- Pre-push: e2e-tests, build-check
+
+**Ferramentas por Fase:**
+
+- Mapeamento de MCPs e CLIs necessários por fase de implementação
+
+### Alterado
+
+- `docs/shared/README.md` - Adicionado link para Claude Code Setup
+- Versão atualizada para 1.11
+
+---
+
+## [1.10.0] - 2026-01-29
+
+### Stack Tecnológica
+
+Documentação completa da stack tecnológica definida para implementação do A-hub, cobrindo todas as três interfaces (Mobile, Web Admin, Web Display), backend, infraestrutura e DevOps.
+
+### Adicionado
+
+**Novo Documento Stack Tecnológica (shared/technology-stack.md):**
+
+- Especificação completa da stack para Mobile, Web e Backend
+- Diagrama de arquitetura do sistema
+- Estrutura do monorepo com Turborepo
+- Decisões tecnológicas documentadas com justificativas
+
+**Stack Mobile (React Native + Expo):**
+
+- React Native com Expo (Managed Workflow)
+- Tamagui para UI/Design System universal
+- Zustand para state management
+- TanStack Query para data fetching
+- MMKV para storage local
+- React Native Reanimated + Lottie para animações
+- expo-camera + expo-barcode-scanner para QR Code
+- expo-local-authentication para biometria
+- Expo Push + FCM/APNs para notificações
+
+**Stack Web (Next.js):**
+
+- Next.js com App Router
+- shadcn/ui + Tailwind CSS para UI
+- TanStack Table para tabelas
+- Recharts para gráficos
+- React Hook Form + Zod para formulários
+- Web Admin e Web Display compartilham o mesmo projeto
+
+**Stack Backend (NestJS):**
+
+- Node.js + TypeScript
+- NestJS com arquitetura modular
+- Prisma ORM
+- Socket.io para WebSocket
+- Passport.js + JWT para autenticação
+- BullMQ para job queues
+
+**Stack Database:**
+
+- PostgreSQL (principal)
+- Redis (cache, sessions, filas)
+- PostgreSQL Full-Text Search
+
+**Stack Cloud & Infraestrutura:**
+
+- AWS (ECS, S3, CloudFront, RDS, ElastiCache)
+- Vercel para frontend
+- GitHub Actions para CI/CD
+- Terraform para IaC
+
+**Stack Monitoramento:**
+
+- AWS CloudWatch + X-Ray
+- Firebase Analytics + Crashlytics
+
+**Stack Testing:**
+
+- Vitest + Testing Library
+- Playwright para E2E
+
+**Estrutura Monorepo:**
+
+- Turborepo + pnpm workspaces
+- apps/mobile, apps/web, apps/api
+- packages/ui, packages/shared, packages/config, packages/database
+
+### Alterado
+
+- `docs/shared/README.md` - Adicionado link para Stack Tecnológica
+- `docs/00-overview/product-overview.md` - Seção "Tecnologias Previstas" atualizada com resumo e link
+- Versão atualizada para 1.10
 
 ---
 

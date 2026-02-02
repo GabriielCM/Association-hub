@@ -3,7 +3,7 @@ section: overview
 document: product-overview
 status: complete
 priority: mvp
-last_updated: 2026-01-10
+last_updated: 2026-01-29
 ---
 
 # A-hub - Visão do Produto
@@ -78,10 +78,18 @@ O A-hub é uma plataforma mobile completa para associações que centraliza toda
 
 ---
 
-## Tecnologias Previstas
+## Stack Tecnologica
 
-- **Mobile:** React Native / Flutter
-- **Backend:** Node.js / Python
-- **Banco de Dados:** PostgreSQL / MongoDB
-- **Real-time:** WebSocket
-- **Push Notifications:** Firebase Cloud Messaging
+A stack tecnologica completa esta documentada em [Stack Tecnologica](../shared/technology-stack.md).
+
+### Resumo
+
+| Interface | Tecnologia |
+|-----------|------------|
+| **Mobile** | React Native + Expo |
+| **Web Admin** | Next.js + shadcn/ui |
+| **Web Display** | Next.js (compartilhado) |
+| **Backend** | NestJS + Prisma |
+| **Database** | PostgreSQL + Redis |
+| **Cloud** | AWS (ECS, S3, CloudFront) |
+| **CI/CD** | GitHub Actions + Terraform |

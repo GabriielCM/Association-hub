@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 O A-hub é um projeto de **documentação de produto** para um aplicativo mobile de associações. Não há código-fonte - apenas especificações técnicas em Markdown organizadas em `docs/`.
 
-**Versão atual:** 1.9.0
+**Versão atual:** 1.12.0
 
 ## Roadmap de Implementação
 
@@ -30,7 +30,7 @@ O roadmap completo para code agents está em `docs/00-overview/roadmap.md`.
 ```
 docs/
 ├── README.md              # Portal principal com status de todos os módulos
-├── CHANGELOG.md           # Histórico de alterações (versão atual: 1.9.0)
+├── CHANGELOG.md           # Histórico de alterações (versão atual: 1.12.0)
 ├── 00-overview/           # Visão geral do produto + ROADMAP
 ├── 01-dashboard/          # Feed social, stories, acessos rápidos (MVP - Completo)
 ├── 02-perfil/             # Perfil do usuário (MVP - Completo)
@@ -57,6 +57,8 @@ docs/
 
 | Arquivo | Descrição |
 |---------|-----------|
+| technology-stack.md | Stack tecnológica completa |
+| claude-code-setup.md | MCPs, plugins, hooks para code agents |
 | design-system.md | Cores, tipografia, componentes UI |
 | authentication.md | Fluxos de autenticação |
 | accessibility.md | Conformidade WCAG 2.1 AA |
@@ -206,3 +208,48 @@ Versão atual: verificar `docs/CHANGELOG.md`
 **Assinaturas entra cedo:**
 - Fornece multiplicadores que afetam Pontos, Loja, PDV e Espaços
 - Implementar junto com Sistema de Pontos evita retrabalho
+
+## Configuração de Code Agent
+
+Para implementar o projeto, o agente precisa dos recursos documentados em `docs/shared/claude-code-setup.md`.
+
+### MCPs Recomendados
+
+**Mínimo para começar:**
+
+- Context7 (documentação de bibliotecas) ✅ Habilitado
+- GitHub MCP (PRs, issues)
+- PostgreSQL MCP (queries SQL)
+
+### CLIs Necessárias
+
+```bash
+# Verificar instalação
+node --version    # 20+
+pnpm --version    # 8+
+docker --version  # 24+
+aws --version     # 2+
+terraform --version # 1.5+
+```
+
+### Comandos Disponíveis
+
+- `/gap-review` - Análise de documentação (existente)
+- `/module-create` - Scaffold de módulo NestJS (futuro)
+- `/component-create` - Scaffold de componente UI (futuro)
+- `/api-endpoint` - Criar endpoint da API (futuro)
+- `/test-generate` - Gerar testes (futuro)
+
+### Padrões de Commit
+
+```text
+feat: implementa sistema de pontos
+
+- Adiciona modelo de dados para transações
+- Cria endpoints CRUD
+- Implementa regras de negócio
+
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+```
+
+Tipos: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`

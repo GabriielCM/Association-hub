@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "postgres-mcp",
+      "args": ["--access-mode=restricted"],
+      "env": {
+        "DATABASE_URI": "${POSTGRES_URI}"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    }
+  }
+}

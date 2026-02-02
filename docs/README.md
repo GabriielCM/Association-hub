@@ -3,13 +3,13 @@ section: a-hub
 document: index
 status: complete
 priority: mvp
-last_updated: 2026-01-28
+last_updated: 2026-01-29
 ---
 
 # A-hub - Documentação Técnica
 
-> **Versão:** 1.9
-> **Última atualização:** 28/01/2026
+> **Versão:** 1.11
+> **Última atualização:** 29/01/2026
 > **Status:** Em Desenvolvimento
 
 ---
