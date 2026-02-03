@@ -5,6 +5,9 @@ import { UsersModule } from './modules/users/users.module';
 import { PointsModule } from './modules/points/points.module';
 import { RankingsModule } from './modules/rankings/rankings.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { ProfileModule } from './modules/profile/profile.module';
+import { CardModule } from './modules/card/card.module';
+import { WalletModule } from './modules/wallet/wallet.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { HealthController } from './health.controller';
 
@@ -17,9 +20,14 @@ import { HealthController } from './health.controller';
     PrismaModule,
     AuthModule,
     UsersModule,
+    // Phase 1 - Core
     PointsModule,
     RankingsModule,
     SubscriptionsModule,
+    // Phase 2 - Identity
+    ProfileModule,
+    CardModule,
+    WalletModule,
   ],
   controllers: [HealthController],
 })

@@ -18,7 +18,7 @@ Este diretório contém a documentação do progresso de implementação do A-hu
 |------|--------|-----------|-------------------|
 | Fase 0 - Infraestrutura | ✅ Completa | 100% | 2026-02-02 |
 | Fase 1 - Core (Pontos + Assinaturas + Rankings) | ✅ Completa | 100% | 2026-02-03 |
-| Fase 2 - Identidade | ⏳ Pendente | 0% | - |
+| Fase 2 - Identidade (Perfil + Carteirinha + Wallet) | ✅ Completa | 100% | 2026-02-03 |
 | Fase 3 - Eventos | ⏳ Pendente | 0% | - |
 | Fase 4 - Comunicação | ⏳ Pendente | 0% | - |
 | Fase 5 - Transações | ⏳ Pendente | 0% | - |
@@ -34,35 +34,37 @@ Este diretório contém a documentação do progresso de implementação do A-hu
 |-----------|-----------|
 | [phase-00-status.md](phase-00-status.md) | Infraestrutura Base |
 | [phase-01-status.md](phase-01-status.md) | Core - Pontos, Rankings, Assinaturas |
+| [phase-02-status.md](phase-02-status.md) | Identidade - Perfil, Carteirinha, Wallet |
 
 ---
 
 ## Métricas de Qualidade
 
-### Cobertura de Testes (Fase 1)
+### Cobertura de Testes
 
-| Módulo | Statements | Branch | Functions | Lines |
-|--------|------------|--------|-----------|-------|
-| Points | 98.58% | 94.06% | 96.77% | 98.58% |
-| Rankings | 96.46% | 83.60% | 90.00% | 96.46% |
-| Subscriptions | 98.25% | 86.00% | 97.36% | 98.25% |
-
-**Total de Testes:** 160 (todos passando)
+| Fase | Módulo | Testes | Cobertura |
+|------|--------|--------|-----------|
+| 1 | Points | 62 | 98.58% |
+| 1 | Rankings | 26 | 96.46% |
+| 1 | Subscriptions | 72 | 98.25% |
+| 2 | Profile | 28 | ~95% |
+| 2 | Card | 83 | ~90% |
+| 2 | Wallet | 47 | ~85% |
+| **Total** | | **318** | **>85%** |
 
 ---
 
 ## Próximos Passos
 
-1. **Fase 2 - Identidade**
-   - [ ] Módulo de Perfil
-   - [ ] Módulo de Carteirinha
-   - [ ] Módulo de Minha Carteira
-
-2. **Fase 3 - Eventos**
+1. **Fase 3 - Eventos**
    - [ ] CRUD de Eventos
    - [ ] Sistema de Check-in com QR Code dinâmico
    - [ ] Display para Kiosks/TVs
-   - [ ] Sistema de Badges
+   - [ ] Sistema de Badges automático
+
+2. **Fase 4 - Comunicação**
+   - [ ] Sistema de Notificações
+   - [ ] Mensagens Diretas
 
 ---
 

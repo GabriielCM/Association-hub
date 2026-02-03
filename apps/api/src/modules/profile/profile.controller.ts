@@ -1,0 +1,140 @@
+import {
+  Controller,
+  Get,
+  Put,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../common/guards';
+import { CurrentUser } from '../../common/decorators';
+import { JwtPayload } from '../../common/types';
+import { ProfileService } from './profile.service';
+import { UpdateProfileDto, UpdateBadgesDisplayDto } from './dto';
+
+@ApiTags('Profile')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('user')
+export class ProfileController {
+  constructor(private readonly profileService: ProfileService) {}
+
+  // ===========================================
+  // PUBLIC PROFILE ENDPOINTS
+  // ===========================================
+
+  @Get(':id/profile')
+  @ApiOperation({ summary: 'Obter perfil de um usuário' })
+  @ApiResponse({ status: 200, description: 'Perfil retornado com sucesso' })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
+  async getProfile(@Param('id') userId: string, @CurrentUser() user: JwtPayload) {
+    const data = await this.profileService.getProfile(userId, user.sub);
+    return { data };
+  }
+
+  @Get(':id/badges')
+  @ApiOperation({ summary: 'Obter badges de um usuário' })
+  @ApiResponse({ status: 200, description: 'Badges retornados com sucesso' })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
+  async getUserBadges(@Param('id') userId: string) {
+    const result = await this.profileService.getUserBadges(userId);
+    return result;
+  }
+
+  @Get(':id/rankings')
+  @ApiOperation({ summary: 'Obter posições em rankings de um usuário' })
+  @ApiResponse({ status: 200, description: 'Rankings retornados com sucesso' })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
+  async getUserRankings(@Param('id') userId: string, @CurrentUser() user: JwtPayload) {
+    const result = await this.profileService.getUserRankings(userId, user.associationId);
+    return result;
+  }
+
+  // ===========================================
+  // PROFILE MANAGEMENT (OWN)
+  // ===========================================
+
+  @Put('profile')
+  @ApiOperation({ summary: 'Atualizar perfil próprio' })
+  @ApiResponse({ status: 200, description: 'Perfil atualizado com sucesso' })
+  @ApiResponse({ status: 409, description: 'Username já em uso' })
+  async updateProfile(@CurrentUser() user: JwtPayload, @Body() dto: UpdateProfileDto) {
+    const data = await this.profileService.updateProfile(user.sub, dto);
+    return { data, message: 'Perfil atualizado com sucesso' };
+  }
+
+  @Post('avatar')
+  @ApiOperation({ summary: 'Upload de foto de perfil' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Imagem do avatar (max 5MB, jpg/png)',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Avatar atualizado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Arquivo inválido' })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadAvatar(
+    @CurrentUser() user: JwtPayload,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    // TODO: Upload to S3 and get URL
+    // For now, we'll use a placeholder URL
+    const avatarUrl = `https://storage.ahub.com.br/avatars/${user.sub}/${Date.now()}-${file.originalname}`;
+
+    const data = await this.profileService.updateAvatar(user.sub, avatarUrl);
+    return { data, message: 'Avatar atualizado com sucesso' };
+  }
+
+  @Put('badges/display')
+  @ApiOperation({ summary: 'Selecionar badges para exibir no perfil (máx 3)' })
+  @ApiResponse({ status: 200, description: 'Badges atualizados com sucesso' })
+  @ApiResponse({ status: 400, description: 'Badges inválidos' })
+  async updateBadgesDisplay(@CurrentUser() user: JwtPayload, @Body() dto: UpdateBadgesDisplayDto) {
+    const data = await this.profileService.updateBadgesDisplay(user.sub, dto);
+    return { data, message: 'Badges atualizados com sucesso' };
+  }
+
+  // ===========================================
+  // UTILITIES
+  // ===========================================
+
+  @Get('username/check')
+  @ApiOperation({ summary: 'Verificar disponibilidade de username' })
+  @ApiResponse({ status: 200, description: 'Disponibilidade verificada' })
+  async checkUsername(@Query('username') username: string, @CurrentUser() user: JwtPayload) {
+    const data = await this.profileService.checkUsernameAvailability(username, user.sub);
+    return { data };
+  }
+}
