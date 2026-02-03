@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ahub-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"  # Use 5433 to avoid conflict with local PostgreSQL
+    environment:
+      POSTGRES_USER: ahub
+      POSTGRES_PASSWORD: ahub_dev
+      POSTGRES_DB: ahub_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ahub -d ahub_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ahub-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"  # Use 6380 to avoid conflict with local Redis
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

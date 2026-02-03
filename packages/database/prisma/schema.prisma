@@ -1,0 +1,417 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================
+// AUTHENTICATION & USERS
+// ===========================================
+
+enum UserRole {
+  USER
+  ADMIN
+  DISPLAY
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  name         String
+  avatarUrl    String?    @map("avatar_url")
+  phone        String?
+  role         UserRole   @default(USER)
+  status       UserStatus @default(PENDING)
+  isVerified   Boolean    @default(false) @map("is_verified")
+  verifiedAt   DateTime?  @map("verified_at")
+  lastLoginAt  DateTime?  @map("last_login_at")
+
+  // Associação
+  associationId String      @map("association_id")
+  association   Association @relation(fields: [associationId], references: [id])
+  memberId      String?     @unique @map("member_id") // ID da carteirinha
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  refreshTokens    RefreshToken[]
+  points           UserPoints?
+  transactions     PointTransaction[]
+  subscriptions    UserSubscription[]
+  badges           UserBadge[]
+  stravaConnection StravaConnection?
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("refresh_tokens")
+}
+
+// ===========================================
+// ASSOCIATION
+// ===========================================
+
+model Association {
+  id             String  @id @default(cuid())
+  name           String
+  slug           String  @unique
+  logoUrl        String? @map("logo_url")
+  primaryColor   String  @default("#6366F1") @map("primary_color")
+  secondaryColor String  @default("#8B5CF6") @map("secondary_color")
+  pointsName     String  @default("pontos") @map("points_name") // customizable currency name
+
+  // Configs
+  cashbackPercent Float @default(5.0) @map("cashback_percent")
+  stravaMaxKmDay  Float @default(5.0) @map("strava_max_km_day")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  users             User[]
+  pointsConfig      PointsConfig?
+  subscriptionPlans SubscriptionPlan[]
+
+  @@map("associations")
+}
+
+// ===========================================
+// POINTS SYSTEM (Phase 1)
+// ===========================================
+
+model PointsConfig {
+  id            String      @id @default(cuid())
+  associationId String      @unique @map("association_id")
+  association   Association @relation(fields: [associationId], references: [id])
+
+  // Points per action
+  checkInPoints   Int @default(50) @map("check_in_points")
+  dailyPostPoints Int @default(5) @map("daily_post_points")
+  referralPoints  Int @default(500) @map("referral_points")
+
+  // Strava config
+  stravaRunPointsPerKm  Int      @default(10) @map("strava_run_points_per_km")
+  stravaRidePointsPerKm Int      @default(5) @map("strava_ride_points_per_km")
+  stravaWalkPointsPerKm Int      @default(5) @map("strava_walk_points_per_km")
+  stravaSwimPointsPerKm Int      @default(15) @map("strava_swim_points_per_km")
+  stravaHikePointsPerKm Int      @default(8) @map("strava_hike_points_per_km")
+  stravaDailyLimitKm    Float    @default(5.0) @map("strava_daily_limit_km")
+  stravaEligibleTypes   String[] @default(["Run", "Ride", "Walk", "Swim", "Hike"]) @map("strava_eligible_types")
+  stravaEnabled         Boolean  @default(true) @map("strava_enabled")
+  dailyPostEnabled      Boolean  @default(true) @map("daily_post_enabled")
+
+  // Conversion rates
+  pointsToMoneyRate Float @default(0.50) @map("points_to_money_rate") // 1 point = R$ X
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("points_config")
+}
+
+// ===========================================
+// STRAVA INTEGRATION
+// ===========================================
+
+model StravaConnection {
+  id     String @id @default(cuid())
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  athleteId      Int      @map("athlete_id")
+  athleteName    String?  @map("athlete_name")
+  accessToken    String   @map("access_token") // encrypted
+  refreshToken   String   @map("refresh_token") // encrypted
+  tokenExpiresAt DateTime @map("token_expires_at")
+
+  lastSyncAt  DateTime? @map("last_sync_at")
+  kmUsedToday Float     @default(0) @map("km_used_today")
+  kmUsedDate  DateTime? @map("km_used_date") // reset daily
+
+  connectedAt DateTime @default(now()) @map("connected_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  activities StravaActivity[]
+
+  @@map("strava_connections")
+}
+
+model StravaActivity {
+  id           String           @id @default(cuid())
+  connectionId String           @map("connection_id")
+  connection   StravaConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  stravaActivityId BigInt   @unique @map("strava_activity_id")
+  name             String
+  type             String // Run, Ride, Walk, Swim, Hike
+  distanceKm       Float    @map("distance_km")
+  kmCredited       Float    @map("km_credited")
+  pointsEarned     Int      @map("points_earned")
+  activityDate     DateTime @map("activity_date")
+  syncedAt         DateTime @default(now()) @map("synced_at")
+
+  @@index([connectionId, activityDate])
+  @@map("strava_activities")
+}
+
+model UserPoints {
+  id     String @id @default(cuid())
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  balance        Int @default(0)
+  lifetimeEarned Int @default(0) @map("lifetime_earned")
+  lifetimeSpent  Int @default(0) @map("lifetime_spent")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("user_points")
+}
+
+enum TransactionSource {
+  // Credits
+  EVENT_CHECKIN // Check-in at event
+  STRAVA_ACTIVITY // Synced Strava activity
+  DAILY_POST // First post of the day
+  TRANSFER_IN // Received transfer
+  SHOP_CASHBACK // Cashback from shop purchase (PIX/money)
+  PDV_CASHBACK // Cashback from PDV purchase (PIX)
+  ADMIN_CREDIT // Manual credit by admin
+
+  // Debits
+  SHOP_PURCHASE // Purchase in shop
+  PDV_PURCHASE // Purchase in PDV (kiosk)
+  JUKEBOX_PAYMENT // Jukebox payment
+  TRANSFER_OUT // Sent transfer
+  ADMIN_DEBIT // Manual debit by admin
+
+  // Both
+  REFUND // Refund (can be credit or debit)
+
+  // Legacy (kept for compatibility)
+  CHECK_IN
+  STRAVA
+  PURCHASE_POINTS
+  PURCHASE_PIX
+  CASHBACK
+  SUBSCRIPTION_BONUS
+  REFERRAL
+  MANUAL_ADJUSTMENT
+}
+
+model PointTransaction {
+  id     String @id @default(cuid())
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amount      Int // positive = credit, negative = debit
+  balance     Int // balance after transaction
+  source      TransactionSource
+  sourceId    String?           @map("source_id") // event_id, order_id, etc
+  description String?
+  metadata    Json? // extra data
+
+  // For transfers
+  relatedUserId String? @map("related_user_id")
+
+  // For refunds
+  refundedTransactionId String?           @unique @map("refunded_transaction_id")
+  refundTransaction     PointTransaction? @relation("RefundRelation", fields: [refundedTransactionId], references: [id])
+  refundedBy            PointTransaction? @relation("RefundRelation")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@index([userId, source])
+  @@map("point_transactions")
+}
+
+// Track recent transfer recipients for quick access
+model TransferRecipient {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  recipientId    String   @map("recipient_id")
+  lastTransferAt DateTime @map("last_transfer_at")
+  transferCount  Int      @default(1) @map("transfer_count")
+
+  @@unique([userId, recipientId])
+  @@index([userId, lastTransferAt(sort: Desc)])
+  @@map("transfer_recipients")
+}
+
+// ===========================================
+// SUBSCRIPTIONS (Phase 1)
+// ===========================================
+
+model SubscriptionPlan {
+  id            String      @id @default(cuid())
+  associationId String      @map("association_id")
+  association   Association @relation(fields: [associationId], references: [id])
+
+  name         String
+  description  String?
+  priceMonthly Int     @map("price_monthly") // in cents
+  iconUrl      String? @map("icon_url")
+  color        String  @default("#6366F1")
+  displayOrder Int     @default(0) @map("display_order")
+
+  // Mutators as JSON for flexibility
+  // { points_events: 1.5, points_strava: 1.5, points_posts: 2.0,
+  //   discount_store: 10.0, discount_pdv: 10.0, discount_spaces: 15.0, cashback: 10.0 }
+  mutators Json @default("{}")
+
+  // Legacy fields (kept for backward compatibility)
+  pointsMultiplier Float   @default(1.0) @map("points_multiplier")
+  storeDiscount    Float   @default(0) @map("store_discount")
+  pdvDiscount      Float   @default(0) @map("pdv_discount")
+  spaceDiscount    Float   @default(0) @map("space_discount")
+  verifiedBadge    Boolean @default(true) @map("verified_badge")
+
+  isActive         Boolean @default(true) @map("is_active")
+  subscribersCount Int     @default(0) @map("subscribers_count")
+
+  stripeProductId String? @map("stripe_product_id")
+  stripePriceId   String? @map("stripe_price_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by")
+
+  // Relations
+  subscriptions UserSubscription[]
+  history       SubscriptionHistory[]
+
+  @@unique([associationId, name])
+  @@map("subscription_plans")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+  EXPIRED
+}
+
+model UserSubscription {
+  id     String           @id @default(cuid())
+  userId String           @map("user_id")
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId String           @map("plan_id")
+  plan   SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  status             SubscriptionStatus @default(ACTIVE)
+  subscribedAt       DateTime           @default(now()) @map("subscribed_at")
+  currentPeriodStart DateTime           @map("current_period_start")
+  currentPeriodEnd   DateTime           @map("current_period_end")
+
+  // Cancellation
+  cancelledAt  DateTime? @map("cancelled_at")
+  cancelReason String?   @map("cancel_reason")
+
+  // Suspension (by admin)
+  suspendedAt   DateTime? @map("suspended_at")
+  suspendedBy   String?   @map("suspended_by")
+  suspendReason String?   @map("suspend_reason")
+
+  stripeSubscriptionId String? @map("stripe_subscription_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  history SubscriptionHistory[]
+
+  @@unique([userId]) // Only one subscription per user
+  @@index([userId, status])
+  @@map("user_subscriptions")
+}
+
+enum SubscriptionAction {
+  SUBSCRIBED
+  CHANGED
+  CANCELLED
+  SUSPENDED
+  REACTIVATED
+  RENEWED
+}
+
+model SubscriptionHistory {
+  id             String            @id @default(cuid())
+  userId         String            @map("user_id")
+  subscriptionId String?           @map("subscription_id")
+  subscription   UserSubscription? @relation(fields: [subscriptionId], references: [id])
+  planId         String            @map("plan_id")
+  plan           SubscriptionPlan  @relation(fields: [planId], references: [id])
+
+  action      SubscriptionAction
+  planName    String             @map("plan_name")
+  details     Json? // { price, previous_plan, reason, etc }
+  performedBy String             @map("performed_by") // user_id or admin_id
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("subscription_history")
+}
+
+// ===========================================
+// BADGES (Phase 2)
+// ===========================================
+
+model Badge {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  iconUrl     String  @map("icon_url")
+
+  // Criteria
+  criteriaType  String @map("criteria_type") // events_count, points_earned, strava_km, etc
+  criteriaValue Int    @map("criteria_value")
+
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  users UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id      String @id @default(cuid())
+  userId  String @map("user_id")
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId String @map("badge_id")
+  badge   Badge  @relation(fields: [badgeId], references: [id])
+
+  earnedAt   DateTime @default(now()) @map("earned_at")
+  isFeatured Boolean  @default(false) @map("is_featured") // displayed on profile
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}

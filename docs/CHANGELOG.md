@@ -3,12 +3,107 @@ module: projeto
 document: changelog
 status: complete
 priority: mvp
-last_updated: 2026-01-31
+last_updated: 2026-02-03
 ---
 
 # Changelog
 
 Histórico de alterações na documentação do A-hub.
+
+---
+
+## [2.0.0] - 2026-02-03
+
+### Implementação Fase 1 - Core Backend
+
+Primeira implementação real de código do A-hub. Backend completo da Fase 1 com Sistema de Pontos, Rankings e Assinaturas, incluindo 160 testes unitários com cobertura >95%.
+
+### Adicionado
+
+**Módulos NestJS Implementados:**
+
+*Sistema de Pontos (06-sistema-pontos):*
+- `points.module.ts` - Módulo NestJS
+- `points.controller.ts` - 12 endpoints (6 user + 6 admin)
+- `points.service.ts` - 13 métodos de negócio (~830 LOC)
+- DTOs completos com validação class-validator
+
+*Rankings (13-rankings):*
+- `rankings.module.ts` - Módulo NestJS
+- `rankings.controller.ts` - 3 endpoints
+- `rankings.service.ts` - 3 métodos (~266 LOC)
+- Suporte a períodos ALL_TIME, MONTHLY, WEEKLY
+
+*Assinaturas (17-assinaturas):*
+- `subscriptions.module.ts` - Módulo NestJS
+- `subscriptions.controller.ts` - 15 endpoints (8 user + 7 admin)
+- `subscriptions.service.ts` - 16 métodos (~814 LOC)
+- Sistema completo de mutadores/multiplicadores
+
+**Infraestrutura de Testes:**
+
+- `test/mocks/prisma.mock.ts` - Factory de mock do PrismaService
+- `test/fixtures/user.fixtures.ts` - Dados mock de usuários
+- `test/fixtures/points.fixtures.ts` - Dados mock de pontos/transações
+- `test/fixtures/subscriptions.fixtures.ts` - Dados mock de planos/assinaturas
+
+**Testes Unitários (160 total):**
+
+| Arquivo | Testes | Cobertura |
+|---------|--------|-----------|
+| points.service.spec.ts | 48 | 99.39% |
+| points.controller.spec.ts | 14 | 100% |
+| rankings.service.spec.ts | 20 | 99.24% |
+| rankings.controller.spec.ts | 6 | 100% |
+| subscriptions.service.spec.ts | 53 | 99.26% |
+| subscriptions.controller.spec.ts | 19 | 100% |
+
+**Documentação de Implementação:**
+
+- `docs/implementation/README.md` - Índice de status de implementação
+- `docs/implementation/phase-00-status.md` - Status Fase 0 (Infraestrutura)
+- `docs/implementation/phase-01-status.md` - Status Fase 1 (Core)
+
+### Funcionalidades Implementadas
+
+**Sistema de Pontos:**
+- ✅ Consulta de saldo e histórico paginado
+- ✅ Resumo de ganhos/gastos por período
+- ✅ Transferência P2P com validações
+- ✅ Destinatários recentes e busca de usuários
+- ✅ Crédito/débito manual por admin
+- ✅ Estorno de transações
+- ✅ Configuração global de pontos
+- ✅ Relatórios consolidados
+
+**Rankings:**
+- ✅ Ranking por pontos totais
+- ✅ Ranking por participação em eventos
+- ✅ Ranking por km no Strava
+- ✅ Filtro por período (all-time, monthly, weekly)
+- ✅ Posição do usuário atual destacada
+
+**Assinaturas:**
+- ✅ Listagem de planos (user e admin)
+- ✅ Detalhes de plano com benefícios
+- ✅ Assinar, trocar e cancelar plano
+- ✅ Histórico de assinaturas
+- ✅ Benefícios ativos do usuário
+- ✅ CRUD de planos (admin)
+- ✅ Suspender/reativar assinatura (admin)
+- ✅ Relatório consolidado (admin)
+
+### Métricas de Qualidade
+
+- **Cobertura de Statements:** >98% nos módulos core
+- **Cobertura de Branches:** >84%
+- **Cobertura de Functions:** >90%
+- **Todos os 160 testes passando**
+
+### Alterado
+
+- `docs/CHANGELOG.md` - Nova entrada para v2.0.0
+- Versão major bump para 2.0.0 (primeiro código implementado)
 
 ---
 

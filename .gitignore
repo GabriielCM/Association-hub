@@ -35,6 +35,29 @@ build/
 .next/
 out/
 
+# Turborepo
+.turbo/
+
+# pnpm
+.pnpm-store/
+
+# Prisma
+packages/database/prisma/*.db
+packages/database/prisma/*.db-journal
+
+# Mobile builds
+*.ipa
+*.apk
+*.aab
+android/.gradle/
+android/app/build/
+ios/Pods/
+ios/build/
+
+# Playwright
+playwright-report/
+test-results/
+
 # Expo
 .expo/
 *.jks

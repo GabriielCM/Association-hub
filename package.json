@@ -1,0 +1,61 @@
+{
+  "name": "a-hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Aplicacao mobile e web para associacoes",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GabriielCM/A-hub.git"
+  },
+  "author": "GabriielCM",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=@ahub/api",
+    "dev:web": "turbo run dev --filter=@ahub/web",
+    "dev:mobile": "turbo run dev --filter=@ahub/mobile",
+    "build": "turbo run build",
+    "build:api": "turbo run build --filter=@ahub/api",
+    "build:web": "turbo run build --filter=@ahub/web",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "test:coverage": "turbo run test:coverage",
+    "test:e2e": "turbo run test:e2e",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "db:generate": "pnpm --filter @ahub/database generate",
+    "db:migrate": "pnpm --filter @ahub/database migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @ahub/database migrate:deploy",
+    "db:studio": "pnpm --filter @ahub/database studio",
+    "db:reset": "pnpm --filter @ahub/database migrate:reset",
+    "db:seed": "pnpm --filter @ahub/database seed",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "dotenv-cli": "^11.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  }
+}
