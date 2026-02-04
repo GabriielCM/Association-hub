@@ -181,10 +181,7 @@ describe('EventsGateway', () => {
       gateway.broadcastQrUpdate('event-123', qrData);
 
       expect(mockServer.to).toHaveBeenCalledWith('event:event-123');
-      expect(mockServer.emit).toHaveBeenCalledWith('qr_update', {
-        event_id: 'event-123',
-        ...qrData,
-      });
+      expect(mockServer.emit).toHaveBeenCalledWith('qr_update', qrData);
     });
 
     it('should include all QR data fields', () => {

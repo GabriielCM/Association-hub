@@ -1,13 +1,25 @@
 import { Controller, Get, Param, Res } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiProduces,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { DisplayService } from './display.service';
 
+@ApiTags('display')
 @Controller('display')
 export class DisplayController {
   constructor(private readonly displayService: DisplayService) {}
 
-  // Public endpoint - no auth required
   @Get(':eventId')
+  @ApiOperation({ summary: 'Página de display para TVs/Kiosks' })
+  @ApiParam({ name: 'eventId', description: 'ID do evento' })
+  @ApiProduces('text/html')
+  @ApiResponse({ status: 200, description: 'Página HTML de display' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   async getDisplayPage(@Param('eventId') eventId: string, @Res() res: Response) {
     try {
       const data = await this.displayService.getDisplayData(eventId);
@@ -22,6 +34,10 @@ export class DisplayController {
   }
 
   @Get(':eventId/data')
+  @ApiOperation({ summary: 'Dados JSON do display (para polling)' })
+  @ApiParam({ name: 'eventId', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'Dados do display retornados' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   async getDisplayData(@Param('eventId') eventId: string) {
     return this.displayService.getDisplayData(eventId);
   }

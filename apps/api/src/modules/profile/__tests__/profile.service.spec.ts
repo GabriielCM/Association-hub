@@ -385,7 +385,7 @@ describe('ProfileService', () => {
           { badge: { id: 'badge-2', name: 'Badge 2', iconUrl: 'url2' } },
         ]);
 
-      prisma.$transaction.mockImplementation(async (fn) => {
+      prisma.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
         const txMock = {
           userBadge: {
             updateMany: vi.fn().mockResolvedValue({ count: 1 }),

@@ -17,14 +17,17 @@ import { AdminEventsController } from '../admin-events.controller';
 import { EventsService } from '../events.service';
 import { Response } from 'express';
 
+import type { JwtPayload } from '../../../common/types';
+
 const mockUserId = 'admin-123';
 const mockAssociationId = 'assoc-123';
 
-const mockRequest = {
-  user: {
-    id: mockUserId,
-    associationId: mockAssociationId,
-  },
+// JwtPayload format for @CurrentUser() decorator
+const mockUser: JwtPayload = {
+  sub: mockUserId,
+  email: 'admin@test.com',
+  role: 'ADMIN',
+  associationId: mockAssociationId,
 };
 
 const createMockResponse = () => {
@@ -66,7 +69,7 @@ describe('AdminEventsController', () => {
       const query = { page: 1, perPage: 20 };
       eventsService.adminListEvents.mockResolvedValue({ data: [], meta: {} });
 
-      await controller.listEvents(mockRequest, query);
+      await controller.listEvents(mockUser, query);
 
       expect(eventsService.adminListEvents).toHaveBeenCalledWith(
         mockAssociationId,
@@ -84,7 +87,7 @@ describe('AdminEventsController', () => {
       };
       eventsService.adminListEvents.mockResolvedValue(mockEvents);
 
-      const result = await controller.listEvents(mockRequest, {});
+      const result = await controller.listEvents(mockUser, {});
 
       expect(result).toEqual(mockEvents);
     });
@@ -93,7 +96,7 @@ describe('AdminEventsController', () => {
       const query = { status: 'DRAFT' as any };
       eventsService.adminListEvents.mockResolvedValue({ data: [], meta: {} });
 
-      await controller.listEvents(mockRequest, query);
+      await controller.listEvents(mockUser, query);
 
       expect(eventsService.adminListEvents).toHaveBeenCalledWith(
         mockAssociationId,
@@ -121,7 +124,7 @@ describe('AdminEventsController', () => {
     it('should call eventsService.createEvent with correct params', async () => {
       eventsService.createEvent.mockResolvedValue({ id: 'event-123' });
 
-      await controller.createEvent(mockRequest, createDto);
+      await controller.createEvent(mockUser, createDto);
 
       expect(eventsService.createEvent).toHaveBeenCalledWith(
         mockAssociationId,
@@ -134,7 +137,7 @@ describe('AdminEventsController', () => {
       const mockEvent = { id: 'event-123', ...createDto, status: 'DRAFT' };
       eventsService.createEvent.mockResolvedValue(mockEvent);
 
-      const result = await controller.createEvent(mockRequest, createDto);
+      const result = await controller.createEvent(mockUser, createDto);
 
       expect(result).toEqual(mockEvent);
     });
@@ -149,7 +152,7 @@ describe('AdminEventsController', () => {
       const updateDto = { title: 'Updated Title' };
       eventsService.updateEvent.mockResolvedValue({ id: 'event-123', title: 'Updated Title' });
 
-      await controller.updateEvent(mockRequest, 'event-123', updateDto);
+      await controller.updateEvent(mockUser, 'event-123', updateDto);
 
       expect(eventsService.updateEvent).toHaveBeenCalledWith(
         'event-123',
@@ -162,7 +165,7 @@ describe('AdminEventsController', () => {
       const mockEvent = { id: 'event-123', title: 'Updated Title' };
       eventsService.updateEvent.mockResolvedValue(mockEvent);
 
-      const result = await controller.updateEvent(mockRequest, 'event-123', {
+      const result = await controller.updateEvent(mockUser, 'event-123', {
         title: 'Updated Title',
       });
 
@@ -178,7 +181,7 @@ describe('AdminEventsController', () => {
     it('should call eventsService.deleteEvent with correct params', async () => {
       eventsService.deleteEvent.mockResolvedValue({ deleted: true });
 
-      await controller.deleteEvent(mockRequest, 'event-123');
+      await controller.deleteEvent(mockUser, 'event-123');
 
       expect(eventsService.deleteEvent).toHaveBeenCalledWith(
         'event-123',
@@ -189,7 +192,7 @@ describe('AdminEventsController', () => {
     it('should return deletion result', async () => {
       eventsService.deleteEvent.mockResolvedValue({ deleted: true });
 
-      const result = await controller.deleteEvent(mockRequest, 'event-123');
+      const result = await controller.deleteEvent(mockUser, 'event-123');
 
       expect(result).toEqual({ deleted: true });
     });
@@ -203,7 +206,7 @@ describe('AdminEventsController', () => {
     it('should call eventsService.publishEvent with correct params', async () => {
       eventsService.publishEvent.mockResolvedValue({ id: 'event-123', status: 'SCHEDULED' });
 
-      await controller.publishEvent(mockRequest, 'event-123');
+      await controller.publishEvent(mockUser, 'event-123');
 
       expect(eventsService.publishEvent).toHaveBeenCalledWith(
         'event-123',
@@ -215,7 +218,7 @@ describe('AdminEventsController', () => {
       const mockEvent = { id: 'event-123', status: 'SCHEDULED', publishedAt: new Date() };
       eventsService.publishEvent.mockResolvedValue(mockEvent);
 
-      const result = await controller.publishEvent(mockRequest, 'event-123');
+      const result = await controller.publishEvent(mockUser, 'event-123');
 
       expect(result).toEqual(mockEvent);
     });
@@ -229,7 +232,7 @@ describe('AdminEventsController', () => {
     it('should call eventsService.cancelEvent with correct params', async () => {
       eventsService.cancelEvent.mockResolvedValue({ id: 'event-123', status: 'CANCELED' });
 
-      await controller.cancelEvent(mockRequest, 'event-123', 'Motivo do cancelamento');
+      await controller.cancelEvent(mockUser, 'event-123', 'Motivo do cancelamento');
 
       expect(eventsService.cancelEvent).toHaveBeenCalledWith(
         'event-123',
@@ -246,7 +249,7 @@ describe('AdminEventsController', () => {
       };
       eventsService.cancelEvent.mockResolvedValue(mockEvent);
 
-      const result = await controller.cancelEvent(mockRequest, 'event-123', 'Motivo');
+      const result = await controller.cancelEvent(mockUser, 'event-123', 'Motivo');
 
       expect(result).toEqual(mockEvent);
     });
@@ -260,7 +263,7 @@ describe('AdminEventsController', () => {
     it('should call eventsService.pauseEvent to pause', async () => {
       eventsService.pauseEvent.mockResolvedValue({ id: 'event-123', isPaused: true });
 
-      await controller.pauseEvent(mockRequest, 'event-123', true);
+      await controller.pauseEvent(mockUser, 'event-123', true);
 
       expect(eventsService.pauseEvent).toHaveBeenCalledWith(
         'event-123',
@@ -272,7 +275,7 @@ describe('AdminEventsController', () => {
     it('should call eventsService.pauseEvent to unpause', async () => {
       eventsService.pauseEvent.mockResolvedValue({ id: 'event-123', isPaused: false });
 
-      await controller.pauseEvent(mockRequest, 'event-123', false);
+      await controller.pauseEvent(mockUser, 'event-123', false);
 
       expect(eventsService.pauseEvent).toHaveBeenCalledWith(
         'event-123',
@@ -285,7 +288,7 @@ describe('AdminEventsController', () => {
       const mockEvent = { id: 'event-123', isPaused: true };
       eventsService.pauseEvent.mockResolvedValue(mockEvent);
 
-      const result = await controller.pauseEvent(mockRequest, 'event-123', true);
+      const result = await controller.pauseEvent(mockUser, 'event-123', true);
 
       expect(result).toEqual(mockEvent);
     });
@@ -305,7 +308,7 @@ describe('AdminEventsController', () => {
     it('should call eventsService.manualCheckin with correct params', async () => {
       eventsService.manualCheckin.mockResolvedValue({ success: true });
 
-      await controller.manualCheckin(mockRequest, 'event-123', manualDto);
+      await controller.manualCheckin(mockUser, 'event-123', manualDto);
 
       expect(eventsService.manualCheckin).toHaveBeenCalledWith(
         'event-123',
@@ -325,7 +328,7 @@ describe('AdminEventsController', () => {
       };
       eventsService.manualCheckin.mockResolvedValue(mockResult);
 
-      const result = await controller.manualCheckin(mockRequest, 'event-123', manualDto);
+      const result = await controller.manualCheckin(mockUser, 'event-123', manualDto);
 
       expect(result).toEqual(mockResult);
     });
@@ -339,7 +342,7 @@ describe('AdminEventsController', () => {
     it('should call eventsService.getAnalytics with correct params', async () => {
       eventsService.getAnalytics.mockResolvedValue({ metrics: {} });
 
-      await controller.getAnalytics(mockRequest, 'event-123');
+      await controller.getAnalytics(mockUser, 'event-123');
 
       expect(eventsService.getAnalytics).toHaveBeenCalledWith(
         'event-123',
@@ -358,7 +361,7 @@ describe('AdminEventsController', () => {
       };
       eventsService.getAnalytics.mockResolvedValue(mockAnalytics);
 
-      const result = await controller.getAnalytics(mockRequest, 'event-123');
+      const result = await controller.getAnalytics(mockUser, 'event-123');
 
       expect(result).toEqual(mockAnalytics);
     });
@@ -372,7 +375,7 @@ describe('AdminEventsController', () => {
     it('should call eventsService.getParticipants with default params', async () => {
       eventsService.getParticipants.mockResolvedValue({ data: [], meta: {} });
 
-      await controller.getParticipants(mockRequest, 'event-123');
+      await controller.getParticipants(mockUser, 'event-123');
 
       expect(eventsService.getParticipants).toHaveBeenCalledWith(
         'event-123',
@@ -385,7 +388,7 @@ describe('AdminEventsController', () => {
     it('should call eventsService.getParticipants with custom params', async () => {
       eventsService.getParticipants.mockResolvedValue({ data: [], meta: {} });
 
-      await controller.getParticipants(mockRequest, 'event-123', 2, 25);
+      await controller.getParticipants(mockUser, 'event-123', 2, 25);
 
       expect(eventsService.getParticipants).toHaveBeenCalledWith(
         'event-123',
@@ -402,7 +405,7 @@ describe('AdminEventsController', () => {
       };
       eventsService.getParticipants.mockResolvedValue(mockParticipants);
 
-      const result = await controller.getParticipants(mockRequest, 'event-123');
+      const result = await controller.getParticipants(mockUser, 'event-123');
 
       expect(result).toEqual(mockParticipants);
     });
@@ -417,7 +420,7 @@ describe('AdminEventsController', () => {
       const res = createMockResponse();
       eventsService.exportToCsv.mockResolvedValue('Nome,Email\nUser1,u1@test.com');
 
-      await controller.exportCsv(mockRequest, 'event-123', res);
+      await controller.exportCsv(mockUser, 'event-123', res);
 
       expect(eventsService.exportToCsv).toHaveBeenCalledWith(
         'event-123',
@@ -429,7 +432,7 @@ describe('AdminEventsController', () => {
       const res = createMockResponse();
       eventsService.exportToCsv.mockResolvedValue('Nome,Email');
 
-      await controller.exportCsv(mockRequest, 'event-123', res);
+      await controller.exportCsv(mockUser, 'event-123', res);
 
       expect(res.setHeader).toHaveBeenCalledWith(
         'Content-Disposition',
@@ -442,7 +445,7 @@ describe('AdminEventsController', () => {
       const csvData = 'Nome,Email\nUser1,u1@test.com';
       eventsService.exportToCsv.mockResolvedValue(csvData);
 
-      await controller.exportCsv(mockRequest, 'event-123', res);
+      await controller.exportCsv(mockUser, 'event-123', res);
 
       expect(res.send).toHaveBeenCalledWith(csvData);
     });
@@ -451,7 +454,7 @@ describe('AdminEventsController', () => {
       const res = createMockResponse();
       eventsService.exportToCsv.mockResolvedValue('Nome,Email');
 
-      await controller.exportCsv(mockRequest, 'event-123', res);
+      await controller.exportCsv(mockUser, 'event-123', res);
 
       expect(res.setHeader).toHaveBeenCalledWith(
         'Content-Disposition',
@@ -469,7 +472,7 @@ describe('AdminEventsController', () => {
       const res = createMockResponse();
       eventsService.exportToPrintHtml.mockResolvedValue('<!DOCTYPE html>');
 
-      await controller.exportPdf(mockRequest, 'event-123', res);
+      await controller.exportPdf(mockUser, 'event-123', res);
 
       expect(eventsService.exportToPrintHtml).toHaveBeenCalledWith(
         'event-123',
@@ -482,7 +485,7 @@ describe('AdminEventsController', () => {
       const htmlData = '<!DOCTYPE html><html></html>';
       eventsService.exportToPrintHtml.mockResolvedValue(htmlData);
 
-      await controller.exportPdf(mockRequest, 'event-123', res);
+      await controller.exportPdf(mockUser, 'event-123', res);
 
       expect(res.send).toHaveBeenCalledWith(htmlData);
     });

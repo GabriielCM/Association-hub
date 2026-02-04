@@ -8,12 +8,20 @@ import {
   Param,
   Query,
   UseGuards,
-  Request,
   Res,
   Header,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../../common/decorators';
+import type { JwtPayload } from '../../common/types';
 import { EventsService } from './events.service';
 import {
   CreateEventDto,
@@ -22,106 +30,149 @@ import {
   ManualCheckinDto,
 } from './dto';
 
+@ApiTags('admin/events')
+@ApiBearerAuth()
 @Controller('admin/events')
 @UseGuards(JwtAuthGuard)
 export class AdminEventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Get()
-  async listEvents(@Request() req, @Query() query: AdminEventQueryDto) {
-    return this.eventsService.adminListEvents(req.user.associationId, query);
+  @ApiOperation({ summary: 'Listar eventos (admin)' })
+  @ApiResponse({ status: 200, description: 'Lista de eventos retornada com sucesso' })
+  async listEvents(@CurrentUser() user: JwtPayload, @Query() query: AdminEventQueryDto) {
+    return this.eventsService.adminListEvents(user.associationId, query);
   }
 
   @Post()
-  async createEvent(@Request() req, @Body() dto: CreateEventDto) {
+  @ApiOperation({ summary: 'Criar evento' })
+  @ApiResponse({ status: 201, description: 'Evento criado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos' })
+  async createEvent(@CurrentUser() user: JwtPayload, @Body() dto: CreateEventDto) {
     return this.eventsService.createEvent(
-      req.user.associationId,
-      req.user.id,
+      user.associationId,
+      user.sub,
       dto,
     );
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Atualizar evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'Evento atualizado com sucesso' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   async updateEvent(
-    @Request() req,
+    @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Body() dto: UpdateEventDto,
   ) {
-    return this.eventsService.updateEvent(id, req.user.associationId, dto);
+    return this.eventsService.updateEvent(id, user.associationId, dto);
   }
 
   @Delete(':id')
-  async deleteEvent(@Request() req, @Param('id') id: string) {
-    return this.eventsService.deleteEvent(id, req.user.associationId);
+  @ApiOperation({ summary: 'Excluir evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'Evento excluído com sucesso' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
+  async deleteEvent(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.eventsService.deleteEvent(id, user.associationId);
   }
 
   @Post(':id/publish')
-  async publishEvent(@Request() req, @Param('id') id: string) {
-    return this.eventsService.publishEvent(id, req.user.associationId);
+  @ApiOperation({ summary: 'Publicar evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'Evento publicado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Evento já publicado ou dados inválidos' })
+  async publishEvent(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.eventsService.publishEvent(id, user.associationId);
   }
 
   @Post(':id/cancel')
+  @ApiOperation({ summary: 'Cancelar evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'Evento cancelado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Evento já cancelado' })
   async cancelEvent(
-    @Request() req,
+    @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Body('reason') reason: string,
   ) {
-    return this.eventsService.cancelEvent(id, req.user.associationId, reason);
+    return this.eventsService.cancelEvent(id, user.associationId, reason);
   }
 
   @Post(':id/pause')
+  @ApiOperation({ summary: 'Pausar/despausar evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'Evento pausado/despausado com sucesso' })
   async pauseEvent(
-    @Request() req,
+    @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Body('isPaused') isPaused: boolean,
   ) {
-    return this.eventsService.pauseEvent(id, req.user.associationId, isPaused);
+    return this.eventsService.pauseEvent(id, user.associationId, isPaused);
   }
 
   @Post(':id/checkin/manual')
+  @ApiOperation({ summary: 'Check-in manual' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 201, description: 'Check-in manual realizado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos' })
+  @ApiResponse({ status: 404, description: 'Evento ou usuário não encontrado' })
   async manualCheckin(
-    @Request() req,
+    @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Body() dto: ManualCheckinDto,
   ) {
     return this.eventsService.manualCheckin(
       id,
-      req.user.associationId,
-      req.user.id,
+      user.associationId,
+      user.sub,
       dto,
     );
   }
 
   @Get(':id/analytics')
-  async getAnalytics(@Request() req, @Param('id') id: string) {
-    return this.eventsService.getAnalytics(id, req.user.associationId);
+  @ApiOperation({ summary: 'Obter analytics do evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'Analytics retornados com sucesso' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
+  async getAnalytics(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.eventsService.getAnalytics(id, user.associationId);
   }
 
   @Get(':id/participants')
+  @ApiOperation({ summary: 'Listar participantes do evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'Participantes retornados com sucesso' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   async getParticipants(
-    @Request() req,
+    @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Query('page') page?: number,
     @Query('perPage') perPage?: number,
   ) {
     return this.eventsService.getParticipants(
       id,
-      req.user.associationId,
+      user.associationId,
       page || 1,
       perPage || 50,
     );
   }
 
   @Get(':id/export/csv')
+  @ApiOperation({ summary: 'Exportar participantes para CSV' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'CSV exportado com sucesso' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   @Header('Content-Type', 'text/csv; charset=utf-8')
   async exportCsv(
-    @Request() req,
+    @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Res() res: Response,
   ) {
     const csv = await this.eventsService.exportToCsv(
       id,
-      req.user.associationId,
+      user.associationId,
     );
     res.setHeader(
       'Content-Disposition',
@@ -131,15 +182,19 @@ export class AdminEventsController {
   }
 
   @Get(':id/export/pdf')
+  @ApiOperation({ summary: 'Exportar participantes para impressão (HTML)' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'HTML exportado com sucesso' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   @Header('Content-Type', 'text/html; charset=utf-8')
   async exportPdf(
-    @Request() req,
+    @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Res() res: Response,
   ) {
     const html = await this.eventsService.exportToPrintHtml(
       id,
-      req.user.associationId,
+      user.associationId,
     );
     res.send(html);
   }

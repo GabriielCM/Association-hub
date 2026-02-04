@@ -79,10 +79,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   broadcastQrUpdate(eventId: string, qrData: QrCodeData) {
     const room = `event:${eventId}`;
-    this.server.to(room).emit('qr_update', {
-      event_id: eventId,
-      ...qrData,
-    });
+    this.server.to(room).emit('qr_update', qrData);
     this.logger.debug(`QR update broadcast to ${room}`);
   }
 

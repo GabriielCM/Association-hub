@@ -15,24 +15,19 @@ vi.mock('../../../common/guards/jwt-auth.guard', () => ({
 
 import { EventsController } from '../events.controller';
 import { EventsService } from '../events.service';
-
-// Define EventFilter locally
-const EventFilter = {
-  ALL: 'ALL',
-  UPCOMING: 'UPCOMING',
-  ONGOING: 'ONGOING',
-  PAST: 'PAST',
-  CONFIRMED: 'CONFIRMED',
-} as const;
+import { EventFilter } from '../dto/event-query.dto';
 
 const mockUserId = 'user-123';
 const mockAssociationId = 'assoc-123';
 
-const mockRequest = {
-  user: {
-    id: mockUserId,
-    associationId: mockAssociationId,
-  },
+import type { JwtPayload } from '../../../common/types';
+
+// JwtPayload format for @CurrentUser() decorator
+const mockUser: JwtPayload = {
+  sub: mockUserId,
+  email: 'user@test.com',
+  role: 'USER',
+  associationId: mockAssociationId,
 };
 
 describe('EventsController', () => {
@@ -62,7 +57,7 @@ describe('EventsController', () => {
       const query = { page: 1, perPage: 20 };
       eventsService.listEvents.mockResolvedValue({ data: [], meta: {} });
 
-      await controller.listEvents(mockRequest, query);
+      await controller.listEvents(mockUser, query);
 
       expect(eventsService.listEvents).toHaveBeenCalledWith(
         mockUserId,
@@ -78,7 +73,7 @@ describe('EventsController', () => {
       };
       eventsService.listEvents.mockResolvedValue(mockEvents);
 
-      const result = await controller.listEvents(mockRequest, {});
+      const result = await controller.listEvents(mockUser, {});
 
       expect(result).toEqual(mockEvents);
     });
@@ -87,7 +82,7 @@ describe('EventsController', () => {
       const query = { filter: EventFilter.UPCOMING, category: 'SOCIAL' as any };
       eventsService.listEvents.mockResolvedValue({ data: [], meta: {} });
 
-      await controller.listEvents(mockRequest, query);
+      await controller.listEvents(mockUser, query);
 
       expect(eventsService.listEvents).toHaveBeenCalledWith(
         mockUserId,
@@ -100,7 +95,7 @@ describe('EventsController', () => {
       const query = { search: 'festa' };
       eventsService.listEvents.mockResolvedValue({ data: [], meta: {} });
 
-      await controller.listEvents(mockRequest, query);
+      await controller.listEvents(mockUser, query);
 
       expect(eventsService.listEvents).toHaveBeenCalledWith(
         mockUserId,
@@ -118,7 +113,7 @@ describe('EventsController', () => {
     it('should call eventsService.getEvent with correct params', async () => {
       eventsService.getEvent.mockResolvedValue({ id: 'event-123' });
 
-      await controller.getEvent(mockRequest, 'event-123');
+      await controller.getEvent(mockUser, 'event-123');
 
       expect(eventsService.getEvent).toHaveBeenCalledWith('event-123', mockUserId);
     });
@@ -131,7 +126,7 @@ describe('EventsController', () => {
       };
       eventsService.getEvent.mockResolvedValue(mockEvent);
 
-      const result = await controller.getEvent(mockRequest, 'event-123');
+      const result = await controller.getEvent(mockUser, 'event-123');
 
       expect(result).toEqual(mockEvent);
     });
@@ -145,7 +140,7 @@ describe('EventsController', () => {
     it('should call eventsService.confirmEvent with correct params', async () => {
       eventsService.confirmEvent.mockResolvedValue({ confirmed: true });
 
-      await controller.confirmEvent(mockRequest, 'event-123');
+      await controller.confirmEvent(mockUser, 'event-123');
 
       expect(eventsService.confirmEvent).toHaveBeenCalledWith('event-123', mockUserId);
     });
@@ -154,7 +149,7 @@ describe('EventsController', () => {
       const mockResult = { confirmed: true, confirmedAt: new Date() };
       eventsService.confirmEvent.mockResolvedValue(mockResult);
 
-      const result = await controller.confirmEvent(mockRequest, 'event-123');
+      const result = await controller.confirmEvent(mockUser, 'event-123');
 
       expect(result).toEqual(mockResult);
     });
@@ -168,7 +163,7 @@ describe('EventsController', () => {
     it('should call eventsService.removeConfirmation with correct params', async () => {
       eventsService.removeConfirmation.mockResolvedValue({ confirmed: false });
 
-      await controller.removeConfirmation(mockRequest, 'event-123');
+      await controller.removeConfirmation(mockUser, 'event-123');
 
       expect(eventsService.removeConfirmation).toHaveBeenCalledWith(
         'event-123',
@@ -180,7 +175,7 @@ describe('EventsController', () => {
       const mockResult = { confirmed: false };
       eventsService.removeConfirmation.mockResolvedValue(mockResult);
 
-      const result = await controller.removeConfirmation(mockRequest, 'event-123');
+      const result = await controller.removeConfirmation(mockUser, 'event-123');
 
       expect(result).toEqual(mockResult);
     });
@@ -200,7 +195,7 @@ describe('EventsController', () => {
       };
       eventsService.processCheckin.mockResolvedValue({ success: true });
 
-      await controller.checkin(mockRequest, 'event-123', dto);
+      await controller.checkin(mockUser, 'event-123', dto);
 
       expect(eventsService.processCheckin).toHaveBeenCalledWith(mockUserId, {
         ...dto,
@@ -217,7 +212,7 @@ describe('EventsController', () => {
       };
       eventsService.processCheckin.mockResolvedValue({ success: true });
 
-      await controller.checkin(mockRequest, 'event-123', dto);
+      await controller.checkin(mockUser, 'event-123', dto);
 
       expect(eventsService.processCheckin).toHaveBeenCalledWith(
         mockUserId,
@@ -239,7 +234,7 @@ describe('EventsController', () => {
       };
       eventsService.processCheckin.mockResolvedValue(mockResult);
 
-      const result = await controller.checkin(mockRequest, 'event-123', dto);
+      const result = await controller.checkin(mockUser, 'event-123', dto);
 
       expect(result).toEqual(mockResult);
     });
@@ -281,7 +276,7 @@ describe('EventsController', () => {
       const dto = { text: 'New comment' };
       eventsService.createComment.mockResolvedValue({ id: 'comment-1', text: 'New comment' });
 
-      await controller.createComment(mockRequest, 'event-123', dto);
+      await controller.createComment(mockUser, 'event-123', dto);
 
       expect(eventsService.createComment).toHaveBeenCalledWith(
         'event-123',
@@ -300,7 +295,7 @@ describe('EventsController', () => {
       };
       eventsService.createComment.mockResolvedValue(mockComment);
 
-      const result = await controller.createComment(mockRequest, 'event-123', dto);
+      const result = await controller.createComment(mockUser, 'event-123', dto);
 
       expect(result).toEqual(mockComment);
     });

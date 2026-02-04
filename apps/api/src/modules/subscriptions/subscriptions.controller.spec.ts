@@ -5,7 +5,7 @@ import {
 } from './subscriptions.controller';
 import { SubscriptionsService } from './subscriptions.service';
 import { mockJwtPayload, mockAdminJwtPayload } from '../../test/fixtures/user.fixtures';
-import { ReportPeriod } from './dto';
+import { ReportPeriod, SubscriberStatus } from './dto';
 
 describe('SubscriptionsController', () => {
   let controller: SubscriptionsController;
@@ -205,6 +205,7 @@ describe('AdminSubscriptionsController', () => {
     it('should create a new plan', async () => {
       const createDto = {
         name: 'Premium',
+        description: 'Plano premium com benefícios exclusivos',
         priceMonthly: 4990,
         benefits: ['Benefit 1'],
       };
@@ -252,7 +253,7 @@ describe('AdminSubscriptionsController', () => {
 
   describe('getSubscribers', () => {
     it('should return subscribers list with query params', async () => {
-      const query = { status: 'ACTIVE', planId: 'plan-1', page: 1, limit: 20 };
+      const query = { status: SubscriberStatus.ACTIVE, planId: 'plan-1', page: 1, limit: 20 };
       const mockResult = { items: [], total: 0 };
       service.getSubscribers.mockResolvedValue(mockResult);
 

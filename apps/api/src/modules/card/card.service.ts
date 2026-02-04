@@ -44,7 +44,7 @@ export class CardService {
 
     if (!card) {
       // Auto-create card for user
-      card = await this.createCardForUser(userId);
+      await this.createCardForUser(userId);
       card = await this.prisma.memberCard.findUnique({
         where: { userId },
         include: {

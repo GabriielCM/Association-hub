@@ -38,6 +38,7 @@ vi.mock('@prisma/client', () => ({
 }));
 
 import { EventsService } from '../events.service';
+import { EventFilter } from '../dto/event-query.dto';
 
 // Define local enums for type safety in tests
 const EventStatus = {
@@ -70,15 +71,7 @@ const BadgeCriteria = {
 } as const;
 type BadgeCriteria = typeof BadgeCriteria[keyof typeof BadgeCriteria];
 
-// Define EventFilter locally (must match DTO enum values - lowercase)
-const EventFilter = {
-  ALL: 'all',
-  UPCOMING: 'upcoming',
-  ONGOING: 'ongoing',
-  PAST: 'past',
-  CONFIRMED: 'confirmed',
-} as const;
-type EventFilter = typeof EventFilter[keyof typeof EventFilter];
+// EventFilter is imported from DTO
 
 // Mock data
 const mockAssociationId = 'assoc-123';
@@ -1385,6 +1378,7 @@ describe('EventsService', () => {
         service.manualCheckin('invalid-id', mockAssociationId, mockAdminId, {
           userId: mockUserId,
           checkinNumber: 1,
+          reason: 'Manual check-in for testing',
         }),
       ).rejects.toThrow(NotFoundException);
     });
@@ -1399,6 +1393,7 @@ describe('EventsService', () => {
         service.manualCheckin('event-123', mockAssociationId, mockAdminId, {
           userId: mockUserId,
           checkinNumber: 1,
+          reason: 'Manual check-in for testing',
         }),
       ).rejects.toThrow(ForbiddenException);
     });
@@ -1411,6 +1406,7 @@ describe('EventsService', () => {
         service.manualCheckin('event-123', mockAssociationId, mockAdminId, {
           userId: 'invalid-user',
           checkinNumber: 1,
+          reason: 'Manual check-in for testing',
         }),
       ).rejects.toThrow(NotFoundException);
     });
@@ -1426,6 +1422,7 @@ describe('EventsService', () => {
         service.manualCheckin('event-123', mockAssociationId, mockAdminId, {
           userId: mockUserId,
           checkinNumber: 1,
+          reason: 'Manual check-in for testing',
         }),
       ).rejects.toThrow(NotFoundException);
     });
@@ -1439,6 +1436,7 @@ describe('EventsService', () => {
         service.manualCheckin('event-123', mockAssociationId, mockAdminId, {
           userId: mockUserId,
           checkinNumber: 1,
+          reason: 'Manual check-in for testing',
         }),
       ).rejects.toThrow(BadRequestException);
     });

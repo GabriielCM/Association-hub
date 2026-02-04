@@ -318,7 +318,7 @@ describe('AdminPartnersController', () => {
 
   describe('updatePartner', () => {
     it('should update partner and return success with data', async () => {
-      const dto = { name: 'Parceiro Atualizado', benefit: '20% de desconto' };
+      const dto = { categoryId: 'cat-1', name: 'Parceiro Atualizado', benefit: '20% de desconto' };
 
       const result = await controller.updatePartner('partner-1', mockAdminUser, dto);
 
@@ -331,7 +331,7 @@ describe('AdminPartnersController', () => {
         new NotFoundException('Parceiro não encontrado'),
       );
 
-      const dto = { name: 'Update' };
+      const dto = { categoryId: 'cat-1', name: 'Update', benefit: '10% desconto' };
 
       await expect(controller.updatePartner('invalid-partner', mockAdminUser, dto)).rejects.toThrow(
         NotFoundException,

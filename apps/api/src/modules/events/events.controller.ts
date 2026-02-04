@@ -7,9 +7,17 @@ import {
   Param,
   Query,
   UseGuards,
-  Request,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../../common/decorators';
+import type { JwtPayload } from '../../common/types';
 import { EventsService } from './events.service';
 import {
   EventQueryDto,
@@ -18,53 +26,85 @@ import {
   CommentQueryDto,
 } from './dto';
 
+@ApiTags('events')
+@ApiBearerAuth()
 @Controller('events')
 @UseGuards(JwtAuthGuard)
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Get()
-  async listEvents(@Request() req, @Query() query: EventQueryDto) {
+  @ApiOperation({ summary: 'Listar eventos' })
+  @ApiResponse({ status: 200, description: 'Lista de eventos retornada com sucesso' })
+  async listEvents(@CurrentUser() user: JwtPayload, @Query() query: EventQueryDto) {
     return this.eventsService.listEvents(
-      req.user.id,
-      req.user.associationId,
+      user.sub,
+      user.associationId,
       query,
     );
   }
 
   @Get(':id')
-  async getEvent(@Request() req, @Param('id') id: string) {
-    return this.eventsService.getEvent(id, req.user.id);
+  @ApiOperation({ summary: 'Obter detalhes de um evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'Evento retornado com sucesso' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
+  async getEvent(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.eventsService.getEvent(id, user.sub);
   }
 
   @Post(':id/confirm')
-  async confirmEvent(@Request() req, @Param('id') id: string) {
-    return this.eventsService.confirmEvent(id, req.user.id);
+  @ApiOperation({ summary: 'Confirmar presença em evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 201, description: 'Presença confirmada com sucesso' })
+  @ApiResponse({ status: 400, description: 'Já confirmou presença ou evento lotado' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
+  async confirmEvent(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.eventsService.confirmEvent(id, user.sub);
   }
 
   @Delete(':id/confirm')
-  async removeConfirmation(@Request() req, @Param('id') id: string) {
-    return this.eventsService.removeConfirmation(id, req.user.id);
+  @ApiOperation({ summary: 'Remover confirmação de presença' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'Confirmação removida com sucesso' })
+  @ApiResponse({ status: 400, description: 'Não havia confirmação' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
+  async removeConfirmation(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.eventsService.removeConfirmation(id, user.sub);
   }
 
   @Post(':id/checkin')
-  async checkin(@Request() req, @Param('id') id: string, @Body() dto: CheckinDto) {
+  @ApiOperation({ summary: 'Realizar check-in no evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 201, description: 'Check-in realizado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Check-in inválido, expirado ou já realizado' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
+  async checkin(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto: CheckinDto) {
     // Override eventId from URL for security
     dto.eventId = id;
-    return this.eventsService.processCheckin(req.user.id, dto);
+    return this.eventsService.processCheckin(user.sub, dto);
   }
 
   @Get(':id/comments')
+  @ApiOperation({ summary: 'Listar comentários do evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'Comentários retornados com sucesso' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   async getComments(@Param('id') id: string, @Query() query: CommentQueryDto) {
     return this.eventsService.getComments(id, query);
   }
 
   @Post(':id/comments')
+  @ApiOperation({ summary: 'Criar comentário no evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 201, description: 'Comentário criado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   async createComment(
-    @Request() req,
+    @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Body() dto: CreateCommentDto,
   ) {
-    return this.eventsService.createComment(id, req.user.id, dto);
+    return this.eventsService.createComment(id, user.sub, dto);
   }
 }

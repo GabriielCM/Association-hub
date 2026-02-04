@@ -39,7 +39,18 @@ async function bootstrap() {
       .addTag('auth', 'Autenticação')
       .addTag('users', 'Usuários')
       .addTag('points', 'Sistema de Pontos')
+      .addTag('admin/points', 'Admin - Sistema de Pontos')
+      .addTag('rankings', 'Rankings e Leaderboards')
       .addTag('subscriptions', 'Assinaturas')
+      .addTag('admin/subscriptions', 'Admin - Assinaturas')
+      .addTag('Profile', 'Perfil do Usuário')
+      .addTag('Card', 'Carteirinha Digital')
+      .addTag('Admin - Cards', 'Gestão de Carteirinhas')
+      .addTag('Benefits', 'Parceiros e Benefícios')
+      .addTag('Admin - Partners', 'Gestão de Parceiros')
+      .addTag('Wallet', 'Minha Carteira')
+      .addTag('events', 'Eventos')
+      .addTag('display', 'Display para TVs/Kiosks')
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
