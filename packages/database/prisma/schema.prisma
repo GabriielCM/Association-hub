@@ -51,14 +51,17 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  refreshTokens    RefreshToken[]
-  points           UserPoints?
-  transactions     PointTransaction[]
-  subscriptions    UserSubscription[]
-  badges           UserBadge[]
-  stravaConnection StravaConnection?
-  card             MemberCard?
-  cardUsages       CardUsageLog[]
+  refreshTokens      RefreshToken[]
+  points             UserPoints?
+  transactions       PointTransaction[]
+  subscriptions      UserSubscription[]
+  badges             UserBadge[]
+  stravaConnection   StravaConnection?
+  card               MemberCard?
+  cardUsages         CardUsageLog[]
+  eventConfirmations EventConfirmation[]
+  eventCheckIns      EventCheckIn[]
+  eventComments      EventComment[]
 
   @@map("users")
 }
@@ -106,6 +109,7 @@ model Association {
   subscriptionPlans SubscriptionPlan[]
   partners          Partner[]
   partnerCategories PartnerCategory[]
+  events            Event[]
 
   @@map("associations")
 }
@@ -409,7 +413,8 @@ model Badge {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  users UserBadge[]
+  users  UserBadge[]
+  events Event[]
 
   @@map("badges")
 }
@@ -573,4 +578,150 @@ model CardUsageLog {
   @@index([cardId, scannedAt])
   @@index([userId, scannedAt])
   @@map("card_usage_logs")
+}
+
+// ===========================================
+// EVENTS (Phase 3)
+// ===========================================
+
+enum EventCategory {
+  SOCIAL
+  SPORTS
+  CULTURAL
+  EDUCATIONAL
+  NETWORKING
+  GASTRO
+  MUSIC
+  ART
+  GAMES
+  INSTITUTIONAL
+}
+
+enum EventStatus {
+  DRAFT
+  SCHEDULED
+  ONGOING
+  ENDED
+  CANCELED
+}
+
+enum BadgeCriteria {
+  FIRST_CHECKIN  // Award on first check-in only
+  ALL_CHECKINS   // Award when all check-ins completed
+  AT_LEAST_ONE   // Award when at least one check-in (default)
+}
+
+model Event {
+  id            String      @id @default(cuid())
+  associationId String      @map("association_id")
+  association   Association @relation(fields: [associationId], references: [id])
+
+  // Basic info
+  title       String
+  description String        @db.Text
+  category    EventCategory
+  color       String        @default("#6366F1")
+
+  // Dates
+  startDate DateTime @map("start_date")
+  endDate   DateTime @map("end_date")
+
+  // Location
+  locationName    String  @map("location_name")
+  locationAddress String? @map("location_address")
+
+  // Images
+  bannerFeed    String?  @map("banner_feed")
+  bannerDisplay String[] @default([]) @map("banner_display")
+
+  // Check-in config
+  pointsTotal     Int @map("points_total")
+  checkinsCount   Int @map("checkins_count")
+  checkinInterval Int @default(30) @map("checkin_interval") // minutes between check-ins
+
+  // Badge config
+  badgeId       String?       @map("badge_id")
+  badge         Badge?        @relation(fields: [badgeId], references: [id])
+  badgeCriteria BadgeCriteria @default(AT_LEAST_ONE) @map("badge_criteria")
+
+  // Status
+  status       EventStatus @default(DRAFT)
+  isPaused     Boolean     @default(false) @map("is_paused")
+  cancelReason String?     @map("cancel_reason")
+
+  // Optional
+  capacity     Int?
+  externalLink String? @map("external_link")
+
+  // QR Code security
+  qrSecret String @map("qr_secret")
+
+  // Metadata
+  createdBy   String    @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  publishedAt DateTime? @map("published_at")
+
+  // Relations
+  confirmations EventConfirmation[]
+  checkIns      EventCheckIn[]
+  comments      EventComment[]
+
+  @@index([associationId, status])
+  @@index([associationId, startDate])
+  @@map("events")
+}
+
+model EventConfirmation {
+  id      String @id @default(cuid())
+  eventId String @map("event_id")
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId  String @map("user_id")
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  confirmedAt DateTime @default(now()) @map("confirmed_at")
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+  @@map("event_confirmations")
+}
+
+model EventCheckIn {
+  id      String @id @default(cuid())
+  eventId String @map("event_id")
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId  String @map("user_id")
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  checkinNumber Int     @map("checkin_number") // 1, 2, 3, etc.
+  pointsAwarded Int     @map("points_awarded")
+  badgeAwarded  Boolean @default(false) @map("badge_awarded")
+
+  // For tracking manual check-ins
+  isManual     Boolean @default(false) @map("is_manual")
+  manualBy     String? @map("manual_by")
+  manualReason String? @map("manual_reason")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([eventId, userId, checkinNumber])
+  @@index([eventId, createdAt])
+  @@index([userId, createdAt])
+  @@map("event_checkins")
+}
+
+model EventComment {
+  id      String @id @default(cuid())
+  eventId String @map("event_id")
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId  String @map("user_id")
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  text      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([eventId, createdAt])
+  @@map("event_comments")
 }

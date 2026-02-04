@@ -1,0 +1,1469 @@
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { PrismaService } from '../../common/prisma/prisma.service';
+import { PointsService } from '../points/points.service';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { EventStatus, Prisma } from '@prisma/client';
+import { createHmac, randomBytes } from 'crypto';
+import {
+  CreateEventDto,
+  UpdateEventDto,
+  EventQueryDto,
+  AdminEventQueryDto,
+  EventFilter,
+  CheckinDto,
+  ManualCheckinDto,
+  CreateCommentDto,
+  CommentQueryDto,
+} from './dto';
+
+@Injectable()
+export class EventsService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly pointsService: PointsService,
+    private readonly subscriptionsService: SubscriptionsService,
+  ) {}
+
+  // ===========================================
+  // USER ENDPOINTS
+  // ===========================================
+
+  async listEvents(userId: string, associationId: string, query: EventQueryDto) {
+    const { page = 1, perPage = 20, filter, category, search } = query;
+    const skip = (page - 1) * perPage;
+    const now = new Date();
+
+    const where: Prisma.EventWhereInput = {
+      associationId,
+      status: { in: ['SCHEDULED', 'ONGOING', 'ENDED'] }, // Hide drafts and canceled
+    };
+
+    // Apply filter
+    switch (filter) {
+      case EventFilter.UPCOMING:
+        where.startDate = { gt: now };
+        where.status = 'SCHEDULED';
+        break;
+      case EventFilter.ONGOING:
+        where.status = 'ONGOING';
+        break;
+      case EventFilter.PAST:
+        where.status = 'ENDED';
+        break;
+      case EventFilter.CONFIRMED:
+        where.confirmations = { some: { userId } };
+        break;
+      // ALL: no additional filter
+    }
+
+    // Filter by category
+    if (category) {
+      where.category = category;
+    }
+
+    // Search
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { locationName: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [events, total] = await Promise.all([
+      this.prisma.event.findMany({
+        where,
+        orderBy: { startDate: 'asc' },
+        skip,
+        take: perPage,
+        select: {
+          id: true,
+          title: true,
+          category: true,
+          color: true,
+          startDate: true,
+          endDate: true,
+          locationName: true,
+          bannerFeed: true,
+          pointsTotal: true,
+          checkinsCount: true,
+          status: true,
+          capacity: true,
+          _count: {
+            select: { confirmations: true },
+          },
+          confirmations: {
+            where: { userId },
+            select: { id: true },
+          },
+        },
+      }),
+      this.prisma.event.count({ where }),
+    ]);
+
+    return {
+      data: events.map((event) => ({
+        id: event.id,
+        title: event.title,
+        category: event.category,
+        color: event.color,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        locationName: event.locationName,
+        bannerFeed: event.bannerFeed,
+        pointsTotal: event.pointsTotal,
+        checkinsCount: event.checkinsCount,
+        status: event.status,
+        capacity: event.capacity,
+        confirmationsCount: event._count.confirmations,
+        isConfirmed: event.confirmations.length > 0,
+      })),
+      meta: {
+        currentPage: page,
+        perPage,
+        totalPages: Math.ceil(total / perPage),
+        totalCount: total,
+      },
+    };
+  }
+
+  async getEvent(eventId: string, userId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: {
+        badge: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            iconUrl: true,
+          },
+        },
+        _count: {
+          select: {
+            confirmations: true,
+            checkIns: true,
+            comments: true,
+          },
+        },
+        confirmations: {
+          where: { userId },
+          select: { id: true, confirmedAt: true },
+        },
+        checkIns: {
+          where: { userId },
+          select: {
+            id: true,
+            checkinNumber: true,
+            pointsAwarded: true,
+            badgeAwarded: true,
+            createdAt: true,
+          },
+          orderBy: { checkinNumber: 'asc' },
+        },
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    // Calculate current check-in number based on time
+    const currentCheckinNumber = this.calculateCurrentCheckinNumber(event);
+
+    return {
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      category: event.category,
+      color: event.color,
+      startDate: event.startDate,
+      endDate: event.endDate,
+      locationName: event.locationName,
+      locationAddress: event.locationAddress,
+      bannerFeed: event.bannerFeed,
+      bannerDisplay: event.bannerDisplay,
+      pointsTotal: event.pointsTotal,
+      checkinsCount: event.checkinsCount,
+      checkinInterval: event.checkinInterval,
+      status: event.status,
+      isPaused: event.isPaused,
+      capacity: event.capacity,
+      externalLink: event.externalLink,
+      badge: event.badge,
+      badgeCriteria: event.badgeCriteria,
+      confirmationsCount: event._count.confirmations,
+      checkInsCount: event._count.checkIns,
+      commentsCount: event._count.comments,
+      currentCheckinNumber,
+      // User-specific
+      isConfirmed: event.confirmations.length > 0,
+      confirmedAt: event.confirmations[0]?.confirmedAt || null,
+      userCheckIns: event.checkIns,
+      userCheckInsCompleted: event.checkIns.length,
+    };
+  }
+
+  async confirmEvent(eventId: string, userId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, status: true, capacity: true, _count: { select: { confirmations: true } } },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    if (event.status === 'ENDED' || event.status === 'CANCELED') {
+      throw new BadRequestException('Este evento ja foi encerrado ou cancelado');
+    }
+
+    if (event.capacity && event._count.confirmations >= event.capacity) {
+      throw new BadRequestException('Evento lotado');
+    }
+
+    const existing = await this.prisma.eventConfirmation.findUnique({
+      where: { eventId_userId: { eventId, userId } },
+    });
+
+    if (existing) {
+      throw new BadRequestException('Voce ja confirmou presenca neste evento');
+    }
+
+    const confirmation = await this.prisma.eventConfirmation.create({
+      data: { eventId, userId },
+    });
+
+    return {
+      confirmed: true,
+      confirmedAt: confirmation.confirmedAt,
+    };
+  }
+
+  async removeConfirmation(eventId: string, userId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, status: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    if (event.status === 'ONGOING' || event.status === 'ENDED') {
+      throw new BadRequestException('Nao e possivel remover confirmacao de evento em andamento ou encerrado');
+    }
+
+    const confirmation = await this.prisma.eventConfirmation.findUnique({
+      where: { eventId_userId: { eventId, userId } },
+    });
+
+    if (!confirmation) {
+      throw new BadRequestException('Voce nao confirmou presenca neste evento');
+    }
+
+    await this.prisma.eventConfirmation.delete({
+      where: { id: confirmation.id },
+    });
+
+    return { confirmed: false };
+  }
+
+  // ===========================================
+  // CHECK-IN
+  // ===========================================
+
+  async processCheckin(userId: string, dto: CheckinDto) {
+    const { eventId, checkinNumber, securityToken, timestamp } = dto;
+
+    // 1. Find event
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        isPaused: true,
+        pointsTotal: true,
+        checkinsCount: true,
+        checkinInterval: true,
+        qrSecret: true,
+        badgeId: true,
+        badgeCriteria: true,
+        associationId: true,
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    // 2. Validate event status
+    if (event.status !== 'ONGOING') {
+      throw new BadRequestException('Evento nao esta em andamento');
+    }
+
+    if (event.isPaused) {
+      throw new BadRequestException('Check-ins estao temporariamente pausados');
+    }
+
+    // 3. Validate check-in number
+    const currentCheckinNumber = this.calculateCurrentCheckinNumber(event as any);
+    if (checkinNumber !== currentCheckinNumber) {
+      throw new BadRequestException(`Check-in ${checkinNumber} nao esta disponivel. Check-in atual: ${currentCheckinNumber}`);
+    }
+
+    // 4. Validate security token (HMAC-SHA256)
+    const now = Math.floor(Date.now() / 1000);
+    const tokenAge = now - timestamp;
+
+    if (tokenAge < 0 || tokenAge > 120) {
+      throw new BadRequestException('QR Code expirado. Escaneie novamente.');
+    }
+
+    const expectedToken = this.generateSecurityToken(eventId, checkinNumber, timestamp, event.qrSecret);
+    if (securityToken !== expectedToken) {
+      throw new BadRequestException('QR Code invalido');
+    }
+
+    // 5. Check if user already did this check-in
+    const existingCheckin = await this.prisma.eventCheckIn.findUnique({
+      where: {
+        eventId_userId_checkinNumber: {
+          eventId,
+          userId,
+          checkinNumber,
+        },
+      },
+    });
+
+    if (existingCheckin) {
+      throw new BadRequestException(`Voce ja fez o check-in ${checkinNumber}`);
+    }
+
+    // 6. Check interval since last check-in
+    if (checkinNumber > 1) {
+      const lastCheckin = await this.prisma.eventCheckIn.findFirst({
+        where: {
+          eventId,
+          userId,
+          checkinNumber: checkinNumber - 1,
+        },
+        select: { createdAt: true },
+      });
+
+      if (lastCheckin) {
+        const minsSinceLastCheckin = (Date.now() - lastCheckin.createdAt.getTime()) / (1000 * 60);
+        if (minsSinceLastCheckin < event.checkinInterval) {
+          const remaining = Math.ceil(event.checkinInterval - minsSinceLastCheckin);
+          throw new BadRequestException(`Aguarde ${remaining} minutos para o proximo check-in`);
+        }
+      }
+    }
+
+    // 7. Calculate points with subscription multiplier
+    const basePoints = Math.floor(event.pointsTotal / event.checkinsCount);
+    let finalPoints = basePoints;
+
+    try {
+      const benefits = await this.subscriptionsService.getBenefits(userId);
+      const multiplier = (benefits?.mutators as any)?.points_events || 1;
+      finalPoints = Math.floor(basePoints * multiplier);
+    } catch {
+      // User has no subscription, use base points
+    }
+
+    // 8. Execute check-in in transaction
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Create check-in record
+      const checkIn = await tx.eventCheckIn.create({
+        data: {
+          eventId,
+          userId,
+          checkinNumber,
+          pointsAwarded: finalPoints,
+        },
+      });
+
+      // Credit points
+      await this.pointsService.creditPoints(
+        userId,
+        finalPoints,
+        'EVENT_CHECKIN',
+        `Check-in ${checkinNumber} - ${event.title}`,
+        { event_id: eventId, checkin_number: checkinNumber },
+        eventId,
+      );
+
+      // Check badge eligibility
+      let badgeAwarded = false;
+      if (event.badgeId) {
+        badgeAwarded = await this.checkAndAwardBadge(
+          tx,
+          userId,
+          eventId,
+          event.badgeId,
+          event.badgeCriteria,
+          event.checkinsCount,
+          checkIn.id,
+        );
+      }
+
+      return { checkIn, badgeAwarded };
+    });
+
+    // 9. Get user's progress
+    const totalUserCheckins = await this.prisma.eventCheckIn.count({
+      where: { eventId, userId },
+    });
+
+    return {
+      success: true,
+      checkinNumber,
+      pointsAwarded: finalPoints,
+      badgeAwarded: result.badgeAwarded,
+      progress: {
+        completed: totalUserCheckins,
+        total: event.checkinsCount,
+        percentage: Math.round((totalUserCheckins / event.checkinsCount) * 100),
+      },
+    };
+  }
+
+  private async checkAndAwardBadge(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    eventId: string,
+    badgeId: string,
+    criteria: string,
+    totalCheckins: number,
+    checkinId: string,
+  ): Promise<boolean> {
+    const userCheckins = await tx.eventCheckIn.count({
+      where: { eventId, userId },
+    });
+
+    let shouldAward = false;
+
+    switch (criteria) {
+      case 'FIRST_CHECKIN':
+        shouldAward = userCheckins === 1;
+        break;
+      case 'ALL_CHECKINS':
+        shouldAward = userCheckins === totalCheckins;
+        break;
+      case 'AT_LEAST_ONE':
+      default:
+        shouldAward = userCheckins >= 1;
+    }
+
+    if (shouldAward) {
+      // Check if user already has this badge
+      const existingBadge = await tx.userBadge.findUnique({
+        where: { userId_badgeId: { userId, badgeId } },
+      });
+
+      if (!existingBadge) {
+        await tx.userBadge.create({
+          data: { userId, badgeId },
+        });
+
+        // Mark check-in as badge awarded
+        await tx.eventCheckIn.update({
+          where: { id: checkinId },
+          data: { badgeAwarded: true },
+        });
+
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // ===========================================
+  // COMMENTS
+  // ===========================================
+
+  async getComments(eventId: string, query: CommentQueryDto) {
+    const { page = 1, perPage = 20 } = query;
+    const skip = (page - 1) * perPage;
+
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    const [comments, total] = await Promise.all([
+      this.prisma.eventComment.findMany({
+        where: { eventId },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: perPage,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      }),
+      this.prisma.eventComment.count({ where: { eventId } }),
+    ]);
+
+    return {
+      data: comments.map((c) => ({
+        id: c.id,
+        text: c.text,
+        createdAt: c.createdAt,
+        user: c.user,
+      })),
+      meta: {
+        currentPage: page,
+        perPage,
+        totalPages: Math.ceil(total / perPage),
+        totalCount: total,
+      },
+    };
+  }
+
+  async createComment(eventId: string, userId: string, dto: CreateCommentDto) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, status: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    const comment = await this.prisma.eventComment.create({
+      data: {
+        eventId,
+        userId,
+        text: dto.text,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    return {
+      id: comment.id,
+      text: comment.text,
+      createdAt: comment.createdAt,
+      user: comment.user,
+    };
+  }
+
+  // ===========================================
+  // ADMIN ENDPOINTS
+  // ===========================================
+
+  async adminListEvents(associationId: string, query: AdminEventQueryDto) {
+    const { page = 1, perPage = 20, status, category, search } = query;
+    const skip = (page - 1) * perPage;
+
+    const where: Prisma.EventWhereInput = { associationId };
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (category) {
+      where.category = category;
+    }
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [events, total] = await Promise.all([
+      this.prisma.event.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: perPage,
+        select: {
+          id: true,
+          title: true,
+          category: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          isPaused: true,
+          pointsTotal: true,
+          checkinsCount: true,
+          _count: {
+            select: {
+              confirmations: true,
+              checkIns: true,
+            },
+          },
+        },
+      }),
+      this.prisma.event.count({ where }),
+    ]);
+
+    return {
+      data: events.map((e) => ({
+        ...e,
+        confirmationsCount: e._count.confirmations,
+        checkInsCount: e._count.checkIns,
+      })),
+      meta: {
+        currentPage: page,
+        perPage,
+        totalPages: Math.ceil(total / perPage),
+        totalCount: total,
+      },
+    };
+  }
+
+  async createEvent(associationId: string, adminId: string, dto: CreateEventDto) {
+    // Validate dates
+    const startDate = new Date(dto.startDate);
+    const endDate = new Date(dto.endDate);
+
+    if (startDate >= endDate) {
+      throw new BadRequestException('Data de inicio deve ser anterior a data de termino');
+    }
+
+    if (startDate <= new Date()) {
+      throw new BadRequestException('Data de inicio deve ser no futuro');
+    }
+
+    // Validate badge if provided
+    if (dto.badgeId) {
+      const badge = await this.prisma.badge.findUnique({
+        where: { id: dto.badgeId },
+      });
+      if (!badge) {
+        throw new BadRequestException('Badge nao encontrado');
+      }
+    }
+
+    // Generate QR secret for this event
+    const qrSecret = randomBytes(32).toString('hex');
+
+    const event = await this.prisma.event.create({
+      data: {
+        associationId,
+        createdBy: adminId,
+        qrSecret,
+        title: dto.title,
+        description: dto.description,
+        category: dto.category,
+        color: dto.color || '#6366F1',
+        startDate,
+        endDate,
+        locationName: dto.locationName,
+        locationAddress: dto.locationAddress,
+        bannerFeed: dto.bannerFeed,
+        bannerDisplay: dto.bannerDisplay || [],
+        pointsTotal: dto.pointsTotal,
+        checkinsCount: dto.checkinsCount,
+        checkinInterval: dto.checkinInterval || 30,
+        badgeId: dto.badgeId,
+        badgeCriteria: dto.badgeCriteria || 'AT_LEAST_ONE',
+        capacity: dto.capacity,
+        externalLink: dto.externalLink,
+        status: 'DRAFT',
+      },
+    });
+
+    return event;
+  }
+
+  async updateEvent(eventId: string, associationId: string, dto: UpdateEventDto) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, associationId: true, status: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao para editar este evento');
+    }
+
+    if (event.status === 'ENDED' || event.status === 'CANCELED') {
+      throw new BadRequestException('Nao e possivel editar evento encerrado ou cancelado');
+    }
+
+    const updateData: Prisma.EventUpdateInput = {};
+
+    if (dto.title) updateData.title = dto.title;
+    if (dto.description) updateData.description = dto.description;
+    if (dto.category) updateData.category = dto.category;
+    if (dto.color) updateData.color = dto.color;
+    if (dto.startDate) updateData.startDate = new Date(dto.startDate);
+    if (dto.endDate) updateData.endDate = new Date(dto.endDate);
+    if (dto.locationName) updateData.locationName = dto.locationName;
+    if (dto.locationAddress !== undefined) updateData.locationAddress = dto.locationAddress;
+    if (dto.bannerFeed !== undefined) updateData.bannerFeed = dto.bannerFeed;
+    if (dto.bannerDisplay !== undefined) updateData.bannerDisplay = dto.bannerDisplay;
+    if (dto.pointsTotal) updateData.pointsTotal = dto.pointsTotal;
+    if (dto.checkinsCount) updateData.checkinsCount = dto.checkinsCount;
+    if (dto.checkinInterval !== undefined) updateData.checkinInterval = dto.checkinInterval;
+    if (dto.badgeId !== undefined) updateData.badge = dto.badgeId ? { connect: { id: dto.badgeId } } : { disconnect: true };
+    if (dto.badgeCriteria) updateData.badgeCriteria = dto.badgeCriteria;
+    if (dto.capacity !== undefined) updateData.capacity = dto.capacity;
+    if (dto.externalLink !== undefined) updateData.externalLink = dto.externalLink;
+
+    return this.prisma.event.update({
+      where: { id: eventId },
+      data: updateData,
+    });
+  }
+
+  async publishEvent(eventId: string, associationId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, associationId: true, status: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao');
+    }
+
+    if (event.status !== 'DRAFT') {
+      throw new BadRequestException('Apenas rascunhos podem ser publicados');
+    }
+
+    return this.prisma.event.update({
+      where: { id: eventId },
+      data: {
+        status: 'SCHEDULED',
+        publishedAt: new Date(),
+      },
+    });
+  }
+
+  async cancelEvent(eventId: string, associationId: string, reason: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, associationId: true, status: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao');
+    }
+
+    if (event.status === 'ENDED' || event.status === 'CANCELED') {
+      throw new BadRequestException('Evento ja foi encerrado ou cancelado');
+    }
+
+    return this.prisma.event.update({
+      where: { id: eventId },
+      data: {
+        status: 'CANCELED',
+        cancelReason: reason,
+      },
+    });
+  }
+
+  async pauseEvent(eventId: string, associationId: string, isPaused: boolean) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, associationId: true, status: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao');
+    }
+
+    if (event.status !== 'ONGOING') {
+      throw new BadRequestException('Apenas eventos em andamento podem ser pausados');
+    }
+
+    return this.prisma.event.update({
+      where: { id: eventId },
+      data: { isPaused },
+    });
+  }
+
+  async manualCheckin(eventId: string, associationId: string, adminId: string, dto: ManualCheckinDto) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        id: true,
+        associationId: true,
+        status: true,
+        title: true,
+        pointsTotal: true,
+        checkinsCount: true,
+        badgeId: true,
+        badgeCriteria: true,
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao');
+    }
+
+    // Check if user exists
+    const user = await this.prisma.user.findUnique({
+      where: { id: dto.userId },
+      select: { id: true, name: true, associationId: true },
+    });
+
+    if (!user || user.associationId !== associationId) {
+      throw new NotFoundException('Usuario nao encontrado');
+    }
+
+    // Check if already did this check-in
+    const existingCheckin = await this.prisma.eventCheckIn.findUnique({
+      where: {
+        eventId_userId_checkinNumber: {
+          eventId,
+          userId: dto.userId,
+          checkinNumber: dto.checkinNumber,
+        },
+      },
+    });
+
+    if (existingCheckin) {
+      throw new BadRequestException(`Usuario ja fez o check-in ${dto.checkinNumber}`);
+    }
+
+    // Calculate points
+    const basePoints = Math.floor(event.pointsTotal / event.checkinsCount);
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const checkIn = await tx.eventCheckIn.create({
+        data: {
+          eventId,
+          userId: dto.userId,
+          checkinNumber: dto.checkinNumber,
+          pointsAwarded: basePoints,
+          isManual: true,
+          manualBy: adminId,
+          manualReason: dto.reason,
+        },
+      });
+
+      await this.pointsService.creditPoints(
+        dto.userId,
+        basePoints,
+        'EVENT_CHECKIN',
+        `Check-in manual ${dto.checkinNumber} - ${event.title}`,
+        { event_id: eventId, checkin_number: dto.checkinNumber, manual: true },
+        eventId,
+      );
+
+      let badgeAwarded = false;
+      if (event.badgeId) {
+        badgeAwarded = await this.checkAndAwardBadge(
+          tx,
+          dto.userId,
+          eventId,
+          event.badgeId,
+          event.badgeCriteria,
+          event.checkinsCount,
+          checkIn.id,
+        );
+      }
+
+      return { checkIn, badgeAwarded };
+    });
+
+    return {
+      success: true,
+      checkinNumber: dto.checkinNumber,
+      pointsAwarded: basePoints,
+      badgeAwarded: result.badgeAwarded,
+      user: { id: user.id, name: user.name },
+    };
+  }
+
+  async deleteEvent(eventId: string, associationId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, associationId: true, status: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao');
+    }
+
+    if (event.status !== 'DRAFT') {
+      throw new BadRequestException('Apenas rascunhos podem ser deletados. Use cancelar para eventos publicados.');
+    }
+
+    await this.prisma.event.delete({
+      where: { id: eventId },
+    });
+
+    return { deleted: true };
+  }
+
+  // ===========================================
+  // ANALYTICS
+  // ===========================================
+
+  async getAnalytics(eventId: string, associationId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        id: true,
+        associationId: true,
+        title: true,
+        checkinsCount: true,
+        pointsTotal: true,
+        badgeId: true,
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao');
+    }
+
+    // Get stats
+    const [
+      confirmationsCount,
+      totalCheckIns,
+      uniqueCheckInUsers,
+      badgesAwarded,
+      checkInsByNumber,
+      recentCheckIns,
+    ] = await Promise.all([
+      this.prisma.eventConfirmation.count({ where: { eventId } }),
+      this.prisma.eventCheckIn.count({ where: { eventId } }),
+      this.prisma.eventCheckIn.groupBy({
+        by: ['userId'],
+        where: { eventId },
+        _count: true,
+      }),
+      event.badgeId
+        ? this.prisma.eventCheckIn.count({
+            where: { eventId, badgeAwarded: true },
+          })
+        : 0,
+      this.prisma.eventCheckIn.groupBy({
+        by: ['checkinNumber'],
+        where: { eventId },
+        _count: true,
+        orderBy: { checkinNumber: 'asc' },
+      }),
+      this.prisma.eventCheckIn.findMany({
+        where: { eventId },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        include: {
+          user: {
+            select: { id: true, name: true, avatarUrl: true },
+          },
+        },
+      }),
+    ]);
+
+    const totalMembers = await this.prisma.user.count({
+      where: { associationId: event.associationId, status: 'ACTIVE' },
+    });
+
+    const pointsDistributed = await this.prisma.eventCheckIn.aggregate({
+      where: { eventId },
+      _sum: { pointsAwarded: true },
+    });
+
+    return {
+      event: {
+        id: event.id,
+        title: event.title,
+        totalCheckins: event.checkinsCount,
+        totalPoints: event.pointsTotal,
+      },
+      metrics: {
+        confirmations: confirmationsCount,
+        totalCheckIns,
+        uniqueUsers: uniqueCheckInUsers.length,
+        presenceRate: totalMembers > 0
+          ? Math.round((uniqueCheckInUsers.length / totalMembers) * 100 * 10) / 10
+          : 0,
+        presenceRateConfirmed: confirmationsCount > 0
+          ? Math.round((uniqueCheckInUsers.length / confirmationsCount) * 100 * 10) / 10
+          : 0,
+        pointsDistributed: pointsDistributed._sum.pointsAwarded || 0,
+        badgesAwarded,
+      },
+      checkInsByNumber: checkInsByNumber.map((c) => ({
+        checkinNumber: c.checkinNumber,
+        count: c._count,
+      })),
+      recentCheckIns: recentCheckIns.map((c) => ({
+        id: c.id,
+        checkinNumber: c.checkinNumber,
+        pointsAwarded: c.pointsAwarded,
+        createdAt: c.createdAt,
+        user: c.user,
+      })),
+    };
+  }
+
+  async getParticipants(eventId: string, associationId: string, page = 1, perPage = 50) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, associationId: true, checkinsCount: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao');
+    }
+
+    const skip = (page - 1) * perPage;
+
+    // Get all users who have check-ins or confirmations
+    const [participants, total] = await Promise.all([
+      this.prisma.$queryRaw`
+        SELECT DISTINCT u.id, u.name, u.email, u.avatar_url
+        FROM users u
+        LEFT JOIN event_confirmations ec ON ec.user_id = u.id AND ec.event_id = ${eventId}
+        LEFT JOIN event_checkins eci ON eci.user_id = u.id AND eci.event_id = ${eventId}
+        WHERE ec.id IS NOT NULL OR eci.id IS NOT NULL
+        ORDER BY u.name
+        LIMIT ${perPage} OFFSET ${skip}
+      ` as Promise<Array<{ id: string; name: string; email: string; avatar_url: string }>>,
+      this.prisma.$queryRaw`
+        SELECT COUNT(DISTINCT u.id)::int as count
+        FROM users u
+        LEFT JOIN event_confirmations ec ON ec.user_id = u.id AND ec.event_id = ${eventId}
+        LEFT JOIN event_checkins eci ON eci.user_id = u.id AND eci.event_id = ${eventId}
+        WHERE ec.id IS NOT NULL OR eci.id IS NOT NULL
+      ` as Promise<Array<{ count: number }>>,
+    ]);
+
+    // Get check-ins for each participant
+    const participantIds = participants.map((p) => p.id);
+    const [confirmations, checkIns] = await Promise.all([
+      this.prisma.eventConfirmation.findMany({
+        where: { eventId, userId: { in: participantIds } },
+        select: { userId: true, confirmedAt: true },
+      }),
+      this.prisma.eventCheckIn.findMany({
+        where: { eventId, userId: { in: participantIds } },
+        select: {
+          userId: true,
+          checkinNumber: true,
+          pointsAwarded: true,
+          badgeAwarded: true,
+          createdAt: true,
+        },
+        orderBy: { checkinNumber: 'asc' },
+      }),
+    ]);
+
+    const confirmationMap = new Map(confirmations.map((c) => [c.userId, c]));
+    const checkInsMap = new Map<string, typeof checkIns>();
+    for (const ci of checkIns) {
+      if (!checkInsMap.has(ci.userId)) {
+        checkInsMap.set(ci.userId, []);
+      }
+      checkInsMap.get(ci.userId)!.push(ci);
+    }
+
+    return {
+      data: participants.map((p) => {
+        const userCheckIns = checkInsMap.get(p.id) || [];
+        const confirmation = confirmationMap.get(p.id);
+        return {
+          id: p.id,
+          name: p.name,
+          email: p.email,
+          avatarUrl: p.avatar_url,
+          confirmed: !!confirmation,
+          confirmedAt: confirmation?.confirmedAt || null,
+          checkInsCompleted: userCheckIns.length,
+          totalCheckIns: event.checkinsCount,
+          totalPoints: userCheckIns.reduce((sum, ci) => sum + ci.pointsAwarded, 0),
+          badgeAwarded: userCheckIns.some((ci) => ci.badgeAwarded),
+          checkIns: userCheckIns,
+        };
+      }),
+      meta: {
+        currentPage: page,
+        perPage,
+        totalPages: Math.ceil((total[0]?.count || 0) / perPage),
+        totalCount: total[0]?.count || 0,
+      },
+    };
+  }
+
+  // ===========================================
+  // HELPERS
+  // ===========================================
+
+  private calculateCurrentCheckinNumber(event: {
+    startDate: Date;
+    checkinsCount: number;
+    checkinInterval: number;
+    status: EventStatus;
+  }): number {
+    if (event.status !== 'ONGOING') {
+      return 1;
+    }
+
+    const now = Date.now();
+    const start = event.startDate.getTime();
+    const elapsedMinutes = (now - start) / (1000 * 60);
+    const checkinNumber = Math.floor(elapsedMinutes / event.checkinInterval) + 1;
+
+    return Math.min(checkinNumber, event.checkinsCount);
+  }
+
+  generateSecurityToken(
+    eventId: string,
+    checkinNumber: number,
+    timestamp: number,
+    secret: string,
+  ): string {
+    const data = `${eventId}:${checkinNumber}:${timestamp}`;
+    return createHmac('sha256', secret).update(data).digest('hex');
+  }
+
+  // Used by DisplayService
+  async getEventForDisplay(eventId: string) {
+    return this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        category: true,
+        color: true,
+        startDate: true,
+        endDate: true,
+        locationName: true,
+        bannerDisplay: true,
+        pointsTotal: true,
+        checkinsCount: true,
+        checkinInterval: true,
+        status: true,
+        isPaused: true,
+        qrSecret: true,
+        association: {
+          select: {
+            name: true,
+            logoUrl: true,
+          },
+        },
+        _count: {
+          select: { checkIns: true },
+        },
+      },
+    });
+  }
+
+  async getOngoingEvents(associationId?: string) {
+    const where: Prisma.EventWhereInput = { status: 'ONGOING' };
+    if (associationId) {
+      where.associationId = associationId;
+    }
+    return this.prisma.event.findMany({
+      where,
+      select: {
+        id: true,
+        qrSecret: true,
+        checkinsCount: true,
+        checkinInterval: true,
+        startDate: true,
+        status: true,
+        isPaused: true,
+      },
+    });
+  }
+
+  // Auto-transition events based on time
+  async transitionEventStatuses() {
+    const now = new Date();
+
+    // SCHEDULED -> ONGOING
+    await this.prisma.event.updateMany({
+      where: {
+        status: 'SCHEDULED',
+        startDate: { lte: now },
+      },
+      data: { status: 'ONGOING' },
+    });
+
+    // ONGOING -> ENDED
+    await this.prisma.event.updateMany({
+      where: {
+        status: 'ONGOING',
+        endDate: { lte: now },
+      },
+      data: { status: 'ENDED' },
+    });
+  }
+
+  // ===========================================
+  // EXPORT
+  // ===========================================
+
+  async exportToCsv(eventId: string, associationId: string): Promise<string> {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, title: true, associationId: true, checkinsCount: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao');
+    }
+
+    const data = await this.getParticipants(eventId, associationId, 1, 10000);
+
+    // CSV Header
+    const headers = ['Nome', 'Email', 'Confirmado', 'Data Confirmacao', 'Check-ins', 'Pontos', 'Badge'];
+
+    // CSV Rows
+    const rows = data.data.map((p) => {
+      const confirmedAt = p.confirmedAt
+        ? new Date(p.confirmedAt).toLocaleString('pt-BR')
+        : '';
+      return [
+        `"${p.name.replace(/"/g, '""')}"`,
+        p.email,
+        p.confirmed ? 'Sim' : 'Nao',
+        confirmedAt,
+        `${p.checkInsCompleted}/${p.totalCheckIns}`,
+        p.totalPoints,
+        p.badgeAwarded ? 'Sim' : 'Nao',
+      ].join(',');
+    });
+
+    return [headers.join(','), ...rows].join('\n');
+  }
+
+  async exportToPrintHtml(eventId: string, associationId: string): Promise<string> {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        id: true,
+        title: true,
+        associationId: true,
+        startDate: true,
+        endDate: true,
+        locationName: true,
+        pointsTotal: true,
+        checkinsCount: true,
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Evento nao encontrado');
+    }
+
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao');
+    }
+
+    const analytics = await this.getAnalytics(eventId, associationId);
+    const participants = await this.getParticipants(eventId, associationId, 1, 1000);
+
+    const formatDate = (date: Date) =>
+      new Date(date).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+    return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Relatorio - ${event.title}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      color: #333;
+    }
+    h1 {
+      color: #6366F1;
+      border-bottom: 2px solid #6366F1;
+      padding-bottom: 10px;
+    }
+    .info {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+    .info p {
+      margin: 5px 0;
+    }
+    .metrics {
+      display: flex;
+      gap: 20px;
+      margin: 20px 0;
+    }
+    .metric {
+      flex: 1;
+      padding: 15px;
+      background: #6366F1;
+      color: white;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .metric-value {
+      font-size: 32px;
+      font-weight: bold;
+    }
+    .metric-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #f5f5f5;
+      font-weight: bold;
+    }
+    .badge-yes {
+      color: #10B981;
+      font-weight: bold;
+    }
+    .badge-no {
+      color: #9CA3AF;
+    }
+    @media print {
+      body { margin: 20px; }
+      .metrics { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <h1>${event.title}</h1>
+
+  <div class="info">
+    <p><strong>Data:</strong> ${formatDate(event.startDate)} - ${formatDate(event.endDate)}</p>
+    <p><strong>Local:</strong> ${event.locationName}</p>
+    <p><strong>Pontos totais:</strong> ${event.pointsTotal} (${event.checkinsCount} check-ins)</p>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-value">${analytics.metrics.confirmations}</div>
+      <div class="metric-label">Confirmacoes</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">${analytics.metrics.uniqueUsers}</div>
+      <div class="metric-label">Participantes</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">${analytics.metrics.totalCheckIns}</div>
+      <div class="metric-label">Check-ins</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">${analytics.metrics.pointsDistributed}</div>
+      <div class="metric-label">Pontos</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">${analytics.metrics.presenceRateConfirmed}%</div>
+      <div class="metric-label">Taxa Presenca</div>
+    </div>
+  </div>
+
+  <h2>Participantes</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Email</th>
+        <th>Confirmado</th>
+        <th>Check-ins</th>
+        <th>Pontos</th>
+        <th>Badge</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${participants.data
+        .map(
+          (p) => `
+        <tr>
+          <td>${p.name}</td>
+          <td>${p.email}</td>
+          <td>${p.confirmed ? 'Sim' : 'Nao'}</td>
+          <td>${p.checkInsCompleted}/${p.totalCheckIns}</td>
+          <td>${p.totalPoints}</td>
+          <td class="${p.badgeAwarded ? 'badge-yes' : 'badge-no'}">${p.badgeAwarded ? 'Sim' : 'Nao'}</td>
+        </tr>
+      `,
+        )
+        .join('')}
+    </tbody>
+  </table>
+
+  <p style="margin-top: 40px; font-size: 12px; color: #9CA3AF;">
+    Gerado em ${new Date().toLocaleString('pt-BR')} | Total: ${participants.meta.totalCount} participantes
+  </p>
+</body>
+</html>
+    `;
+  }
+}
