@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PointsService } from '../points/points.service';
 import { CardService } from '../card/card.service';
+import { PdvCheckoutService } from '../pdv/pdv-checkout.service';
 import { SummaryPeriod } from './dto';
 
 @Injectable()
@@ -10,6 +11,8 @@ export class WalletService {
     private readonly prisma: PrismaService,
     private readonly pointsService: PointsService,
     private readonly cardService: CardService,
+    @Inject(forwardRef(() => PdvCheckoutService))
+    private readonly pdvCheckoutService: PdvCheckoutService,
   ) {}
 
   /**
@@ -188,30 +191,23 @@ export class WalletService {
 
   /**
    * Get PDV checkout details
-   * Nota: Será completamente implementado na Fase 5
    */
   async getCheckoutDetails(checkoutCode: string, userId: string) {
-    // TODO: Implementar na Fase 5 - PDV
-    // Por enquanto, retorna erro informativo
-
-    return {
-      error: 'PDV será implementado na Fase 5',
-      checkoutCode,
-    };
+    return this.pdvCheckoutService.getCheckoutDetails(checkoutCode, userId);
   }
 
   /**
-   * Process PDV payment
-   * Nota: Será completamente implementado na Fase 5
+   * Process PDV payment with points
    */
   async processPdvPayment(checkoutCode: string, userId: string) {
-    // TODO: Implementar na Fase 5 - PDV
-    // Por enquanto, retorna erro informativo
+    return this.pdvCheckoutService.payWithPoints(checkoutCode, userId);
+  }
 
-    return {
-      success: false,
-      error: 'PDV será implementado na Fase 5',
-    };
+  /**
+   * Initiate PDV PIX payment
+   */
+  async initiatePdvPixPayment(checkoutCode: string, userId: string) {
+    return this.pdvCheckoutService.initiatePixPayment(checkoutCode, userId);
   }
 
   /**

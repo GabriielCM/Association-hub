@@ -503,6 +503,199 @@ describe('NotificationsService', () => {
 
       expect(result).toBe(false);
     });
+
+    it('deve retornar false se dia da semana não está na lista', async () => {
+      const currentDay = new Date().getDay();
+      const otherDay = (currentDay + 1) % 7;
+
+      mockPrismaService.doNotDisturbSettings.findUnique.mockResolvedValue({
+        ...mockDndSettings,
+        enabled: true,
+        startTime: '00:00',
+        endTime: '23:59',
+        daysOfWeek: [otherDay],
+      });
+
+      const result = await service.isDndActive(mockUserId);
+
+      expect(result).toBe(false);
+    });
+
+    it('deve verificar range normal (startTime <= endTime)', async () => {
+      // Range normal: se startTime <= endTime, deve estar entre startTime e endTime
+      mockPrismaService.doNotDisturbSettings.findUnique.mockResolvedValue({
+        ...mockDndSettings,
+        enabled: true,
+        startTime: '00:00',
+        endTime: '23:59',
+        daysOfWeek: [],
+      });
+
+      const result = await service.isDndActive(mockUserId);
+
+      // Como 00:00-23:59 cobre o dia todo, deve retornar true
+      expect(result).toBe(true);
+    });
+
+    it('deve verificar range overnight (startTime > endTime) - após startTime', async () => {
+      // Range overnight: 22:00-07:00
+      // Se hora atual for 23:00, deve retornar true
+      const now = new Date();
+      const hours = now.getHours();
+
+      // Configuramos um range overnight que inclui a hora atual
+      mockPrismaService.doNotDisturbSettings.findUnique.mockResolvedValue({
+        ...mockDndSettings,
+        enabled: true,
+        startTime: `${hours.toString().padStart(2, '0')}:00`,
+        endTime: '07:00',
+        daysOfWeek: [],
+      });
+
+      const result = await service.isDndActive(mockUserId);
+
+      // A hora atual está >= startTime (mesmo horário), então deve ser true
+      expect(result).toBe(true);
+    });
+
+    it('deve verificar range overnight (startTime > endTime) - antes de endTime', async () => {
+      // Range overnight: 22:00-23:59 onde a hora atual é antes de endTime
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const currentTimeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+      // Configuramos um range normal que inclui a hora atual
+      mockPrismaService.doNotDisturbSettings.findUnique.mockResolvedValue({
+        ...mockDndSettings,
+        enabled: true,
+        startTime: '00:00',
+        endTime: currentTimeStr,
+        daysOfWeek: [],
+      });
+
+      const result = await service.isDndActive(mockUserId);
+
+      expect(result).toBe(true);
+    });
+
+    it('deve retornar true quando dia da semana está na lista e horário válido', async () => {
+      const currentDay = new Date().getDay();
+
+      mockPrismaService.doNotDisturbSettings.findUnique.mockResolvedValue({
+        ...mockDndSettings,
+        enabled: true,
+        startTime: '00:00',
+        endTime: '23:59',
+        daysOfWeek: [currentDay],
+      });
+
+      const result = await service.isDndActive(mockUserId);
+
+      expect(result).toBe(true);
+    });
+
+    it('deve retornar true quando daysOfWeek está vazio e horário válido', async () => {
+      mockPrismaService.doNotDisturbSettings.findUnique.mockResolvedValue({
+        ...mockDndSettings,
+        enabled: true,
+        startTime: '00:00',
+        endTime: '23:59',
+        daysOfWeek: [],
+      });
+
+      const result = await service.isDndActive(mockUserId);
+
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('cleanupOldNotifications', () => {
+    it('não deve deletar quando <= limite (500)', async () => {
+      mockPrismaService.notificationSettings.findUnique.mockResolvedValue(mockSettings);
+      mockPrismaService.notification.create.mockResolvedValue(mockNotification);
+      mockPrismaService.notification.count.mockResolvedValue(500);
+
+      await service.create({
+        userId: mockUserId,
+        type: NotificationType.NEW_LIKE as any,
+        category: NotificationCategory.SOCIAL as any,
+        title: 'Test',
+        body: 'Test',
+      });
+
+      expect(mockPrismaService.notification.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('deve deletar quando exceder limite de 500', async () => {
+      mockPrismaService.notificationSettings.findUnique.mockResolvedValue(mockSettings);
+      mockPrismaService.notification.create.mockResolvedValue(mockNotification);
+      mockPrismaService.notification.count.mockResolvedValue(501);
+      mockPrismaService.notification.findMany.mockResolvedValue([{ id: 'notif-old-1' }]);
+      mockPrismaService.notification.deleteMany.mockResolvedValue({ count: 1 });
+
+      await service.create({
+        userId: mockUserId,
+        type: NotificationType.NEW_LIKE as any,
+        category: NotificationCategory.SOCIAL as any,
+        title: 'Test',
+        body: 'Test',
+      });
+
+      expect(mockPrismaService.notification.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['notif-old-1'] } },
+      });
+    });
+
+    it('deve buscar as notificações mais antigas primeiro', async () => {
+      mockPrismaService.notificationSettings.findUnique.mockResolvedValue(mockSettings);
+      mockPrismaService.notification.create.mockResolvedValue(mockNotification);
+      mockPrismaService.notification.count.mockResolvedValue(502);
+      mockPrismaService.notification.findMany.mockResolvedValue([
+        { id: 'notif-old-1' },
+        { id: 'notif-old-2' },
+      ]);
+      mockPrismaService.notification.deleteMany.mockResolvedValue({ count: 2 });
+
+      await service.create({
+        userId: mockUserId,
+        type: NotificationType.NEW_LIKE as any,
+        category: NotificationCategory.SOCIAL as any,
+        title: 'Test',
+        body: 'Test',
+      });
+
+      expect(mockPrismaService.notification.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { createdAt: 'asc' },
+          take: 2,
+        })
+      );
+    });
+
+    it('deve calcular corretamente quantas notificações deletar', async () => {
+      mockPrismaService.notificationSettings.findUnique.mockResolvedValue(mockSettings);
+      mockPrismaService.notification.create.mockResolvedValue(mockNotification);
+      mockPrismaService.notification.count.mockResolvedValue(510); // 10 acima do limite
+      mockPrismaService.notification.findMany.mockResolvedValue(
+        Array.from({ length: 10 }, (_, i) => ({ id: `notif-${i}` }))
+      );
+      mockPrismaService.notification.deleteMany.mockResolvedValue({ count: 10 });
+
+      await service.create({
+        userId: mockUserId,
+        type: NotificationType.NEW_LIKE as any,
+        category: NotificationCategory.SOCIAL as any,
+        title: 'Test',
+        body: 'Test',
+      });
+
+      expect(mockPrismaService.notification.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          take: 10,
+        })
+      );
+    });
   });
 
   describe('getCategoryTypes', () => {

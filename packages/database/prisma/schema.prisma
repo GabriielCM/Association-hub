@@ -989,3 +989,506 @@ model MessageReaction {
   @@unique([messageId, userId, emoji])
   @@map("message_reactions")
 }
+
+// ===========================================
+// PDV SYSTEM (Phase 5 - MVP)
+// ===========================================
+
+enum PdvStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum PdvCheckoutStatus {
+  PENDING      // Aguardando scan do QR
+  AWAITING_PIX // Usuário escolheu PIX, aguardando pagamento
+  PAID         // Pagamento confirmado
+  EXPIRED      // QR expirou
+  CANCELLED    // Cancelado
+}
+
+enum PdvPaymentMethod {
+  POINTS
+  PIX
+}
+
+model Pdv {
+  id            String      @id @default(cuid())
+  associationId String      @map("association_id")
+
+  name     String
+  location String
+  status   PdvStatus @default(ACTIVE)
+
+  // Display config (JSON)
+  displayConfig Json @default("{}") @map("display_config")
+  // { theme: "default", idle_timeout: 60, checkout_timeout: 300 }
+
+  // Authentication for kiosk
+  apiKey    String @unique @map("api_key")
+  apiSecret String @map("api_secret") // hashed
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  products  PdvProduct[]
+  checkouts PdvCheckout[]
+  sales     PdvSale[]
+
+  @@index([associationId, status])
+  @@map("pdvs")
+}
+
+model PdvProduct {
+  id    String @id @default(cuid())
+  pdvId String @map("pdv_id")
+  pdv   Pdv    @relation(fields: [pdvId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  imageUrl    String?  @map("image_url")
+  pricePoints Int      @map("price_points")
+  priceMoney  Decimal  @map("price_money") @db.Decimal(10, 2)
+  category    String?
+  stock       Int      @default(0)
+  isActive    Boolean  @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([pdvId, isActive])
+  @@map("pdv_products")
+}
+
+model PdvCheckout {
+  id    String @id @default(cuid())
+  code  String @unique // 6-char alphanumeric
+  pdvId String @map("pdv_id")
+  pdv   Pdv    @relation(fields: [pdvId], references: [id])
+
+  items       Json // Array of { product_id, name, quantity, unit_price_points, unit_price_money }
+  totalPoints Int  @map("total_points")
+  totalMoney  Decimal @map("total_money") @db.Decimal(10, 2)
+
+  paymentMethod PdvPaymentMethod?  @map("payment_method")
+  status        PdvCheckoutStatus @default(PENDING)
+
+  // QR Code data
+  qrCodeUrl String? @map("qr_code_url")
+
+  // Stripe PIX
+  stripePaymentIntentId String?   @map("stripe_payment_intent_id")
+  pixQrCode             String?   @map("pix_qr_code") @db.Text
+  pixExpiresAt          DateTime? @map("pix_expires_at")
+
+  // User who paid
+  paidByUserId String?   @map("paid_by_user_id")
+  paidAt       DateTime? @map("paid_at")
+
+  // Cashback (if PIX)
+  cashbackEarned Int? @map("cashback_earned")
+
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  sale PdvSale?
+
+  @@index([pdvId, status])
+  @@index([code])
+  @@map("pdv_checkouts")
+}
+
+model PdvSale {
+  id         String      @id @default(cuid())
+  checkoutId String      @unique @map("checkout_id")
+  checkout   PdvCheckout @relation(fields: [checkoutId], references: [id])
+  pdvId      String      @map("pdv_id")
+  pdv        Pdv         @relation(fields: [pdvId], references: [id])
+  userId     String      @map("user_id")
+
+  items         Json
+  paymentMethod PdvPaymentMethod @map("payment_method")
+  totalPoints   Int?             @map("total_points")
+  totalMoney    Decimal?         @map("total_money") @db.Decimal(10, 2)
+
+  // Transaction references
+  pointsTransactionId   String? @map("points_transaction_id")
+  stripePaymentId       String? @map("stripe_payment_id")
+  cashbackEarned        Int?    @map("cashback_earned")
+  cashbackTransactionId String? @map("cashback_transaction_id")
+
+  // Linked order
+  orderId String? @unique @map("order_id")
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([pdvId, createdAt])
+  @@index([userId])
+  @@map("pdv_sales")
+}
+
+// ===========================================
+// STORE SYSTEM (Phase 5)
+// ===========================================
+
+model StoreCategory {
+  id            String @id @default(cuid())
+  associationId String @map("association_id")
+
+  name         String
+  slug         String
+  description  String?
+  imageUrl     String? @map("image_url")
+  displayOrder Int     @default(0) @map("display_order")
+  isActive     Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  products StoreProduct[]
+
+  @@unique([associationId, slug])
+  @@map("store_categories")
+}
+
+enum ProductType {
+  PHYSICAL
+  VOUCHER
+  SERVICE
+}
+
+enum PaymentOptions {
+  POINTS_ONLY
+  MONEY_ONLY
+  BOTH
+}
+
+model StoreProduct {
+  id         String        @id @default(cuid())
+  categoryId String        @map("category_id")
+  category   StoreCategory @relation(fields: [categoryId], references: [id])
+
+  name             String
+  slug             String      @unique
+  shortDescription String?     @map("short_description")
+  longDescription  String?     @map("long_description") @db.Text
+  type             ProductType @default(PHYSICAL)
+
+  // Pricing
+  pricePoints       Int?           @map("price_points")
+  priceMoney        Decimal?       @map("price_money") @db.Decimal(10, 2)
+  paymentOptions    PaymentOptions @default(BOTH) @map("payment_options")
+  allowMixedPayment Boolean        @default(true) @map("allow_mixed_payment")
+
+  // Stock
+  stockType    String @default("limited") @map("stock_type") // "limited" | "unlimited"
+  stockCount   Int?   @map("stock_count")
+  limitPerUser Int?   @map("limit_per_user")
+
+  // Cashback
+  cashbackPercent Decimal? @map("cashback_percent") @db.Decimal(5, 2)
+
+  // Voucher specific
+  voucherValidityDays Int? @map("voucher_validity_days")
+
+  // Featured & Promotions
+  isFeatured             Boolean   @default(false) @map("is_featured")
+  isPromotional          Boolean   @default(false) @map("is_promotional")
+  promotionalPricePoints Int?      @map("promotional_price_points")
+  promotionalPriceMoney  Decimal?  @map("promotional_price_money") @db.Decimal(10, 2)
+  promotionalEndsAt      DateTime? @map("promotional_ends_at")
+
+  // Restrictions
+  eligiblePlans String[] @default([]) @map("eligible_plans")
+
+  // Location
+  pickupLocation String? @map("pickup_location")
+
+  // Stats
+  averageRating Decimal? @map("average_rating") @db.Decimal(2, 1)
+  reviewCount   Int      @default(0) @map("review_count")
+  soldCount     Int      @default(0) @map("sold_count")
+
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  variants       ProductVariant[]
+  images         ProductImage[]
+  specifications ProductSpecification[]
+  reviews        ProductReview[]
+  favorites      ProductFavorite[]
+  cartItems      CartItem[]
+
+  @@index([categoryId, isActive])
+  @@map("store_products")
+}
+
+model ProductVariant {
+  id        String       @id @default(cuid())
+  productId String       @map("product_id")
+  product   StoreProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  sku        String  @unique
+  name       String // "M - Azul"
+  attributes Json // { size: "M", color: "Azul" }
+
+  pricePoints Int?     @map("price_points") // Override
+  priceMoney  Decimal? @map("price_money") @db.Decimal(10, 2)
+  stockCount  Int      @default(0) @map("stock_count")
+  imageUrl    String?  @map("image_url")
+  isActive    Boolean  @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  cartItems CartItem[]
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+model ProductImage {
+  id        String       @id @default(cuid())
+  productId String       @map("product_id")
+  product   StoreProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  url          String
+  altText      String? @map("alt_text")
+  displayOrder Int     @default(0) @map("display_order")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+model ProductSpecification {
+  id        String       @id @default(cuid())
+  productId String       @map("product_id")
+  product   StoreProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  key          String
+  value        String
+  displayOrder Int @default(0) @map("display_order")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("product_specifications")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model ProductReview {
+  id        String       @id @default(cuid())
+  productId String       @map("product_id")
+  product   StoreProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String       @map("user_id")
+  orderId   String       @map("order_id")
+
+  rating  Int // 1-5
+  comment String? @db.Text
+  status  ReviewStatus @default(PENDING)
+
+  moderatedBy String?   @map("moderated_by")
+  moderatedAt DateTime? @map("moderated_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([productId, userId, orderId])
+  @@map("product_reviews")
+}
+
+model ProductFavorite {
+  id        String       @id @default(cuid())
+  userId    String       @map("user_id")
+  productId String       @map("product_id")
+  product   StoreProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("product_favorites")
+}
+
+model Cart {
+  id     String @id @default(cuid())
+  userId String @unique @map("user_id")
+
+  subtotalPoints Int      @default(0) @map("subtotal_points")
+  subtotalMoney  Decimal  @default(0) @map("subtotal_money") @db.Decimal(10, 2)
+  reservedUntil  DateTime? @map("reserved_until")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String          @id @default(cuid())
+  cartId    String          @map("cart_id")
+  cart      Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String          @map("product_id")
+  product   StoreProduct    @relation(fields: [productId], references: [id])
+  variantId String?         @map("variant_id")
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+
+  quantity        Int
+  unitPricePoints Int     @map("unit_price_points")
+  unitPriceMoney  Decimal @map("unit_price_money") @db.Decimal(10, 2)
+  reservedStock   Boolean @default(false) @map("reserved_stock")
+
+  addedAt DateTime @default(now()) @map("added_at")
+
+  @@unique([cartId, productId, variantId])
+  @@map("cart_items")
+}
+
+// ===========================================
+// ORDERS SYSTEM (Phase 5 - Shared)
+// ===========================================
+
+enum OrderSource {
+  STORE
+  PDV
+}
+
+enum OrderStatus {
+  PENDING   // Pago, aguardando processamento
+  CONFIRMED // Em separação
+  READY     // Pronto para retirada
+  COMPLETED // Entregue
+  CANCELLED // Cancelado
+}
+
+enum OrderPaymentMethod {
+  POINTS
+  MONEY
+  MIXED
+}
+
+model Order {
+  id     String @id @default(cuid())
+  code   String @unique // 6-char alphanumeric
+  userId String @map("user_id")
+
+  source     OrderSource
+  sourceId   String      @map("source_id") // checkout_id or sale_id
+  sourceName String      @map("source_name") // "Loja Online" or PDV name
+
+  // Totals
+  subtotalPoints Int     @map("subtotal_points")
+  subtotalMoney  Decimal @map("subtotal_money") @db.Decimal(10, 2)
+
+  // Payment
+  paymentMethod   OrderPaymentMethod @map("payment_method")
+  pointsUsed      Int?               @map("points_used")
+  moneyPaid       Decimal?           @map("money_paid") @db.Decimal(10, 2)
+  cashbackEarned  Int?               @map("cashback_earned")
+  stripePaymentId String?            @map("stripe_payment_id")
+
+  // Transaction references
+  pointsTransactionId   String? @map("points_transaction_id")
+  cashbackTransactionId String? @map("cashback_transaction_id")
+
+  // Status
+  status OrderStatus @default(PENDING)
+
+  // Pickup
+  pickupCode     String  @map("pickup_code") // QR code data
+  pickupLocation String? @map("pickup_location")
+
+  // Cancellation
+  cancelledBy     String?   @map("cancelled_by")
+  cancelledReason String?   @map("cancelled_reason")
+  cancelledAt     DateTime? @map("cancelled_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  items         OrderItem[]
+  statusHistory OrderStatusHistory[]
+  receipt       OrderReceipt?
+  pdvSale       PdvSale?
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("orders")
+}
+
+enum OrderItemType {
+  PHYSICAL
+  VOUCHER
+  SERVICE
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId    String  @map("product_id")
+  variantId    String? @map("variant_id")
+  productName  String  @map("product_name")
+  variantName  String? @map("variant_name")
+  productImage String? @map("product_image")
+
+  quantity        Int
+  unitPricePoints Int     @map("unit_price_points")
+  unitPriceMoney  Decimal @map("unit_price_money") @db.Decimal(10, 2)
+  totalPoints     Int     @map("total_points")
+  totalMoney      Decimal @map("total_money") @db.Decimal(10, 2)
+
+  type OrderItemType @default(PHYSICAL)
+
+  // Voucher fields
+  voucherCode      String?   @map("voucher_code")
+  voucherUsed      Boolean   @default(false) @map("voucher_used")
+  voucherUsedAt    DateTime? @map("voucher_used_at")
+  voucherExpiresAt DateTime? @map("voucher_expires_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id      String @id @default(cuid())
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  status        OrderStatus
+  changedBy     String?     @map("changed_by")
+  changedByName String?     @map("changed_by_name")
+  notes         String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([orderId, createdAt])
+  @@map("order_status_history")
+}
+
+model OrderReceipt {
+  id      String @id @default(cuid())
+  orderId String @unique @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  receiptNumber String @unique @map("receipt_number") // REC-2026-000001
+  data          Json // Full receipt data snapshot
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("order_receipts")
+}

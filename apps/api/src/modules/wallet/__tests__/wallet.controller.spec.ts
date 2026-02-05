@@ -63,12 +63,21 @@ describe('WalletController', () => {
   };
 
   const mockCheckoutDetails = {
-    error: 'PDV será implementado na Fase 5',
+    code: 'checkout-123',
+    items: [{ product_id: 'prod-1', name: 'Café', quantity: 2 }],
+    totalPoints: 100,
+    totalMoney: 10.0,
+    expiresAt: new Date(),
+    pdv: { name: 'PDV Central', location: 'Entrada' },
+    user: { balance: 1000, canPayWithPoints: true },
   };
 
   const mockPdvPaymentResult = {
-    success: false,
-    error: 'PDV será implementado na Fase 5',
+    success: true,
+    transactionId: 'tx-1',
+    newBalance: 900,
+    orderId: 'order-1',
+    orderCode: 'ORD-001',
   };
 
   beforeEach(() => {
@@ -231,10 +240,11 @@ describe('WalletController', () => {
       expect(walletService.getCheckoutDetails).toHaveBeenCalledWith('checkout-123', 'user-123');
     });
 
-    it('should return Fase 5 placeholder', async () => {
+    it('should return checkout code and user balance', async () => {
       const result = await controller.getCheckoutDetails('checkout-123', mockUser);
 
-      expect(result.data.error).toContain('Fase 5');
+      expect(result.data.code).toBe('checkout-123');
+      expect(result.data.user.canPayWithPoints).toBe(true);
     });
   });
 
@@ -252,13 +262,13 @@ describe('WalletController', () => {
       expect(walletService.processPdvPayment).toHaveBeenCalledWith('checkout-123', 'user-123');
     });
 
-    it('should return Fase 5 placeholder', async () => {
+    it('should return success and new balance', async () => {
       const dto = { checkoutCode: 'checkout-123' };
 
       const result = await controller.processPdvPayment(mockUser, dto);
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Fase 5');
+      expect(result.success).toBe(true);
+      expect(result.newBalance).toBe(900);
     });
   });
 });

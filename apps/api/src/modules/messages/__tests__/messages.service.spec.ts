@@ -497,4 +497,200 @@ describe('MessagesService', () => {
       );
     });
   });
+
+  describe('mapMessageWithSender', () => {
+    const baseMessage = {
+      id: 'msg-1',
+      conversationId: mockConversationId,
+      senderId: mockUserId,
+      sender: { name: 'User 1', avatarUrl: null },
+      content: 'Test message',
+      contentType: MessageContentType.TEXT,
+      mediaUrl: null,
+      replyTo: null,
+      status: 'SENT',
+      reactions: [],
+      createdAt: new Date(),
+      deletedAt: null,
+    };
+
+    it('deve retornar array vazio quando sem reações', () => {
+      const result = (service as any).mapMessageWithSender(baseMessage, mockUserId);
+
+      expect(result.reactions).toHaveLength(0);
+    });
+
+    it('deve agregar reação única corretamente', () => {
+      const message = {
+        ...baseMessage,
+        reactions: [
+          { emoji: '👍', userId: mockOtherUserId, user: { name: 'User 2' } },
+        ],
+      };
+
+      const result = (service as any).mapMessageWithSender(message, mockUserId);
+
+      expect(result.reactions).toHaveLength(1);
+      expect(result.reactions[0]).toEqual({
+        emoji: '👍',
+        count: 1,
+        users: [{ userId: mockOtherUserId, name: 'User 2' }],
+        hasReacted: false,
+      });
+    });
+
+    it('deve agregar múltiplas reações do mesmo emoji', () => {
+      const message = {
+        ...baseMessage,
+        reactions: [
+          { emoji: '👍', userId: mockOtherUserId, user: { name: 'User 2' } },
+          { emoji: '👍', userId: 'user-789', user: { name: 'User 3' } },
+          { emoji: '👍', userId: mockUserId, user: { name: 'User 1' } },
+        ],
+      };
+
+      const result = (service as any).mapMessageWithSender(message, mockUserId);
+
+      const likeReaction = result.reactions[0];
+      expect(likeReaction.count).toBe(3);
+      expect(likeReaction.users).toHaveLength(3);
+      expect(likeReaction.hasReacted).toBe(true);
+    });
+
+    it('deve agregar múltiplos emojis diferentes', () => {
+      const message = {
+        ...baseMessage,
+        reactions: [
+          { emoji: '👍', userId: mockOtherUserId, user: { name: 'User 2' } },
+          { emoji: '❤️', userId: 'user-789', user: { name: 'User 3' } },
+          { emoji: '😂', userId: mockUserId, user: { name: 'User 1' } },
+        ],
+      };
+
+      const result = (service as any).mapMessageWithSender(message, mockUserId);
+
+      expect(result.reactions).toHaveLength(3);
+      const emojis = result.reactions.map((r: any) => r.emoji);
+      expect(emojis).toContain('👍');
+      expect(emojis).toContain('❤️');
+      expect(emojis).toContain('😂');
+    });
+
+    it('deve marcar hasReacted como true apenas para emojis do usuário atual', () => {
+      const message = {
+        ...baseMessage,
+        reactions: [
+          { emoji: '👍', userId: mockOtherUserId, user: { name: 'User 2' } },
+          { emoji: '👍', userId: mockUserId, user: { name: 'User 1' } },
+          { emoji: '❤️', userId: mockUserId, user: { name: 'User 1' } },
+          { emoji: '😂', userId: mockOtherUserId, user: { name: 'User 2' } },
+        ],
+      };
+
+      const result = (service as any).mapMessageWithSender(message, mockUserId);
+
+      const likeReaction = result.reactions.find((r: any) => r.emoji === '👍');
+      const heartReaction = result.reactions.find((r: any) => r.emoji === '❤️');
+      const laughReaction = result.reactions.find((r: any) => r.emoji === '😂');
+
+      expect(likeReaction?.hasReacted).toBe(true);
+      expect(heartReaction?.hasReacted).toBe(true);
+      expect(laughReaction?.hasReacted).toBe(false);
+    });
+
+    it('deve mapear corretamente mensagem com resposta', () => {
+      const replyToMessage = {
+        id: 'msg-reply-to',
+        content: 'Original message',
+        contentType: MessageContentType.TEXT,
+        senderId: mockOtherUserId,
+        sender: { name: 'User 2' },
+        createdAt: new Date(),
+      };
+
+      const message = {
+        ...baseMessage,
+        replyToId: 'msg-reply-to',
+        replyTo: replyToMessage,
+      };
+
+      const result = (service as any).mapMessageWithSender(message, mockUserId);
+
+      expect(result.replyTo).toBeDefined();
+      expect(result.replyTo.id).toBe('msg-reply-to');
+      expect(result.replyTo.content).toBe('Original message');
+      expect(result.replyTo.senderName).toBe('User 2');
+    });
+
+    it('deve mapear undefined quando não há resposta', () => {
+      const result = (service as any).mapMessageWithSender(baseMessage, mockUserId);
+
+      expect(result.replyTo).toBeUndefined();
+    });
+
+    it('deve mapear mediaUrl quando presente', () => {
+      const message = {
+        ...baseMessage,
+        mediaUrl: 'https://example.com/image.jpg',
+      };
+
+      const result = (service as any).mapMessageWithSender(message, mockUserId);
+
+      expect(result.mediaUrl).toBe('https://example.com/image.jpg');
+    });
+
+    it('deve mapear undefined quando mediaUrl é null', () => {
+      const result = (service as any).mapMessageWithSender(baseMessage, mockUserId);
+
+      expect(result.mediaUrl).toBeUndefined();
+    });
+
+    it('deve mapear deletedAt quando mensagem foi deletada', () => {
+      const deletedDate = new Date();
+      const message = { ...baseMessage, deletedAt: deletedDate };
+
+      const result = (service as any).mapMessageWithSender(message, mockUserId);
+
+      expect(result.deletedAt).toBe(deletedDate);
+    });
+
+    it('deve mapear undefined para deletedAt quando mensagem ativa', () => {
+      const result = (service as any).mapMessageWithSender(baseMessage, mockUserId);
+
+      expect(result.deletedAt).toBeUndefined();
+    });
+  });
+
+  describe('getConversationParticipants', () => {
+    it('deve retornar lista de IDs dos participantes ativos', async () => {
+      mockPrismaService.conversationParticipant.findMany.mockResolvedValue([
+        { userId: mockUserId },
+        { userId: mockOtherUserId },
+        { userId: 'user-789' },
+      ]);
+
+      const result = await service.getConversationParticipants(mockConversationId);
+
+      expect(result).toEqual([mockUserId, mockOtherUserId, 'user-789']);
+    });
+
+    it('deve retornar array vazio quando nenhum participante ativo', async () => {
+      mockPrismaService.conversationParticipant.findMany.mockResolvedValue([]);
+
+      const result = await service.getConversationParticipants(mockConversationId);
+
+      expect(result).toEqual([]);
+    });
+
+    it('deve filtrar por leftAt = null', async () => {
+      mockPrismaService.conversationParticipant.findMany.mockResolvedValue([]);
+
+      await service.getConversationParticipants(mockConversationId);
+
+      expect(mockPrismaService.conversationParticipant.findMany).toHaveBeenCalledWith({
+        where: { conversationId: mockConversationId, leftAt: null },
+        select: { userId: true },
+      });
+    });
+  });
 });

@@ -12,6 +12,10 @@ import { WalletModule } from './modules/wallet/wallet.module';
 import { EventsModule } from './modules/events/events.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { MessagesModule } from './modules/messages/messages.module';
+import { StripeModule } from './modules/stripe/stripe.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { PdvModule } from './modules/pdv/pdv.module';
+import { StoreModule } from './modules/store/store.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { HealthController } from './health.controller';
 
@@ -38,6 +42,11 @@ import { HealthController } from './health.controller';
     // Phase 4 - Communication
     NotificationsModule,
     MessagesModule,
+    // Phase 5 - Transactions
+    StripeModule,
+    OrdersModule,
+    PdvModule,
+    StoreModule,
   ],
   controllers: [HealthController],
 })

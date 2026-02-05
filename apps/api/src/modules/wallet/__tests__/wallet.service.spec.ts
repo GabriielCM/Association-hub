@@ -7,6 +7,7 @@ describe('WalletService', () => {
   let prisma: any;
   let pointsService: any;
   let cardService: any;
+  let pdvCheckoutService: any;
 
   beforeEach(() => {
     prisma = {
@@ -41,7 +42,26 @@ describe('WalletService', () => {
       }),
     };
 
-    service = new WalletService(prisma, pointsService, cardService);
+    pdvCheckoutService = {
+      getCheckoutDetails: vi.fn().mockResolvedValue({
+        code: 'checkout-123',
+        items: [],
+        totalPoints: 100,
+        totalMoney: 10.0,
+        expiresAt: new Date(),
+        pdv: { name: 'PDV Teste', location: 'Entrada' },
+        user: { balance: 1000, canPayWithPoints: true },
+      }),
+      payWithPoints: vi.fn().mockResolvedValue({
+        success: true,
+        transactionId: 'tx-1',
+        orderId: 'order-123',
+        orderCode: 'ORD-001',
+        newBalance: 900,
+      }),
+    };
+
+    service = new WalletService(prisma, pointsService, cardService, pdvCheckoutService);
   });
 
   // ===========================================
@@ -278,10 +298,20 @@ describe('WalletService', () => {
   // ===========================================
 
   describe('getCheckoutDetails', () => {
-    it('should return placeholder for PDV (Fase 5)', async () => {
+    it('should return checkout details from PdvCheckoutService', async () => {
       const result = await service.getCheckoutDetails('checkout-123', 'user-123');
 
-      expect(result.error).toContain('Fase 5');
+      expect(pdvCheckoutService.getCheckoutDetails).toHaveBeenCalledWith('checkout-123', 'user-123');
+      expect(result.pdv.name).toBe('PDV Teste');
+      expect(result.totalPoints).toBe(100);
+    });
+
+    it('should propagate errors from PdvCheckoutService', async () => {
+      pdvCheckoutService.getCheckoutDetails.mockRejectedValue(new Error('Checkout not found'));
+
+      await expect(service.getCheckoutDetails('invalid', 'user-123')).rejects.toThrow(
+        'Checkout not found',
+      );
     });
   });
 
@@ -290,11 +320,21 @@ describe('WalletService', () => {
   // ===========================================
 
   describe('processPdvPayment', () => {
-    it('should return placeholder for PDV (Fase 5)', async () => {
+    it('should process payment through PdvCheckoutService', async () => {
       const result = await service.processPdvPayment('checkout-123', 'user-123');
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Fase 5');
+      expect(pdvCheckoutService.payWithPoints).toHaveBeenCalledWith('checkout-123', 'user-123');
+      expect(result.success).toBe(true);
+      expect(result.orderId).toBe('order-123');
+      expect(result.newBalance).toBe(900);
+    });
+
+    it('should propagate errors from PdvCheckoutService', async () => {
+      pdvCheckoutService.payWithPoints.mockRejectedValue(new Error('Insufficient balance'));
+
+      await expect(service.processPdvPayment('checkout-123', 'user-123')).rejects.toThrow(
+        'Insufficient balance',
+      );
     });
   });
 });
