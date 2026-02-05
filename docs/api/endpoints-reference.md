@@ -16,6 +16,7 @@ last_updated: 2026-01-15
 
 - [Autenticação](#autenticação)
 - [Dashboard](#dashboard)
+- [Notificações](#notificações)
 - [Perfil](#perfil)
 - [Carteirinha](#carteirinha)
 - [Eventos](#eventos)
@@ -83,6 +84,55 @@ last_updated: 2026-01-15
 |--------|----------|-----------|-----------|
 | POST | `/feed/polls` | Criar enquete | ADM |
 | POST | `/feed/polls/:id/vote` | Votar em opção | User |
+
+---
+
+## Notificações
+
+### Listagem e Ações
+
+| Método | Endpoint | Descrição | Permissão |
+|--------|----------|-----------|-----------|
+| GET | `/notifications` | Listar notificações (paginado, filtros) | User |
+| GET | `/notifications/unread-count` | Contadores por categoria | User |
+| GET | `/notifications/:id` | Detalhes de uma notificação | User |
+| POST | `/notifications/:id/read` | Marcar como lida | User |
+| POST | `/notifications/read-all` | Marcar todas como lidas | User |
+| POST | `/notifications/read-category/:category` | Marcar categoria como lida | User |
+| POST | `/notifications/group/:groupKey/read` | Marcar grupo como lido | User |
+| DELETE | `/notifications/:id` | Excluir notificação | User |
+| DELETE | `/notifications/clear` | Excluir todas as lidas | User |
+
+### Configurações
+
+| Método | Endpoint | Descrição | Permissão |
+|--------|----------|-----------|-----------|
+| GET | `/notifications/settings` | Obter todas as configurações | User |
+| GET | `/notifications/settings/:category` | Configurações de uma categoria | User |
+| PUT | `/notifications/settings/:category` | Atualizar configurações | User |
+
+### Não Perturbe (DND)
+
+| Método | Endpoint | Descrição | Permissão |
+|--------|----------|-----------|-----------|
+| GET | `/notifications/dnd` | Configurações DND | User |
+| PUT | `/notifications/dnd` | Atualizar DND | User |
+
+### WebSocket Notificações
+
+| Conexão | Descrição |
+|---------|-----------|
+| `wss://api.ahub.com/ws/notifications` | WebSocket de notificações em tempo real |
+
+**Eventos Server → Client:**
+
+| Evento | Descrição |
+|--------|-----------|
+| `notification.new` | Nova notificação recebida |
+| `notification.read` | Notificação marcada como lida |
+| `notification.deleted` | Notificação excluída |
+| `unread_count.update` | Contadores de não lidas atualizados |
+| `settings.changed` | Configurações de categoria alteradas |
 
 ---
 
