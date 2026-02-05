@@ -197,7 +197,22 @@ describe('EventsService', () => {
       getBenefits: vi.fn().mockResolvedValue({ mutators: { points_events: 1 } }),
     };
 
-    service = new EventsService(prisma, pointsService, subscriptionsService);
+    const notificationsService = {
+      create: vi.fn().mockResolvedValue(null),
+      createBatch: vi.fn().mockResolvedValue(0),
+    };
+
+    const notificationsGateway = {
+      broadcastNewNotification: vi.fn(),
+    };
+
+    service = new EventsService(
+      prisma,
+      pointsService,
+      subscriptionsService,
+      notificationsService as any,
+      notificationsGateway as any,
+    );
   });
 
   // ==========================================

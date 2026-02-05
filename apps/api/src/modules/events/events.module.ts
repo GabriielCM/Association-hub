@@ -9,12 +9,14 @@ import { EventsScheduler } from './events.scheduler';
 import { PrismaModule } from '../../common/prisma/prisma.module';
 import { PointsModule } from '../points/points.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     PrismaModule,
     forwardRef(() => PointsModule),
     forwardRef(() => SubscriptionsModule),
+    NotificationsModule,
   ],
   controllers: [
     EventsController,

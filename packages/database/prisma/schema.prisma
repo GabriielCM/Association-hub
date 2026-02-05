@@ -63,6 +63,16 @@ model User {
   eventCheckIns      EventCheckIn[]
   eventComments      EventComment[]
 
+  // Phase 4 - Notifications & Messages
+  notifications         Notification[]
+  notificationSettings  NotificationSettings[]
+  doNotDisturbSettings  DoNotDisturbSettings?
+  deviceTokens          DeviceToken[]
+  conversationParticipants ConversationParticipant[]
+  messagesSent          Message[]
+  messageReactions      MessageReaction[]
+  groupsCreated         ConversationGroup[]
+
   @@map("users")
 }
 
@@ -724,4 +734,258 @@ model EventComment {
 
   @@index([eventId, createdAt])
   @@map("event_comments")
+}
+
+// ===========================================
+// NOTIFICATIONS (Phase 4)
+// ===========================================
+
+enum NotificationCategory {
+  SOCIAL
+  EVENTS
+  POINTS
+  RESERVATIONS
+  SYSTEM
+}
+
+enum NotificationType {
+  // Social (7 types)
+  NEW_LIKE
+  NEW_COMMENT
+  COMMENT_REPLY
+  MENTION
+  NEW_FOLLOWER
+  STORY_VIEW
+  POLL_ENDED
+
+  // Events (9 types)
+  NEW_EVENT
+  EVENT_REMINDER_1DAY
+  EVENT_REMINDER_1HOUR
+  EVENT_STARTED
+  CHECKIN_REMINDER
+  BADGE_EARNED
+  EVENT_CANCELLED
+  EVENT_UPDATED
+  CHECKIN_PROGRESS
+
+  // Points (5 types)
+  POINTS_RECEIVED
+  POINTS_SPENT
+  RANKING_UP
+  TRANSFER_RECEIVED
+  STRAVA_SYNC
+
+  // Reservations (4 types)
+  RESERVATION_APPROVED
+  RESERVATION_REJECTED
+  RESERVATION_REMINDER
+  WAITLIST_AVAILABLE
+
+  // System (5 types)
+  NEW_MESSAGE
+  NEW_BENEFIT
+  CARD_BLOCKED
+  CARD_UNBLOCKED
+  ADMIN_ANNOUNCEMENT
+}
+
+enum DevicePlatform {
+  IOS
+  ANDROID
+  WEB
+}
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      NotificationType
+  category  NotificationCategory
+  title     String
+  body      String
+  data      Json?   // Extra payload data
+  imageUrl  String? @map("image_url")
+  actionUrl String? @map("action_url")
+  groupKey  String? @map("group_key") // For batching similar notifications
+
+  isRead    Boolean  @default(false) @map("is_read")
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, isRead])
+  @@index([userId, category])
+  @@index([userId, createdAt])
+  @@index([groupKey])
+  @@map("notifications")
+}
+
+model NotificationSettings {
+  id       String               @id @default(cuid())
+  userId   String               @map("user_id")
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category NotificationCategory
+
+  pushEnabled  Boolean @default(true) @map("push_enabled")
+  inAppEnabled Boolean @default(true) @map("in_app_enabled")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, category])
+  @@map("notification_settings")
+}
+
+model DoNotDisturbSettings {
+  id     String @id @default(cuid())
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  enabled    Boolean @default(false)
+  startTime  String? @map("start_time") // "22:00" format
+  endTime    String? @map("end_time")   // "07:00" format
+  daysOfWeek Int[]   @default([]) @map("days_of_week") // 0=Sunday, 6=Saturday
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("do_not_disturb_settings")
+}
+
+model DeviceToken {
+  id       String         @id @default(cuid())
+  userId   String         @map("user_id")
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token    String         @unique
+  platform DevicePlatform
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("device_tokens")
+}
+
+// ===========================================
+// MESSAGES (Phase 4)
+// ===========================================
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum ConversationRole {
+  MEMBER
+  ADMIN
+}
+
+enum MessageContentType {
+  TEXT
+  IMAGE
+  AUDIO
+}
+
+enum MessageStatus {
+  SENDING
+  SENT
+  DELIVERED
+  READ
+}
+
+model Conversation {
+  id   String           @id @default(cuid())
+  type ConversationType
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  participants ConversationParticipant[]
+  messages     Message[]
+  group        ConversationGroup?
+
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String           @id @default(cuid())
+  conversationId String           @map("conversation_id")
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String           @map("user_id")
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role       ConversationRole @default(MEMBER)
+  isMuted    Boolean          @default(false) @map("is_muted")
+  isArchived Boolean          @default(false) @map("is_archived")
+  lastReadAt DateTime?        @map("last_read_at")
+  joinedAt   DateTime         @default(now()) @map("joined_at")
+  leftAt     DateTime?        @map("left_at")
+
+  @@unique([conversationId, userId])
+  @@index([userId, isArchived])
+  @@map("conversation_participants")
+}
+
+model ConversationGroup {
+  id             String       @id @default(cuid())
+  conversationId String       @unique @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  imageUrl    String? @map("image_url")
+
+  createdById String @map("created_by_id")
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("conversation_groups")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String       @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String       @map("sender_id")
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  content     String           @db.Text
+  contentType MessageContentType @default(TEXT) @map("content_type")
+  mediaUrl    String?          @map("media_url")
+
+  // Reply reference
+  replyToId String?  @map("reply_to_id")
+  replyTo   Message? @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies   Message[] @relation("MessageReplies")
+
+  status    MessageStatus @default(SENT)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  deletedAt DateTime?     @map("deleted_at")
+
+  // Relations
+  reactions MessageReaction[]
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("messages")
+}
+
+model MessageReaction {
+  id        String  @id @default(cuid())
+  messageId String  @map("message_id")
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String  @map("user_id")
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  emoji     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([messageId, userId, emoji])
+  @@map("message_reactions")
 }

@@ -49,8 +49,21 @@ describe('PointsService', () => {
       $transaction: vi.fn(),
     };
 
+    const notificationsService = {
+      create: vi.fn().mockResolvedValue(null),
+      createBatch: vi.fn().mockResolvedValue(0),
+    };
+
+    const notificationsGateway = {
+      broadcastNewNotification: vi.fn(),
+    };
+
     // Instantiate service directly with mock
-    service = new PointsService(prisma);
+    service = new PointsService(
+      prisma,
+      notificationsService as any,
+      notificationsGateway as any,
+    );
   });
 
   // ==========================================

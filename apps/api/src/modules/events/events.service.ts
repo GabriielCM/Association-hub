@@ -3,11 +3,14 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PointsService } from '../points/points.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
-import { EventStatus, Prisma } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { EventStatus, Prisma, NotificationCategory, NotificationType } from '@prisma/client';
 import { createHmac, randomBytes } from 'crypto';
 import {
   CreateEventDto,
@@ -23,10 +26,14 @@ import {
 
 @Injectable()
 export class EventsService {
+  private readonly logger = new Logger(EventsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly pointsService: PointsService,
     private readonly subscriptionsService: SubscriptionsService,
+    private readonly notificationsService: NotificationsService,
+    private readonly notificationsGateway: NotificationsGateway,
   ) {}
 
   // ===========================================
@@ -469,6 +476,11 @@ export class EventsService {
       });
 
       if (!existingBadge) {
+        const badge = await tx.badge.findUnique({
+          where: { id: badgeId },
+          select: { name: true, iconUrl: true },
+        });
+
         await tx.userBadge.create({
           data: { userId, badgeId },
         });
@@ -479,11 +491,38 @@ export class EventsService {
           data: { badgeAwarded: true },
         });
 
+        // Send notification for badge earned (async, non-blocking)
+        this.sendBadgeNotification(userId, badge?.name || 'Badge', badge?.iconUrl, eventId).catch(
+          (err) => this.logger.error('Failed to send badge notification:', err)
+        );
+
         return true;
       }
     }
 
     return false;
+  }
+
+  private async sendBadgeNotification(
+    userId: string,
+    badgeName: string,
+    badgeIconUrl: string | null | undefined,
+    eventId: string,
+  ): Promise<void> {
+    const notification = await this.notificationsService.create({
+      userId,
+      type: NotificationType.BADGE_EARNED,
+      category: NotificationCategory.EVENTS,
+      title: 'Nova Conquista!',
+      body: `Você conquistou a badge "${badgeName}"`,
+      data: { eventId, badgeName },
+      imageUrl: badgeIconUrl || undefined,
+      actionUrl: `/profile/badges`,
+    });
+
+    if (notification) {
+      this.notificationsGateway.broadcastNewNotification(userId, notification);
+    }
   }
 
   // ===========================================
@@ -742,7 +781,7 @@ export class EventsService {
   async publishEvent(eventId: string, associationId: string) {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
-      select: { id: true, associationId: true, status: true },
+      select: { id: true, associationId: true, status: true, title: true, bannerFeed: true, startDate: true },
     });
 
     if (!event) {
@@ -757,19 +796,62 @@ export class EventsService {
       throw new BadRequestException('Apenas rascunhos podem ser publicados');
     }
 
-    return this.prisma.event.update({
+    const updatedEvent = await this.prisma.event.update({
       where: { id: eventId },
       data: {
         status: 'SCHEDULED',
         publishedAt: new Date(),
       },
     });
+
+    // Send notification to all users in the association (async, non-blocking)
+    this.sendNewEventNotification(eventId, event.title, event.bannerFeed, event.startDate, associationId).catch(
+      (err) => this.logger.error('Failed to send new event notification:', err)
+    );
+
+    return updatedEvent;
+  }
+
+  private async sendNewEventNotification(
+    eventId: string,
+    title: string,
+    bannerUrl: string | null,
+    startDate: Date,
+    associationId: string,
+  ): Promise<void> {
+    // Get all active users in the association
+    const users = await this.prisma.user.findMany({
+      where: { associationId, status: 'ACTIVE' },
+      select: { id: true },
+    });
+
+    const userIds = users.map((u) => u.id);
+    if (userIds.length === 0) return;
+
+    const formattedDate = startDate.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+    });
+
+    const count = await this.notificationsService.createBatch({
+      userIds,
+      type: NotificationType.NEW_EVENT,
+      category: NotificationCategory.EVENTS,
+      title: 'Novo Evento!',
+      body: `${title} - ${formattedDate}`,
+      data: { eventId, title, startDate: startDate.toISOString() },
+      imageUrl: bannerUrl || undefined,
+      actionUrl: `/events/${eventId}`,
+      groupKey: `new-events-${new Date().toISOString().split('T')[0]}`,
+    });
+
+    this.logger.log(`New event notification sent to ${count} users`);
   }
 
   async cancelEvent(eventId: string, associationId: string, reason: string) {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
-      select: { id: true, associationId: true, status: true },
+      select: { id: true, associationId: true, status: true, title: true },
     });
 
     if (!event) {
@@ -784,13 +866,47 @@ export class EventsService {
       throw new BadRequestException('Evento ja foi encerrado ou cancelado');
     }
 
-    return this.prisma.event.update({
+    const updatedEvent = await this.prisma.event.update({
       where: { id: eventId },
       data: {
         status: 'CANCELED',
         cancelReason: reason,
       },
     });
+
+    // Send notification to confirmed users (async, non-blocking)
+    this.sendEventCancelledNotification(eventId, event.title, reason).catch(
+      (err) => this.logger.error('Failed to send event cancelled notification:', err)
+    );
+
+    return updatedEvent;
+  }
+
+  private async sendEventCancelledNotification(
+    eventId: string,
+    title: string,
+    reason: string,
+  ): Promise<void> {
+    // Get all confirmed users
+    const confirmations = await this.prisma.eventConfirmation.findMany({
+      where: { eventId },
+      select: { userId: true },
+    });
+
+    const userIds = confirmations.map((c) => c.userId);
+    if (userIds.length === 0) return;
+
+    const count = await this.notificationsService.createBatch({
+      userIds,
+      type: NotificationType.EVENT_CANCELLED,
+      category: NotificationCategory.EVENTS,
+      title: 'Evento Cancelado',
+      body: `${title} foi cancelado. Motivo: ${reason}`,
+      data: { eventId, title, reason },
+      actionUrl: `/events/${eventId}`,
+    });
+
+    this.logger.log(`Event cancelled notification sent to ${count} users`);
   }
 
   async pauseEvent(eventId: string, associationId: string, isPaused: boolean) {

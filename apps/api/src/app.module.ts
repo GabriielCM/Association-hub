@@ -10,6 +10,8 @@ import { ProfileModule } from './modules/profile/profile.module';
 import { CardModule } from './modules/card/card.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { EventsModule } from './modules/events/events.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { MessagesModule } from './modules/messages/messages.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { HealthController } from './health.controller';
 
@@ -33,6 +35,9 @@ import { HealthController } from './health.controller';
     WalletModule,
     // Phase 3 - Engagement
     EventsModule,
+    // Phase 4 - Communication
+    NotificationsModule,
+    MessagesModule,
   ],
   controllers: [HealthController],
 })

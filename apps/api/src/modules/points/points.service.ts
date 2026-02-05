@@ -3,9 +3,12 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { TransactionSource, Prisma } from '@prisma/client';
+import { TransactionSource, Prisma, NotificationCategory, NotificationType } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 import {
   SummaryPeriod,
   HistoryQueryDto,
@@ -15,7 +18,13 @@ import {
 
 @Injectable()
 export class PointsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(PointsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+    private readonly notificationsGateway: NotificationsGateway,
+  ) {}
 
   // ==========================================
   // USER ENDPOINTS
@@ -268,7 +277,42 @@ export class PointsService {
       };
     });
 
+    // Get sender name for notification
+    const sender = await this.prisma.user.findUnique({
+      where: { id: fromUserId },
+      select: { name: true },
+    });
+
+    // Send notification to recipient (async, non-blocking)
+    this.sendTransferNotification(
+      toUserId,
+      amount,
+      sender?.name || 'Alguém',
+      message,
+    ).catch((err) => this.logger.error('Failed to send transfer notification:', err));
+
     return result;
+  }
+
+  private async sendTransferNotification(
+    userId: string,
+    amount: number,
+    senderName: string,
+    message?: string,
+  ): Promise<void> {
+    const notification = await this.notificationsService.create({
+      userId,
+      type: NotificationType.TRANSFER_RECEIVED,
+      category: NotificationCategory.POINTS,
+      title: 'Pontos Recebidos!',
+      body: `${senderName} transferiu ${amount.toLocaleString()} pontos para você${message ? `: "${message}"` : ''}`,
+      data: { amount, senderName, message },
+      actionUrl: '/wallet',
+    });
+
+    if (notification) {
+      this.notificationsGateway.broadcastNewNotification(userId, notification);
+    }
   }
 
   async getRecentRecipients(userId: string, limit: number = 5) {
@@ -467,6 +511,11 @@ export class PointsService {
       where: { userId },
     });
 
+    // Send notification to user (async, non-blocking)
+    this.sendPointsReceivedNotification(userId, amount, reason).catch(
+      (err) => this.logger.error('Failed to send points received notification:', err)
+    );
+
     return {
       transactionId: transaction.id,
       userId,
@@ -477,6 +526,26 @@ export class PointsService {
       grantedBy: adminId,
       createdAt: transaction.createdAt,
     };
+  }
+
+  private async sendPointsReceivedNotification(
+    userId: string,
+    amount: number,
+    reason: string,
+  ): Promise<void> {
+    const notification = await this.notificationsService.create({
+      userId,
+      type: NotificationType.POINTS_RECEIVED,
+      category: NotificationCategory.POINTS,
+      title: 'Pontos Recebidos!',
+      body: `Você recebeu ${amount.toLocaleString()} pontos: ${reason}`,
+      data: { amount, reason },
+      actionUrl: '/wallet',
+    });
+
+    if (notification) {
+      this.notificationsGateway.broadcastNewNotification(userId, notification);
+    }
   }
 
   async adminDeductPoints(
