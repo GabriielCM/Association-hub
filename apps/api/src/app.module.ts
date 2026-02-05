@@ -19,6 +19,7 @@ import { StoreModule } from './modules/store/store.module';
 import { SpacesModule } from './modules/spaces/spaces.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { SupportModule } from './modules/support/support.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { HealthController } from './health.controller';
 
@@ -55,6 +56,8 @@ import { HealthController } from './health.controller';
     BookingsModule,
     // Phase 7 - Unification
     SupportModule,
+    // Phase 8 - Aggregator
+    DashboardModule,
   ],
   controllers: [HealthController],
 })

@@ -206,12 +206,19 @@ describe('EventsService', () => {
       broadcastNewNotification: vi.fn(),
     };
 
+    const postsService = {
+      createEventPost: vi.fn().mockResolvedValue('post-id'),
+      updateEventPost: vi.fn().mockResolvedValue(undefined),
+      deleteEventPost: vi.fn().mockResolvedValue(undefined),
+    };
+
     service = new EventsService(
       prisma,
       pointsService,
       subscriptionsService,
       notificationsService as any,
       notificationsGateway as any,
+      postsService as any,
     );
   });
 

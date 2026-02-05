@@ -4,13 +4,16 @@ import {
   BadRequestException,
   ForbiddenException,
   Logger,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PointsService } from '../points/points.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
-import { EventStatus, Prisma, NotificationCategory, NotificationType } from '@prisma/client';
+import { PostsService } from '../dashboard/services/posts.service';
+import { EventStatus, Prisma, NotificationCategory, NotificationType, PostType } from '@prisma/client';
 import { createHmac, randomBytes } from 'crypto';
 import {
   CreateEventDto,
@@ -34,6 +37,8 @@ export class EventsService {
     private readonly subscriptionsService: SubscriptionsService,
     private readonly notificationsService: NotificationsService,
     private readonly notificationsGateway: NotificationsGateway,
+    @Inject(forwardRef(() => PostsService))
+    private readonly postsService: PostsService,
   ) {}
 
   // ===========================================
@@ -772,16 +777,37 @@ export class EventsService {
     if (dto.capacity !== undefined) updateData.capacity = dto.capacity;
     if (dto.externalLink !== undefined) updateData.externalLink = dto.externalLink;
 
-    return this.prisma.event.update({
+    const updatedEvent = await this.prisma.event.update({
       where: { id: eventId },
       data: updateData,
     });
+
+    // Update feed post if event is published and description changed
+    if (
+      (event.status === 'SCHEDULED' || event.status === 'ONGOING') &&
+      dto.description
+    ) {
+      this.postsService.updateEventPost(eventId, dto.description).catch((err) =>
+        this.logger.error('Failed to update event post:', err),
+      );
+    }
+
+    return updatedEvent;
   }
 
   async publishEvent(eventId: string, associationId: string) {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
-      select: { id: true, associationId: true, status: true, title: true, bannerFeed: true, startDate: true },
+      select: {
+        id: true,
+        associationId: true,
+        status: true,
+        title: true,
+        description: true,
+        bannerFeed: true,
+        startDate: true,
+        createdBy: true,
+      },
     });
 
     if (!event) {
@@ -803,6 +829,17 @@ export class EventsService {
         publishedAt: new Date(),
       },
     });
+
+    // Create feed post for the event
+    this.postsService
+      .createEventPost(
+        associationId,
+        eventId,
+        event.bannerFeed || '',
+        event.description || event.title,
+        event.createdBy,
+      )
+      .catch((err) => this.logger.error('Failed to create event post:', err));
 
     // Send notification to all users in the association (async, non-blocking)
     this.sendNewEventNotification(eventId, event.title, event.bannerFeed, event.startDate, associationId).catch(
@@ -873,6 +910,11 @@ export class EventsService {
         cancelReason: reason,
       },
     });
+
+    // Delete the feed post for this event
+    this.postsService.deleteEventPost(eventId).catch((err) =>
+      this.logger.error('Failed to delete event post:', err),
+    );
 
     // Send notification to confirmed users (async, non-blocking)
     this.sendEventCancelledNotification(eventId, event.title, reason).catch(

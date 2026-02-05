@@ -10,6 +10,7 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
 import { PointsModule } from '../points/points.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { DashboardModule } from '../dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     forwardRef(() => PointsModule),
     forwardRef(() => SubscriptionsModule),
     NotificationsModule,
+    forwardRef(() => DashboardModule),
   ],
   controllers: [
     EventsController,

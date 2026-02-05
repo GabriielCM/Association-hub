@@ -77,6 +77,18 @@ model User {
   tickets      Ticket[]
   chatSessions ChatSession[]
 
+  // Phase 8 - Dashboard
+  stories              Story[]
+  storyViews           StoryView[]          @relation("StoryViews")
+  posts                Post[]
+  postLikes            PostLike[]
+  feedComments         FeedComment[]
+  feedCommentReactions FeedCommentReaction[]
+  pollVotes            PollVote[]
+  reports              Report[]
+  suspensions          UserSuspension[]
+  dailyPostTrackers    DailyPostTracker[]
+
   @@map("users")
 }
 
@@ -1925,4 +1937,313 @@ model SupportUpload {
 
   @@index([userId, expiresAt])
   @@map("support_uploads")
+}
+
+// ===========================================
+// DASHBOARD - STORIES (Phase 8)
+// ===========================================
+
+enum StoryType {
+  IMAGE
+  VIDEO
+  TEXT
+}
+
+model Story {
+  id            String @id @default(cuid())
+  userId        String @map("user_id")
+  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  associationId String @map("association_id")
+
+  type            StoryType
+  mediaUrl        String?   @map("media_url")
+  text            String?   @db.VarChar(280)
+  backgroundColor String?   @map("background_color") // For text stories
+
+  expiresAt DateTime @map("expires_at") // 24h after creation
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  views StoryView[]
+
+  @@index([userId, createdAt])
+  @@index([associationId, expiresAt])
+  @@map("stories")
+}
+
+model StoryView {
+  id       String @id @default(cuid())
+  storyId  String @map("story_id")
+  story    Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  viewerId String @map("viewer_id")
+  viewer   User   @relation("StoryViews", fields: [viewerId], references: [id], onDelete: Cascade)
+
+  viewedAt DateTime @default(now()) @map("viewed_at")
+
+  @@unique([storyId, viewerId])
+  @@index([storyId])
+  @@map("story_views")
+}
+
+// ===========================================
+// DASHBOARD - FEED & POSTS (Phase 8)
+// ===========================================
+
+enum PostType {
+  PHOTO
+  POLL
+  EVENT // Auto-generated from Events module
+}
+
+model Post {
+  id            String @id @default(cuid())
+  authorId      String @map("author_id")
+  author        User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  associationId String @map("association_id")
+
+  type        PostType
+  imageUrl    String?  @map("image_url")
+  description String?  @db.VarChar(500)
+
+  // For EVENT posts - link to source event
+  eventId String? @unique @map("event_id")
+
+  // Counters (denormalized for performance)
+  likesCount    Int @default(0) @map("likes_count")
+  commentsCount Int @default(0) @map("comments_count")
+
+  // Moderation
+  isPinned Boolean @default(false) @map("is_pinned")
+  isHidden Boolean @default(false) @map("is_hidden")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at") // Soft delete
+
+  // Relations
+  likes    PostLike[]
+  comments FeedComment[]
+  poll     Poll?
+  reports  Report[]
+
+  @@index([authorId, createdAt])
+  @@index([associationId, createdAt])
+  @@index([associationId, isPinned, createdAt])
+  @@map("posts")
+}
+
+model PostLike {
+  id     String @id @default(cuid())
+  postId String @map("post_id")
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+  @@map("post_likes")
+}
+
+model FeedComment {
+  id       String @id @default(cuid())
+  postId   String @map("post_id")
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId String @map("author_id")
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // For replies (1 level nesting)
+  parentId String?       @map("parent_id")
+  parent   FeedComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  FeedComment[] @relation("CommentReplies")
+
+  text String @db.VarChar(500)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  // Relations
+  reactions FeedCommentReaction[]
+
+  @@index([postId, createdAt])
+  @@index([authorId])
+  @@index([parentId])
+  @@map("feed_comments")
+}
+
+enum FeedReactionType {
+  HEART
+  THUMBS_UP
+  LAUGH
+  WOW
+}
+
+model FeedCommentReaction {
+  id        String           @id @default(cuid())
+  commentId String           @map("comment_id")
+  comment   FeedComment      @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String           @map("user_id")
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      FeedReactionType
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([commentId, userId, type])
+  @@index([commentId])
+  @@map("feed_comment_reactions")
+}
+
+// ===========================================
+// DASHBOARD - POLLS (Phase 8)
+// ===========================================
+
+model Poll {
+  id     String @id @default(cuid())
+  postId String @unique @map("post_id")
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  question     String @db.VarChar(200)
+  durationDays Int?   @map("duration_days") // null = no expiration
+  totalVotes   Int    @default(0) @map("total_votes")
+
+  endsAt  DateTime? @map("ends_at")
+  endedAt DateTime? @map("ended_at") // Actual end time
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  options PollOption[]
+  votes   PollVote[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id     String @id @default(cuid())
+  pollId String @map("poll_id")
+  poll   Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  text       String @db.VarChar(80)
+  votesCount Int    @default(0) @map("votes_count")
+  order      Int    @default(0)
+
+  // Relations
+  votes PollVote[]
+
+  @@index([pollId])
+  @@map("poll_options")
+}
+
+model PollVote {
+  id       String     @id @default(cuid())
+  pollId   String     @map("poll_id")
+  poll     Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionId String     @map("option_id")
+  option   PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  userId   String     @map("user_id")
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([pollId, userId])
+  @@index([pollId])
+  @@index([optionId])
+  @@map("poll_votes")
+}
+
+// ===========================================
+// DASHBOARD - MODERATION (Phase 8)
+// ===========================================
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE
+  HARASSMENT
+  MISINFORMATION
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportTargetType {
+  POST
+  COMMENT
+}
+
+model Report {
+  id            String @id @default(cuid())
+  reporterId    String @map("reporter_id")
+  reporter      User   @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  associationId String @map("association_id")
+
+  targetType ReportTargetType @map("target_type")
+  targetId   String           @map("target_id")
+
+  // Link to post if target is POST
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: SetNull)
+  postId String? @map("post_id")
+
+  reason      ReportReason
+  description String?      @db.VarChar(500)
+  status      ReportStatus @default(PENDING)
+
+  // Resolution
+  resolvedById String?   @map("resolved_by_id")
+  resolvedAt   DateTime? @map("resolved_at")
+  resolution   String?   @db.VarChar(500)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([associationId, status])
+  @@index([targetType, targetId])
+  @@map("reports")
+}
+
+model UserSuspension {
+  id            String @id @default(cuid())
+  userId        String @map("user_id")
+  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  associationId String @map("association_id")
+
+  suspendedById String @map("suspended_by_id")
+  reason        String @db.VarChar(500)
+  durationDays  Int?   @map("duration_days") // null = permanent
+
+  startsAt DateTime  @default(now()) @map("starts_at")
+  endsAt   DateTime? @map("ends_at") // null = permanent
+
+  // Early release
+  liftedById String?   @map("lifted_by_id")
+  liftedAt   DateTime? @map("lifted_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, endsAt])
+  @@index([associationId])
+  @@map("user_suspensions")
+}
+
+// Track daily post points to ensure only first post gets points
+model DailyPostTracker {
+  id     String   @id @default(cuid())
+  userId String   @map("user_id")
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date   DateTime @db.Date
+
+  firstPostId   String?  @map("first_post_id")
+  pointsAwarded Boolean  @default(false) @map("points_awarded")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("daily_post_trackers")
 }
