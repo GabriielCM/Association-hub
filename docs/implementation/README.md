@@ -21,7 +21,7 @@ Este diretório contém a documentação do progresso de implementação do A-hu
 | Fase 2 - Identidade (Perfil + Carteirinha + Wallet) | ✅ Completa | 100% | 2026-02-03 |
 | Fase 3 - Eventos (Engajamento) | ✅ Completa | 100% | 2026-02-04 |
 | Fase 4 - Comunicação (Notificações + Mensagens) | ✅ Completa | 100% | 2026-02-05 |
-| Fase 5 - Transações | ⏳ Pendente | 0% | - |
+| Fase 5 - Transações (PDV + Loja) | ✅ Completa | 100% | 2026-02-05 |
 | Fase 6 - Locações | ⏳ Pendente | 0% | - |
 | Fase 7 - Unificação | ⏳ Pendente | 0% | - |
 | Fase 8 - Dashboard | ⏳ Pendente | 0% | - |
@@ -37,6 +37,7 @@ Este diretório contém a documentação do progresso de implementação do A-hu
 | [phase-02-status.md](phase-02-status.md) | Identidade - Perfil, Carteirinha, Wallet |
 | [phase-03-status.md](phase-03-status.md) | Eventos - Check-in, QR Code, Display |
 | [phase-04-status.md](phase-04-status.md) | Comunicação - Notificações, Mensagens |
+| [phase-05-status.md](phase-05-status.md) | Transações - PDV, Loja, Orders, Stripe |
 
 ---
 
@@ -55,19 +56,23 @@ Este diretório contém a documentação do progresso de implementação do A-hu
 | 3 | Events | 250 | 97.34% |
 | 4 | Notifications | 55 | ~97% |
 | 4 | Messages | 43 | ~97% |
-| **Total** | - | **666** | **>95%** |
+| 5 | Stripe | 10 | ~95% |
+| 5 | PDV | 27 | ~96% |
+| 5 | Store | 52 | ~95% |
+| 5 | Orders | 22 | ~96% |
+| **Total** | - | **777** | **>95%** |
 
 ---
 
 ## Próximos Passos
 
-1. **Fase 5 - Transações**
-   - [ ] PDV (Ponto de Venda)
-   - [ ] Loja Online
-
-2. **Fase 6 - Locações**
+1. **Fase 6 - Locações**
    - [ ] Gerenciamento de Espaços
    - [ ] Sistema de Reservas
+
+2. **Fase 7 - Unificação**
+   - [ ] Pedidos consolidados
+   - [ ] Suporte/Tickets
 
 ---
 
