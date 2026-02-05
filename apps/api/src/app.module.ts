@@ -16,6 +16,8 @@ import { StripeModule } from './modules/stripe/stripe.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PdvModule } from './modules/pdv/pdv.module';
 import { StoreModule } from './modules/store/store.module';
+import { SpacesModule } from './modules/spaces/spaces.module';
+import { BookingsModule } from './modules/bookings/bookings.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { HealthController } from './health.controller';
 
@@ -47,6 +49,9 @@ import { HealthController } from './health.controller';
     OrdersModule,
     PdvModule,
     StoreModule,
+    // Phase 6 - Locations
+    SpacesModule,
+    BookingsModule,
   ],
   controllers: [HealthController],
 })

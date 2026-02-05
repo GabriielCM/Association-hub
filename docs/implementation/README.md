@@ -22,7 +22,7 @@ Este diretório contém a documentação do progresso de implementação do A-hu
 | Fase 3 - Eventos (Engajamento) | ✅ Completa | 100% | 2026-02-04 |
 | Fase 4 - Comunicação (Notificações + Mensagens) | ✅ Completa | 100% | 2026-02-05 |
 | Fase 5 - Transações (PDV + Loja) | ✅ Completa | 100% | 2026-02-05 |
-| Fase 6 - Locações | ⏳ Pendente | 0% | - |
+| Fase 6 - Locações (Espaços + Reservas) | ✅ Completa | 100% | 2026-02-05 |
 | Fase 7 - Unificação | ⏳ Pendente | 0% | - |
 | Fase 8 - Dashboard | ⏳ Pendente | 0% | - |
 
@@ -38,6 +38,7 @@ Este diretório contém a documentação do progresso de implementação do A-hu
 | [phase-03-status.md](phase-03-status.md) | Eventos - Check-in, QR Code, Display |
 | [phase-04-status.md](phase-04-status.md) | Comunicação - Notificações, Mensagens |
 | [phase-05-status.md](phase-05-status.md) | Transações - PDV, Loja, Orders, Stripe |
+| [phase-06-status.md](phase-06-status.md) | Locações - Espaços, Reservas |
 
 ---
 
@@ -60,19 +61,21 @@ Este diretório contém a documentação do progresso de implementação do A-hu
 | 5 | PDV | 27 | ~96% |
 | 5 | Store | 52 | ~95% |
 | 5 | Orders | 22 | ~96% |
-| **Total** | - | **777** | **>95%** |
+| 6 | Spaces | 22 | ~97% |
+| 6 | Bookings | 28 | ~97% |
+| **Total** | - | **827** | **>95%** |
 
 ---
 
 ## Próximos Passos
 
-1. **Fase 6 - Locações**
-   - [ ] Gerenciamento de Espaços
-   - [ ] Sistema de Reservas
+1. **Fase 7 - Unificação**
+   - [ ] Pedidos consolidados (integração Espacos + Loja + PDV)
+   - [ ] Sistema de Suporte/Tickets
 
-2. **Fase 7 - Unificação**
-   - [ ] Pedidos consolidados
-   - [ ] Suporte/Tickets
+2. **Fase 8 - Dashboard**
+   - [ ] Dashboard Administrativo
+   - [ ] Relatórios e Métricas
 
 ---
 

@@ -1492,3 +1492,187 @@ model OrderReceipt {
 
   @@map("order_receipts")
 }
+
+// ===========================================
+// SPACES SYSTEM (Phase 6)
+// ===========================================
+
+enum SpaceStatus {
+  ACTIVE
+  MAINTENANCE
+  INACTIVE
+}
+
+enum BookingPeriodType {
+  DAY   // Dia inteiro
+  SHIFT // Por turno (manhã, tarde, noite)
+  HOUR  // Por hora
+}
+
+model Space {
+  id            String      @id @default(cuid())
+  associationId String      @map("association_id")
+
+  name        String
+  description String   @db.Text
+  capacity    Int
+
+  // Images
+  images       String[] @default([])
+  mainImageUrl String?  @map("main_image_url")
+
+  // Pricing (0 = free)
+  fee Decimal @default(0) @db.Decimal(10, 2)
+
+  // Booking period config
+  periodType BookingPeriodType @default(DAY) @map("period_type")
+
+  // For SHIFT period - JSON array of { name, startTime, endTime }
+  // e.g., [{ "name": "Manhã", "startTime": "08:00", "endTime": "12:00" }]
+  shifts Json? @default("[]")
+
+  // For HOUR period
+  openingTime     String? @map("opening_time")  // "08:00"
+  closingTime     String? @map("closing_time")  // "22:00"
+  minDurationHours Int?   @map("min_duration_hours")
+
+  // Booking rules
+  minAdvanceDays Int @default(1) @map("min_advance_days") // Min days to book in advance
+  maxAdvanceDays Int @default(60) @map("max_advance_days") // Max days to book in advance
+
+  // Interval between bookings for same user (in months, 0 = no restriction)
+  bookingIntervalMonths Int @default(0) @map("booking_interval_months")
+
+  // Related spaces that get blocked when this space is booked
+  blockedSpaceIds String[] @default([]) @map("blocked_space_ids")
+
+  status SpaceStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at") // Soft delete
+
+  // Relations
+  blocks    SpaceBlock[]
+  bookings  Booking[]
+
+  @@index([associationId, status])
+  @@map("spaces")
+}
+
+model SpaceBlock {
+  id      String @id @default(cuid())
+  spaceId String @map("space_id")
+  space   Space  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  date   DateTime @db.Date
+  reason String?
+
+  createdById String @map("created_by_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([spaceId, date])
+  @@index([spaceId, date])
+  @@map("space_blocks")
+}
+
+// ===========================================
+// BOOKINGS SYSTEM (Phase 6)
+// ===========================================
+
+enum BookingStatus {
+  PENDING   // Aguardando aprovação
+  APPROVED  // Aprovada
+  REJECTED  // Rejeitada
+  CANCELLED // Cancelada
+  EXPIRED   // Expirada (não aprovada a tempo)
+  COMPLETED // Concluída (data passou)
+}
+
+model Booking {
+  id      String @id @default(cuid())
+  spaceId String @map("space_id")
+  space   Space  @relation(fields: [spaceId], references: [id])
+  userId  String @map("user_id")
+
+  // Booking date/time
+  date       DateTime @db.Date
+  periodType BookingPeriodType @map("period_type")
+
+  // For SHIFT bookings
+  shiftName  String? @map("shift_name")  // "Manhã", "Tarde", "Noite"
+  shiftStart String? @map("shift_start") // "08:00"
+  shiftEnd   String? @map("shift_end")   // "12:00"
+
+  // For HOUR bookings
+  startTime String? @map("start_time") // "14:00"
+  endTime   String? @map("end_time")   // "18:00"
+
+  // Pricing
+  totalFee      Decimal? @map("total_fee") @db.Decimal(10, 2)
+  discountApplied Decimal? @map("discount_applied") @db.Decimal(5, 2) // From subscription
+  finalFee      Decimal? @map("final_fee") @db.Decimal(10, 2)
+
+  status BookingStatus @default(PENDING)
+
+  // Approval/Rejection
+  approvedById  String?   @map("approved_by_id")
+  approvedAt    DateTime? @map("approved_at")
+  rejectedById  String?   @map("rejected_by_id")
+  rejectedAt    DateTime? @map("rejected_at")
+  rejectionReason String? @map("rejection_reason")
+
+  // Cancellation
+  cancelledById    String?   @map("cancelled_by_id")
+  cancelledAt      DateTime? @map("cancelled_at")
+  cancellationReason String? @map("cancellation_reason")
+
+  // Expiration
+  expiredAt DateTime? @map("expired_at")
+
+  // Completion
+  completedAt DateTime? @map("completed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  waitlistEntries BookingWaitlist[]
+
+  @@unique([spaceId, date, periodType, shiftName, startTime])
+  @@index([spaceId, date, status])
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("bookings")
+}
+
+model BookingWaitlist {
+  id        String   @id @default(cuid())
+  spaceId   String   @map("space_id")
+  bookingId String?  @map("booking_id") // The booking they're waiting for
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  userId    String   @map("user_id")
+
+  // Booking details they want
+  date       DateTime @db.Date
+  periodType BookingPeriodType @map("period_type")
+  shiftName  String? @map("shift_name")
+  startTime  String? @map("start_time")
+  endTime    String? @map("end_time")
+
+  position Int // Queue position
+
+  // Notification tracking
+  notifiedAt    DateTime? @map("notified_at")
+  expiresAt     DateTime? @map("expires_at") // 24h after notification
+  respondedAt   DateTime? @map("responded_at")
+  accepted      Boolean?  // true = accepted, false = declined, null = no response
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([spaceId, date, periodType, shiftName, startTime, userId])
+  @@index([spaceId, date])
+  @@index([userId])
+  @@map("booking_waitlist")
+}
