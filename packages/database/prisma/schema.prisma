@@ -73,6 +73,10 @@ model User {
   messageReactions      MessageReaction[]
   groupsCreated         ConversationGroup[]
 
+  // Phase 7 - Support
+  tickets      Ticket[]
+  chatSessions ChatSession[]
+
   @@map("users")
 }
 
@@ -1675,4 +1679,250 @@ model BookingWaitlist {
   @@index([spaceId, date])
   @@index([userId])
   @@map("booking_waitlist")
+}
+
+// ===========================================
+// SUPPORT SYSTEM (Phase 7)
+// ===========================================
+
+enum TicketCategory {
+  BUG
+  SUGGESTION
+  QUESTION
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum AttachmentType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
+enum ChatSessionStatus {
+  QUEUED
+  ACTIVE
+  ENDED
+}
+
+enum SenderType {
+  USER
+  SUPPORT
+  AGENT
+}
+
+model Ticket {
+  id            String         @id @default(cuid())
+  code          String         @unique // TKT-001
+  userId        String         @map("user_id")
+  user          User           @relation(fields: [userId], references: [id])
+  associationId String         @map("association_id")
+
+  category    TicketCategory
+  subject     String // min 5, max 100 chars
+  description String         @db.Text // min 20, max 5000 chars
+  status      TicketStatus   @default(OPEN)
+
+  // Automatic ticket (crash report)
+  isAutomatic Boolean     @default(false) @map("is_automatic")
+  deviceInfo  Json?       @map("device_info") // DeviceInfo object
+
+  // Assignment
+  assignedToId String? @map("assigned_to_id")
+
+  // Timestamps
+  resolvedAt DateTime? @map("resolved_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  messages    TicketMessage[]
+  attachments TicketAttachment[]
+  rating      TicketRating?
+
+  @@index([userId, createdAt])
+  @@index([associationId, status])
+  @@index([status])
+  @@map("tickets")
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String   @map("ticket_id")
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  senderType SenderType @map("sender_type")
+  senderId   String     @map("sender_id") // user_id or admin_id
+  senderName String?    @map("sender_name")
+
+  content String @db.Text // max 5000 chars
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  attachments TicketMessageAttachment[]
+
+  @@index([ticketId, createdAt])
+  @@map("ticket_messages")
+}
+
+model TicketAttachment {
+  id       String @id @default(cuid())
+  ticketId String @map("ticket_id")
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  type      AttachmentType
+  url       String
+  filename  String
+  sizeBytes Int            @map("size_bytes") // max 10MB
+  mimeType  String         @map("mime_type")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("ticket_attachments")
+}
+
+model TicketMessageAttachment {
+  id        String        @id @default(cuid())
+  messageId String        @map("message_id")
+  message   TicketMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  type      AttachmentType
+  url       String
+  filename  String
+  sizeBytes Int            @map("size_bytes")
+  mimeType  String         @map("mime_type")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("ticket_message_attachments")
+}
+
+model TicketRating {
+  id       String @id @default(cuid())
+  ticketId String @unique @map("ticket_id")
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  rating  Int // 1-5
+  comment String? @db.VarChar(500)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("ticket_ratings")
+}
+
+model FAQItem {
+  id            String  @id @default(cuid())
+  associationId String  @map("association_id")
+
+  question String
+  answer   String   @db.Text // Supports Markdown
+  category String
+  order    Int      @default(0)
+  isActive Boolean  @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([associationId, isActive, category, order])
+  @@map("faq_items")
+}
+
+model ChatSession {
+  id            String            @id @default(cuid())
+  userId        String            @map("user_id")
+  user          User              @relation(fields: [userId], references: [id])
+  associationId String            @map("association_id")
+
+  agentId String? @map("agent_id") // Support agent ID
+
+  status        ChatSessionStatus @default(QUEUED)
+  queuePosition Int?              @map("queue_position")
+
+  startedAt DateTime? @map("started_at") // When connected to agent
+  endedAt   DateTime? @map("ended_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  messages ChatMessage[]
+  rating   ChatRating?
+
+  @@index([userId, createdAt])
+  @@index([associationId, status])
+  @@index([agentId, status])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String      @map("session_id")
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  senderType SenderType @map("sender_type") // USER or AGENT
+  senderId   String     @map("sender_id")
+
+  content String @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  attachments ChatMessageAttachment[]
+
+  @@index([sessionId, createdAt])
+  @@map("chat_messages")
+}
+
+model ChatMessageAttachment {
+  id        String      @id @default(cuid())
+  messageId String      @map("message_id")
+  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  type      AttachmentType
+  url       String
+  filename  String
+  sizeBytes Int            @map("size_bytes")
+  mimeType  String         @map("mime_type")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("chat_message_attachments")
+}
+
+model ChatRating {
+  id        String      @id @default(cuid())
+  sessionId String      @unique @map("session_id")
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  rating  Int // 1-5
+  comment String? @db.VarChar(500)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("chat_ratings")
+}
+
+// Temporary upload storage for attachments
+model SupportUpload {
+  id            String @id @default(cuid())
+  userId        String @map("user_id")
+  associationId String @map("association_id")
+
+  type      AttachmentType
+  url       String
+  filename  String
+  sizeBytes Int            @map("size_bytes")
+  mimeType  String         @map("mime_type")
+
+  expiresAt DateTime @map("expires_at") // 1 hour after upload
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, expiresAt])
+  @@map("support_uploads")
 }
