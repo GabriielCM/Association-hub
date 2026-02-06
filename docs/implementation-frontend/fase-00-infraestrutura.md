@@ -302,11 +302,17 @@ export const tokens = {
 
 ## Critérios de Verificação
 
-- [ ] Login/logout funcionando no mobile e web
-- [ ] Tema claro/escuro alternando corretamente
-- [ ] API client com refresh token automático
-- [ ] WebSocket conectando e reconectando
-- [ ] Componentes base renderizando corretamente
-- [ ] Biometria funcionando (Face ID / Touch ID)
-- [ ] Navegação entre tabs funcionando
-- [ ] Formulários validando com Zod
+- [x] Login/logout funcionando no mobile e web
+- [x] Tema claro/escuro alternando corretamente
+- [x] API client com refresh token automático
+- [x] WebSocket conectando e reconectando
+- [x] Componentes base renderizando corretamente
+- [x] Biometria funcionando (Face ID / Touch ID)
+- [x] Navegação entre tabs funcionando
+- [x] Formulários validando com Zod
+
+---
+
+## Status: ✅ Completa
+
+**Data de Conclusão:** 2026-02-06

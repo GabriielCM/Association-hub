@@ -13,8 +13,9 @@ Este plano cobre a implementação completa do frontend do A-hub:
 ## Estado Atual
 
 - **Backend:** 100% implementado (19 módulos NestJS, 100+ endpoints)
-- **Frontend:** 0% implementado (apps/web/, apps/mobile/, packages/ui/ vazios)
-- **Shared:** packages/shared/ tem types e validation schemas prontos
+- **Frontend Fase 0:** ✅ Completa (Auth, Design System, API Client, WebSocket)
+- **Frontend Fases 1-8:** Pendente
+- **Shared:** packages/shared/ tem types, validation schemas e utils prontos
 
 ## Stack Tecnológica
 
@@ -36,17 +37,17 @@ Este plano cobre a implementação completa do frontend do A-hub:
 
 ## Fases de Implementação
 
-| Fase | Foco | Complexidade | Duração |
-|------|------|--------------|---------|
-| [Fase 0](./fase-00-infraestrutura.md) | Infraestrutura (Auth, Design System, API, WebSocket) | Alta | 2-3 semanas |
-| [Fase 1](./fase-01-core.md) | Core (Pontos + Assinaturas) | Alta | 2-3 semanas |
-| [Fase 2](./fase-02-identidade.md) | Identidade (Perfil + Carteirinha + Carteira) | Média | 2 semanas |
-| [Fase 3](./fase-03-eventos.md) | Engajamento (Eventos + Check-in + Display) | Alta | 2-3 semanas |
-| [Fase 4](./fase-04-comunicacao.md) | Comunicação (Notificações + Mensagens) | Alta | 2-3 semanas |
-| [Fase 5](./fase-05-transacoes.md) | Transações (PDV + Loja) | Alta | 3-4 semanas |
-| [Fase 6](./fase-06-locacoes.md) | Locações (Espaços + Reservas) | Média | 2 semanas |
-| [Fase 7](./fase-07-unificacao.md) | Unificação (Pedidos + Suporte + Rankings) | Média | 2-3 semanas |
-| [Fase 8](./fase-08-dashboard.md) | Dashboard (Agregador) | Alta | 2-3 semanas |
+| Fase | Foco | Complexidade | Duração | Status |
+|------|------|--------------|---------|--------|
+| [Fase 0](./fase-00-infraestrutura.md) | Infraestrutura (Auth, Design System, API, WebSocket) | Alta | 2-3 semanas | ✅ Completa |
+| [Fase 1](./fase-01-core.md) | Core (Pontos + Assinaturas) | Alta | 2-3 semanas | Pendente |
+| [Fase 2](./fase-02-identidade.md) | Identidade (Perfil + Carteirinha + Carteira) | Média | 2 semanas | Pendente |
+| [Fase 3](./fase-03-eventos.md) | Engajamento (Eventos + Check-in + Display) | Alta | 2-3 semanas | Pendente |
+| [Fase 4](./fase-04-comunicacao.md) | Comunicação (Notificações + Mensagens) | Alta | 2-3 semanas | Pendente |
+| [Fase 5](./fase-05-transacoes.md) | Transações (PDV + Loja) | Alta | 3-4 semanas | Pendente |
+| [Fase 6](./fase-06-locacoes.md) | Locações (Espaços + Reservas) | Média | 2 semanas | Pendente |
+| [Fase 7](./fase-07-unificacao.md) | Unificação (Pedidos + Suporte + Rankings) | Média | 2-3 semanas | Pendente |
+| [Fase 8](./fase-08-dashboard.md) | Dashboard (Agregador) | Alta | 2-3 semanas | Pendente |
 
 **Total estimado:** 18-26 semanas
 
