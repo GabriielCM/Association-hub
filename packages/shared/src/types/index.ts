@@ -99,6 +99,24 @@ export interface UserSubscription {
   canceledAt?: Date;
 }
 
+// Profile update types
+export interface UpdateProfileInput {
+  name?: string;
+  phone?: string;
+  avatarUrl?: string;
+}
+
+// Notification types
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
+  createdAt: string;
+  data?: Record<string, unknown>;
+}
+
 // API Response types
 export interface ApiResponse<T> {
   success: boolean;

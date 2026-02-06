@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 250 250 250;
+    --foreground: 31 41 55;
+    --surface: 255 255 255;
+    --muted: 243 244 246;
+    --muted-foreground: 107 114 128;
+    --border: 229 231 235;
+    --input: 229 231 235;
+    --ring: 139 92 246;
+    --primary: 139 92 246;
+    --primary-foreground: 255 255 255;
+    --secondary: 6 182 212;
+    --secondary-foreground: 255 255 255;
+    --success: 134 239 172;
+    --warning: 253 230 138;
+    --error: 252 165 165;
+    --info: 147 197 253;
+    --radius: 8px;
+  }
+
+  .dark {
+    --background: 26 26 46;
+    --foreground: 249 250 251;
+    --surface: 37 37 66;
+    --muted: 55 65 81;
+    --muted-foreground: 156 163 175;
+    --border: 55 65 81;
+    --input: 55 65 81;
+    --ring: 139 92 246;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom utilities */
+@layer utilities {
+  .gradient-primary {
+    background: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
+  }
+
+  .gradient-accent {
+    background: linear-gradient(135deg, #06B6D4 0%, #8B5CF6 100%);
+  }
+
+  /* Neumorphic styles */
+  .neu {
+    @apply shadow-neu dark:shadow-neu-dark;
+  }
+
+  .neu-sm {
+    @apply shadow-neu-sm dark:shadow-neu-dark-sm;
+  }
+
+  .neu-lg {
+    @apply shadow-neu-lg dark:shadow-neu-dark-lg;
+  }
+
+  .neu-inset {
+    @apply shadow-neu-inset dark:shadow-neu-dark-inset;
+  }
+}
+
+/* Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');

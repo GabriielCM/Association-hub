@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
@@ -20,10 +22,22 @@
     "incremental": true,
     "composite": false,
     "paths": {
-      "@ahub/shared/*": ["./packages/shared/src/*"],
-      "@ahub/database": ["./packages/database/src"],
-      "@ahub/ui": ["./packages/ui/src"]
+      "@ahub/shared/*": [
+        "./packages/shared/src/*"
+      ],
+      "@ahub/database": [
+        "./packages/database/src"
+      ],
+      "@ahub/ui": [
+        "./packages/ui/src"
+      ]
     }
   },
-  "exclude": ["node_modules", "dist", "build", ".next", ".expo"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".next",
+    ".expo"
+  ]
 }

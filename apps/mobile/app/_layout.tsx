@@ -1,0 +1,74 @@
+import { useEffect } from 'react';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { QueryProvider, ThemeProvider, AuthProvider } from '@/providers';
+import { WebSocketProvider } from '@/providers/WebSocketProvider';
+import { useAuthContext } from '@/providers/AuthProvider';
+import { useThemeContext } from '@/providers/ThemeProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+// Keep splash screen visible while loading
+SplashScreen.preventAutoHideAsync();
+
+function RootLayoutContent() {
+  const { isHydrated } = useAuthContext();
+  const { theme } = useThemeContext();
+
+  useEffect(() => {
+    if (isHydrated) {
+      SplashScreen.hideAsync();
+    }
+  }, [isHydrated]);
+
+  if (!isHydrated) {
+    return null;
+  }
+
+  return (
+    <>
+      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  useEffect(() => {
+    // Hide splash after a short delay
+    const timer = setTimeout(() => {
+      SplashScreen.hideAsync();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ErrorBoundary>
+          <QueryProvider>
+            <ThemeProvider>
+              <AuthProvider>
+                <WebSocketProvider>
+                  <RootLayoutContent />
+                </WebSocketProvider>
+              </AuthProvider>
+            </ThemeProvider>
+          </QueryProvider>
+        </ErrorBoundary>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  );
+}

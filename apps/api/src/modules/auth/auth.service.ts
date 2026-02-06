@@ -21,7 +21,7 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async login(dto: LoginDto): Promise<AuthTokens> {
+  async login(dto: LoginDto): Promise<{ tokens: AuthTokens; user: Record<string, any> }> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
     });
@@ -45,10 +45,12 @@ export class AuthService {
       data: { lastLoginAt: new Date() },
     });
 
-    return this.generateTokens(user.id, user.email, user.role, user.associationId);
+    const tokens = await this.generateTokens(user.id, user.email, user.role, user.associationId);
+
+    return { tokens, user: this.sanitizeUser(user) };
   }
 
-  async register(dto: RegisterDto): Promise<AuthTokens> {
+  async register(dto: RegisterDto): Promise<{ tokens: AuthTokens; user: Record<string, any> }> {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
     });
@@ -87,7 +89,9 @@ export class AuthService {
       data: { userId: user.id },
     });
 
-    return this.generateTokens(user.id, user.email, user.role, user.associationId);
+    const tokens = await this.generateTokens(user.id, user.email, user.role, user.associationId);
+
+    return { tokens, user: this.sanitizeUser(user) };
   }
 
   async refreshToken(dto: RefreshTokenDto): Promise<AuthTokens> {
@@ -156,6 +160,11 @@ export class AuthService {
       refreshToken,
       expiresIn: 900, // 15 minutes in seconds
     };
+  }
+
+  private sanitizeUser(user: any): Record<string, any> {
+    const { passwordHash, ...sanitized } = user;
+    return sanitized;
   }
 
   async validateUser(payload: JwtPayload) {

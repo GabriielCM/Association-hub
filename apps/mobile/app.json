@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "A-hub",
+    "slug": "ahub",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "ahub",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#8B5CF6"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ahub.app",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Usamos Face ID para autenticação rápida e segura."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#8B5CF6"
+      },
+      "package": "com.ahub.app",
+      "permissions": [
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Permitir que A-hub use Face ID para autenticação."
+        }
+      ],
+      "expo-asset",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    }
+  }
+}

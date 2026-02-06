@@ -132,9 +132,12 @@ describe('AuthService', () => {
         password: mockPassword,
       });
 
-      expect(result).toHaveProperty('accessToken');
-      expect(result).toHaveProperty('refreshToken');
-      expect(result).toHaveProperty('expiresIn');
+      expect(result).toHaveProperty('tokens');
+      expect(result).toHaveProperty('user');
+      expect(result.tokens).toHaveProperty('accessToken');
+      expect(result.tokens).toHaveProperty('refreshToken');
+      expect(result.tokens).toHaveProperty('expiresIn');
+      expect(result.user).not.toHaveProperty('passwordHash');
       expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email: mockEmail.toLowerCase() },
       });
@@ -217,8 +220,11 @@ describe('AuthService', () => {
 
       const result = await service.register(registerDto);
 
-      expect(result).toHaveProperty('accessToken');
-      expect(result).toHaveProperty('refreshToken');
+      expect(result).toHaveProperty('tokens');
+      expect(result).toHaveProperty('user');
+      expect(result.tokens).toHaveProperty('accessToken');
+      expect(result.tokens).toHaveProperty('refreshToken');
+      expect(result.user).not.toHaveProperty('passwordHash');
       expect(mockPrismaService.user.create).toHaveBeenCalled();
     });
 
@@ -291,9 +297,9 @@ describe('AuthService', () => {
       const result = await service.register(registerDto);
 
       expect(mockJwtService.sign).toHaveBeenCalled();
-      expect(result.accessToken).toBeDefined();
-      expect(result.refreshToken).toBeDefined();
-      expect(result.expiresIn).toBe(900);
+      expect(result.tokens.accessToken).toBeDefined();
+      expect(result.tokens.refreshToken).toBeDefined();
+      expect(result.tokens.expiresIn).toBe(900);
     });
 
     it('deve fazer lookup de email case-insensitive no registro', async () => {

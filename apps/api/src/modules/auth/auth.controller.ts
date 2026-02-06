@@ -16,23 +16,23 @@ export class AuthController {
   @ApiOperation({ summary: 'Login com email e senha' })
   @ApiResponse({ status: 200, description: 'Login realizado com sucesso', type: AuthResponseDto })
   @ApiResponse({ status: 401, description: 'Credenciais inválidas' })
-  async login(@Body() dto: LoginDto): Promise<AuthResponseDto> {
-    const tokens = await this.authService.login(dto);
+  async login(@Body() dto: LoginDto) {
+    const result = await this.authService.login(dto);
     return {
       success: true,
-      data: tokens,
+      data: result,
     };
   }
 
   @Post('register')
   @ApiOperation({ summary: 'Registrar novo usuário' })
-  @ApiResponse({ status: 201, description: 'Usuário registrado com sucesso', type: AuthResponseDto })
+  @ApiResponse({ status: 201, description: 'Usuário registrado com sucesso' })
   @ApiResponse({ status: 409, description: 'Email já está em uso' })
-  async register(@Body() dto: RegisterDto): Promise<AuthResponseDto> {
-    const tokens = await this.authService.register(dto);
+  async register(@Body() dto: RegisterDto) {
+    const result = await this.authService.register(dto);
     return {
       success: true,
-      data: tokens,
+      data: result,
     };
   }
 

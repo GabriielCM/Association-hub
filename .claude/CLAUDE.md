@@ -4,15 +4,203 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Sobre o Projeto
 
-O A-hub é um projeto de **documentação de produto** para um aplicativo mobile de associações. Não há código-fonte - apenas especificações técnicas em Markdown organizadas em `docs/`.
+O A-hub é uma **aplicação mobile e web** para associações, com sistema de pontos, eventos, loja e comunicação entre membros.
 
-**Versão atual:** 1.12.0
+**Versão:** 0.1.0 (início do desenvolvimento)
+**Repositório:** GabriielCM/A-hub
+
+### Plataformas
+
+| Plataforma | Tecnologia | Usuários |
+|------------|------------|----------|
+| **App Mobile** | React Native + Expo | Membros da associação |
+| **Web Admin** | Next.js | Administradores |
+| **Web Display** | Next.js | TVs/Kiosks em eventos |
+
+---
+
+## Stack Tecnológica
+
+### Frontend Mobile
+- **Framework:** React Native + Expo (Managed Workflow)
+- **UI:** Tamagui
+- **State:** Zustand + TanStack Query
+- **Storage:** MMKV
+- **Navigation:** React Navigation
+
+### Frontend Web
+- **Framework:** Next.js (App Router)
+- **UI:** shadcn/ui + Tailwind CSS
+- **State:** Zustand + TanStack Query
+- **Forms:** React Hook Form + Zod
+
+### Backend
+- **Framework:** NestJS
+- **ORM:** Prisma
+- **Auth:** Passport.js + JWT
+- **WebSocket:** Socket.io
+- **Jobs:** BullMQ
+
+### Database & Cache
+- **Database:** PostgreSQL
+- **Cache:** Redis
+- **Search:** PostgreSQL Full-Text
+
+### Cloud (AWS)
+- **Compute:** ECS/Fargate
+- **Database:** RDS (PostgreSQL)
+- **Cache:** ElastiCache (Redis)
+- **Storage:** S3 + CloudFront
+- **Frontend:** Vercel
+
+---
+
+## Estrutura do Monorepo
+
+```
+a-hub/
+├── apps/
+│   ├── mobile/              # React Native + Expo
+│   │   ├── app/             # Expo Router screens
+│   │   ├── components/
+│   │   └── package.json
+│   │
+│   ├── web/                 # Next.js (Admin + Display)
+│   │   ├── app/
+│   │   │   ├── (admin)/     # Rotas admin
+│   │   │   └── display/     # Rotas display
+│   │   └── package.json
+│   │
+│   └── api/                 # NestJS Backend
+│       ├── src/
+│       │   ├── modules/     # Feature modules
+│       │   └── main.ts
+│       └── package.json
+│
+├── packages/
+│   ├── ui/                  # Componentes compartilhados (Tamagui)
+│   ├── shared/              # Types, utils, Zod schemas
+│   ├── config/              # ESLint, TypeScript, Tailwind
+│   └── database/            # Prisma schema e client
+│
+├── infrastructure/
+│   └── terraform/           # IaC para AWS
+│
+├── docs/                    # Especificações técnicas
+├── docker-compose.yml       # Dev environment
+├── turbo.json
+├── package.json
+└── pnpm-workspace.yaml
+```
+
+---
+
+## Ambiente Local
+
+### Pré-requisitos
+
+```bash
+node --version    # 20+
+pnpm --version    # 8+
+docker --version  # 24+
+```
+
+### Setup Inicial
+
+```bash
+# Clonar e instalar dependências
+git clone git@github.com:GabriielCM/A-hub.git
+cd A-hub
+pnpm install
+
+# Subir banco de dados e Redis
+docker compose up -d
+
+# Copiar variáveis de ambiente
+cp .env.example .env
+
+# Rodar migrations
+pnpm db:migrate
+
+# Iniciar desenvolvimento
+pnpm dev
+```
+
+### Docker Compose (dev)
+
+```yaml
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ahub
+      POSTGRES_PASSWORD: ahub_dev
+      POSTGRES_DB: ahub_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+---
+
+## Comandos de Desenvolvimento
+
+### Desenvolvimento
+
+```bash
+pnpm dev              # Todos os apps em paralelo
+pnpm dev:mobile       # Apenas mobile (Expo)
+pnpm dev:web          # Apenas web (Next.js)
+pnpm dev:api          # Apenas backend (NestJS)
+```
+
+### Database
+
+```bash
+pnpm db:migrate       # Rodar migrations
+pnpm db:studio        # Abrir Prisma Studio
+pnpm db:generate      # Gerar Prisma Client
+pnpm db:reset         # Reset do banco (dev only)
+```
+
+### Testes
+
+```bash
+pnpm test             # Testes unitários
+pnpm test:watch       # Modo watch
+pnpm test:coverage    # Com cobertura
+pnpm test:e2e         # Testes E2E (Playwright)
+```
+
+### Build & Lint
+
+```bash
+pnpm build            # Build de produção
+pnpm lint             # ESLint
+pnpm typecheck        # TypeScript check
+pnpm format           # Prettier
+```
+
+---
 
 ## Roadmap de Implementação
 
-O roadmap completo para code agents está em `docs/00-overview/roadmap.md`.
+O roadmap completo está em `docs/00-overview/roadmap.md`.
 
 **Ordem de implementação (9 fases):**
+
 1. **Fase 0:** Infraestrutura (Auth, Design System, API, WebSocket)
 2. **Fase 1:** Core (Sistema de Pontos + Assinaturas)
 3. **Fase 2:** Identidade (Perfil + Carteirinha + Minha Carteira)
@@ -25,163 +213,90 @@ O roadmap completo para code agents está em `docs/00-overview/roadmap.md`.
 
 **Exclusão:** Módulo 15-jukebox NÃO será implementado nesta versão.
 
-## Estrutura de Documentação
-
-```
-docs/
-├── README.md              # Portal principal com status de todos os módulos
-├── CHANGELOG.md           # Histórico de alterações (versão atual: 1.12.0)
-├── 00-overview/           # Visão geral do produto + ROADMAP
-├── 01-dashboard/          # Feed social, stories, acessos rápidos (MVP - Completo)
-├── 02-perfil/             # Perfil do usuário (MVP - Completo)
-├── 03-carteirinha/        # Carteirinha digital, QR Code, benefícios (MVP - Completo)
-├── 04-eventos/            # Eventos, check-in, display (MVP - Completo)
-├── 05-minha-carteira/     # Carteira de pontos, QR pessoal (MVP - Parcial)
-├── 06-sistema-pontos/     # Gamificação, rankings, Strava (MVP - Parcial)
-├── 07-notificacoes/       # Notificações (MVP - Completo)
-├── 08-mensagens/          # Chat (MVP - Completo)
-├── 09-espacos/            # Espaços físicos da associação (Fase 2 - Completo)
-├── 10-reservas/           # Sistema de reservas (Fase 2 - Completo)
-├── 11-pedidos/            # Histórico unificado (Fase 2 - Completo)
-├── 12-loja/               # E-commerce (Fase 2 - Completo)
-├── 13-rankings/           # Rankings (Fase 2 - Completo)
-├── 14-suporte/            # Suporte (Fase 2 - Completo)
-├── 15-jukebox/            # Jukebox (Nice to Have - NÃO IMPLEMENTAR)
-├── 16-pdv/                # Ponto de Venda / Displays (MVP - Completo)
-├── 17-assinaturas/        # Planos premium (Fase 2 - Completo)
-├── shared/                # Design system, acessibilidade, performance
-└── api/                   # Documentação centralizada de endpoints
-```
-
-### Arquivos Shared (docs/shared/)
-
-| Arquivo | Descrição |
-|---------|-----------|
-| technology-stack.md | Stack tecnológica completa |
-| claude-code-setup.md | MCPs, plugins, hooks para code agents |
-| design-system.md | Cores, tipografia, componentes UI |
-| authentication.md | Fluxos de autenticação |
-| accessibility.md | Conformidade WCAG 2.1 AA |
-| performance.md | Requisitos de performance |
-| conventions.md | Convenções de documentação |
-| responsiveness.md | Breakpoints e adaptações |
-
-## Padrões Obrigatórios
-
-### YAML Front Matter
-Todos os arquivos devem iniciar com:
-```yaml
 ---
-module: nome-do-modulo
-document: tipo-do-documento
-status: complete | partial | stub
-priority: mvp | phase2 | nice-to-have
-last_updated: YYYY-MM-DD
----
+
+## Padrões de Código
+
+### TypeScript
+
+- **Strict mode** habilitado
+- Sem `any` (usar `unknown` se necessário)
+- Types em `packages/shared/src/types/`
+- Schemas Zod em `packages/shared/src/validation/`
+
+### Estrutura de Módulo NestJS
+
+```
+src/modules/pontos/
+├── pontos.module.ts
+├── pontos.controller.ts
+├── pontos.service.ts
+├── dto/
+│   ├── create-pontos.dto.ts
+│   └── update-pontos.dto.ts
+├── entities/
+│   └── pontos.entity.ts
+└── __tests__/
+    ├── pontos.controller.spec.ts
+    └── pontos.service.spec.ts
 ```
 
-### Estrutura de Módulo
+### Testes
 
-**Arquivos obrigatórios:**
-- `README.md` - Índice e visão geral
-- `spec.md` - Especificação técnica completa
-- `api.md` - Endpoints da API
-- `acceptance-criteria.md` - Checklist de aceitação
+- **Cobertura mínima:** 80%
+- **Unit tests:** Vitest + Testing Library
+- **E2E tests:** Playwright
+- **Mocking:** MSW (Mock Service Worker)
 
-**Arquivos opcionais (conforme necessidade):**
-- `components.md` - Componentes UI específicos
-- `benefits.md` - Benefícios/recursos específicos
-- `qr-code.md` - Especificações de QR Code
-- Outros conforme contexto do módulo
+### Linting
 
-### Links Internos
-Usar caminhos relativos: `[Link](../outro-modulo/doc.md)`
+- ESLint + Prettier
+- Husky + lint-staged para pre-commit
+- TypeScript strict
 
-## Workflow de Documentação
+---
 
-### Antes de Criar/Editar Módulo
+## Workflow de Desenvolvimento
 
-Fazer **20 perguntas de descoberta** organizadas em 5 categorias:
+### Git Flow (Trunk-based)
 
-**1. Visão e Propósito (4 perguntas)**
-- Qual o objetivo principal deste módulo?
-- Quem são os usuários-alvo (Common User, ADM, Display)?
-- Qual problema ele resolve para o usuário?
-- Como ele se encaixa no fluxo geral do app?
+```bash
+# Criar branch de feature
+git checkout -b feat/sistema-pontos
 
-**2. Funcionalidades Core (4 perguntas)**
-- Quais são as 3-5 funcionalidades essenciais?
-- Quais ações o usuário pode realizar?
-- Quais informações precisam ser exibidas?
-- Existem estados diferentes (loading, empty, error)?
+# Trabalhar, commitar
+git add .
+git commit -m "feat: implementa cálculo de pontos"
 
-**3. Integrações (4 perguntas)**
-- Quais outros módulos ele depende?
-- Quais módulos dependem dele?
-- Precisa de notificações? Quais tipos?
-- Integra com sistema de pontos? Como?
+# Push e PR
+git push -u origin feat/sistema-pontos
+# Criar PR para main via GitHub
+```
 
-**4. Experiência e Interface (4 perguntas)**
-- Quais são os componentes visuais principais?
-- Qual o fluxo de navegação?
-- Há comportamentos offline?
-- Quais feedbacks visuais/táteis são necessários?
+### Padrões de Commit
 
-**5. Regras de Negócio e Técnico (4 perguntas)**
-- Quais validações são necessárias?
-- Quais são os critérios de aceitação principais?
-- Há requisitos de performance específicos?
-- Quais endpoints de API são necessários?
+```text
+feat: implementa sistema de pontos
 
-### Após Respostas
+- Adiciona modelo de dados para transações
+- Cria endpoints CRUD
+- Implementa regras de negócio
 
-1. Preencher `spec.md` com visão geral e componentes
-2. Documentar fluxos e estados
-3. Listar endpoints em `api.md`
-4. Criar checklist em `acceptance-criteria.md`
-5. Atualizar `last_updated` em todos os arquivos modificados
-6. Registrar mudanças no `CHANGELOG.md`
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+```
 
-## Símbolos de Referência
+**Tipos:** `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`
 
-| Símbolo | Prioridade |
-|---------|------------|
-| 🔴 | MVP - Essencial |
-| 🟡 | Fase 2 - Importante |
-| 🟢 | Nice to Have |
+### Pull Requests
 
-| Símbolo | Status |
-|---------|--------|
-| ⚪ | Não Iniciado |
-| 🟡 | Em Especificação |
-| 🔵 | Em Desenvolvimento |
-| 🟢 | Concluído |
-| 🔴 | Bloqueado |
+- Título descritivo
+- Descrição com contexto
+- Testes passando (CI)
+- Review obrigatório
 
-## Idioma
+---
 
-Conteúdo em **português brasileiro**. Nomes de arquivos e pastas em **inglês**.
-
-## Manutenção da Documentação
-
-### Gap Review
-
-Usar o skill `/gap-review` periodicamente para:
-- Identificar inconsistências entre módulos
-- Verificar links quebrados
-- Validar status dos módulos
-- Detectar informações desatualizadas
-
-### Versionamento
-
-A documentação segue versionamento semântico no CHANGELOG.md:
-- **Major**: Mudanças estruturais significativas
-- **Minor**: Novos módulos ou features completas
-- **Patch**: Correções e ajustes menores
-
-Versão atual: verificar `docs/CHANGELOG.md`
-
-## Decisões de Negócio Documentadas
+## Decisões de Negócio
 
 | Área | Decisão |
 |------|---------|
@@ -193,7 +308,8 @@ Versão atual: verificar `docs/CHANGELOG.md`
 | Cashback | Percentual global configurável por associação |
 | Strava | Máximo 5km/dia pontuáveis |
 | Pontos | Não expiram |
-| Jukebox | NÃO será implementado nesta versão |
+
+---
 
 ## Dependências Críticas
 
@@ -209,47 +325,74 @@ Versão atual: verificar `docs/CHANGELOG.md`
 - Fornece multiplicadores que afetam Pontos, Loja, PDV e Espaços
 - Implementar junto com Sistema de Pontos evita retrabalho
 
-## Configuração de Code Agent
+---
 
-Para implementar o projeto, o agente precisa dos recursos documentados em `docs/shared/claude-code-setup.md`.
+## Documentação de Referência
 
-### MCPs Recomendados
+Toda especificação técnica está em `docs/`:
 
-**Mínimo para começar:**
+| Diretório | Conteúdo |
+|-----------|----------|
+| `docs/00-overview/` | Roadmap, glossário, visão geral |
+| `docs/01-dashboard/` a `docs/17-assinaturas/` | Specs de cada módulo |
+| `docs/shared/` | Design system, auth, performance |
+| `docs/api/` | Endpoints de referência |
 
-- Context7 (documentação de bibliotecas) ✅ Habilitado
-- GitHub MCP (PRs, issues)
-- PostgreSQL MCP (queries SQL)
+### Arquivos Importantes
 
-### CLIs Necessárias
+- `docs/shared/technology-stack.md` - Stack completa
+- `docs/shared/design-system.md` - Cores, tipografia, componentes
+- `docs/shared/authentication.md` - Fluxos de auth
+- `docs/api/endpoints-reference.md` - Todos os endpoints
+
+### Como Usar Durante Implementação
+
+1. **Antes de implementar um módulo:** Ler `docs/XX-modulo/spec.md`
+2. **Para endpoints:** Consultar `docs/XX-modulo/api.md`
+3. **Para validar:** Usar `docs/XX-modulo/acceptance-criteria.md`
+4. **Para UI:** Consultar `docs/shared/design-system.md`
+
+---
+
+## MCPs e Ferramentas
+
+### MCPs Habilitados
+
+- **Context7** - Documentação de bibliotecas em tempo real
+- **Stripe MCP** - Integração com pagamentos (Fase 5)
+- **Firebase MCP** - Analytics e Crashlytics
+- **Playwright MCP** - Testes E2E automatizados
+
+### CLIs Úteis
 
 ```bash
-# Verificar instalação
-node --version    # 20+
-pnpm --version    # 8+
-docker --version  # 24+
-aws --version     # 2+
-terraform --version # 1.5+
+# NestJS
+nest g resource nome-modulo    # Gerar módulo completo
+nest g controller nome         # Gerar controller
+nest g service nome            # Gerar service
+
+# Prisma
+npx prisma migrate dev         # Criar migration
+npx prisma studio              # GUI do banco
+npx prisma generate            # Gerar client
+
+# Expo
+npx expo start                 # Dev server
+eas build --profile dev        # Build de dev
+
+# Stripe (Fase 5)
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
 ```
 
-### Comandos Disponíveis
+### Skills Disponíveis
 
-- `/gap-review` - Análise de documentação (existente)
-- `/module-create` - Scaffold de módulo NestJS (futuro)
-- `/component-create` - Scaffold de componente UI (futuro)
-- `/api-endpoint` - Criar endpoint da API (futuro)
-- `/test-generate` - Gerar testes (futuro)
+- `/gap-review` - Análise de gaps na documentação
 
-### Padrões de Commit
+---
 
-```text
-feat: implementa sistema de pontos
+## Idioma
 
-- Adiciona modelo de dados para transações
-- Cria endpoints CRUD
-- Implementa regras de negócio
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
-```
-
-Tipos: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`
+- **Código:** Inglês (variáveis, funções, comentários técnicos)
+- **Commits:** Português
+- **Documentação:** Português brasileiro
+- **UI/UX:** Português brasileiro
