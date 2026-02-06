@@ -41,7 +41,7 @@ export class SubscriptionsService {
         id: p.id,
         name: p.name,
         description: p.description,
-        priceMonthly: p.priceMonthly / 100, // Convert cents to reais
+        priceMonthly: p.priceMonthly,
         iconUrl: p.iconUrl,
         color: p.color,
         displayOrder: p.displayOrder,
@@ -75,7 +75,7 @@ export class SubscriptionsService {
       id: plan.id,
       name: plan.name,
       description: plan.description,
-      priceMonthly: plan.priceMonthly / 100,
+      priceMonthly: plan.priceMonthly,
       iconUrl: plan.iconUrl,
       color: plan.color,
       displayOrder: plan.displayOrder,
@@ -104,7 +104,7 @@ export class SubscriptionsService {
         id: subscription.plan.id,
         name: subscription.plan.name,
         color: subscription.plan.color,
-        priceMonthly: subscription.plan.priceMonthly / 100,
+        priceMonthly: subscription.plan.priceMonthly,
         mutators: subscription.plan.mutators as MutatorsDto,
       },
       status: subscription.status,
@@ -400,7 +400,7 @@ export class SubscriptionsService {
       monthlyRevenue: plans.reduce(
         (sum, p) => sum + p.priceMonthly * p.subscribersCount,
         0,
-      ) / 100,
+      ),
     };
 
     return {
@@ -408,7 +408,7 @@ export class SubscriptionsService {
         id: p.id,
         name: p.name,
         description: p.description,
-        priceMonthly: p.priceMonthly / 100,
+        priceMonthly: p.priceMonthly,
         isActive: p.isActive,
         subscribersCount: p.subscribersCount,
         mutators: p.mutators,
@@ -461,7 +461,7 @@ export class SubscriptionsService {
         id: plan.id,
         name: plan.name,
         description: plan.description,
-        priceMonthly: plan.priceMonthly / 100,
+        priceMonthly: plan.priceMonthly,
         mutators: plan.mutators,
       },
       message: 'Plano criado com sucesso!',
@@ -496,7 +496,7 @@ export class SubscriptionsService {
       plan: {
         id: updated.id,
         name: updated.name,
-        priceMonthly: updated.priceMonthly / 100,
+        priceMonthly: updated.priceMonthly,
         mutators: updated.mutators,
       },
       affectedSubscribers: plan.subscribersCount,
@@ -736,7 +736,7 @@ export class SubscriptionsService {
     const monthlyRevenue = plans.reduce(
       (sum, p) => sum + p.priceMonthly * p.subscribersCount,
       0,
-    ) / 100;
+    );
 
     const churnRate = activeCount > 0 ? (cancelledThisPeriod / activeCount) * 100 : 0;
 
@@ -758,7 +758,7 @@ export class SubscriptionsService {
         percentage: subscriptions.length > 0
           ? Math.round((p.subscribersCount / subscriptions.length) * 1000) / 10
           : 0,
-        revenue: (p.priceMonthly * p.subscribersCount) / 100,
+        revenue: p.priceMonthly * p.subscribersCount,
       })),
     };
   }

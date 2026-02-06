@@ -33,7 +33,7 @@ export class PartnersService {
     });
 
     const isSubscriber = userSub?.status === 'ACTIVE';
-    const userPlanId = userSub?.planId;
+    const userPlanId = isSubscriber ? userSub?.planId : undefined;
 
     // Build where clause
     const where: any = {
@@ -144,7 +144,7 @@ export class PartnersService {
     });
 
     const isSubscriber = userSub?.status === 'ACTIVE';
-    const userPlanId = userSub?.planId;
+    const userPlanId = isSubscriber ? userSub?.planId : undefined;
 
     const isEligible = this.checkEligibility(
       partner.eligibleAudiences,
@@ -232,7 +232,7 @@ export class PartnersService {
     });
 
     const isSubscriber = userSub?.status === 'ACTIVE';
-    const userPlanId = userSub?.planId;
+    const userPlanId = isSubscriber ? userSub?.planId : undefined;
 
     // Get all partners with coordinates
     const partners = await this.prisma.partner.findMany({
@@ -291,7 +291,154 @@ export class PartnersService {
   }
 
   // ===========================================
-  // ADMIN ENDPOINTS - PARTNERS
+  // ADMIN ENDPOINTS - READ
+  // ===========================================
+
+  async listAdminPartners(associationId: string, query: BenefitsQueryDto) {
+    const { page = 1, perPage = 20, search, category } = query;
+    const skip = (page - 1) * perPage;
+
+    const where: any = { associationId };
+
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
+
+    if (category) {
+      where.category = { slug: category };
+    }
+
+    const [partners, total, activeCount, newThisMonth, totalCategories] = await Promise.all([
+      this.prisma.partner.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        skip,
+        take: perPage,
+        include: {
+          category: {
+            select: { id: true, name: true, slug: true, icon: true, color: true },
+          },
+        },
+      }),
+      this.prisma.partner.count({ where }),
+      this.prisma.partner.count({ where: { associationId, isActive: true } }),
+      this.prisma.partner.count({
+        where: {
+          associationId,
+          createdAt: { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) },
+        },
+      }),
+      this.prisma.partnerCategory.count({ where: { associationId } }),
+    ]);
+
+    return {
+      partners: partners.map((p) => ({
+        id: p.id,
+        name: p.name,
+        logoUrl: p.logoUrl,
+        benefit: p.benefit,
+        category: p.category,
+        city: p.city,
+        state: p.state,
+        isActive: p.isActive,
+        isNew: p.isNew && this.isRecentlyAdded(p.addedAt),
+        eligibleAudiences: p.eligibleAudiences,
+        createdAt: p.createdAt,
+      })),
+      stats: {
+        totalPartners: total,
+        activePartners: activeCount,
+        newThisMonth,
+        totalCategories,
+      },
+      pagination: {
+        page,
+        limit: perPage,
+        total,
+        totalPages: Math.ceil(total / perPage),
+      },
+    };
+  }
+
+  async listAdminCategories(associationId: string) {
+    const categories = await this.prisma.partnerCategory.findMany({
+      where: { associationId },
+      orderBy: { order: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        icon: true,
+        color: true,
+        order: true,
+        isActive: true,
+        _count: { select: { partners: true } },
+      },
+    });
+
+    return {
+      categories: categories.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        icon: cat.icon,
+        color: cat.color,
+        order: cat.order,
+        isActive: cat.isActive,
+        partnersCount: cat._count.partners,
+      })),
+    };
+  }
+
+  async getAdminPartnerDetail(partnerId: string, associationId: string) {
+    const partner = await this.prisma.partner.findUnique({
+      where: { id: partnerId },
+      include: {
+        category: {
+          select: { id: true, name: true, slug: true, icon: true, color: true },
+        },
+      },
+    });
+
+    if (!partner || partner.associationId !== associationId) {
+      throw new NotFoundException('Parceiro não encontrado');
+    }
+
+    return {
+      id: partner.id,
+      name: partner.name,
+      logoUrl: partner.logoUrl,
+      bannerUrl: partner.bannerUrl,
+      benefit: partner.benefit,
+      instructions: partner.instructions,
+      category: partner.category,
+      address: {
+        street: partner.street,
+        city: partner.city,
+        state: partner.state,
+        zipCode: partner.zipCode,
+        lat: partner.lat,
+        lng: partner.lng,
+      },
+      contact: {
+        phone: partner.phone,
+        website: partner.website,
+        instagram: partner.instagram,
+        facebook: partner.facebook,
+        whatsapp: partner.whatsapp,
+      },
+      businessHours: partner.businessHours,
+      eligibleAudiences: partner.eligibleAudiences,
+      eligiblePlanIds: partner.eligiblePlanIds,
+      showLocked: partner.showLocked,
+      isActive: partner.isActive,
+      isNew: partner.isNew,
+      createdAt: partner.createdAt,
+    };
+  }
+
+  // ===========================================
+  // ADMIN ENDPOINTS - WRITE
   // ===========================================
 
   async createPartner(associationId: string, dto: CreatePartnerDto) {

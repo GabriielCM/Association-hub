@@ -60,7 +60,7 @@ describe('SubscriptionsService', () => {
       const result = await service.getPlans('user-123', 'assoc-1');
 
       expect(result.plans).toHaveLength(2);
-      expect(result.plans[0].priceMonthly).toBe(29.9); // cents to reais
+      expect(result.plans[0].priceMonthly).toBe(2990);
       expect(result.currentSubscription?.planId).toBe('plan-basic');
     });
 
@@ -73,13 +73,13 @@ describe('SubscriptionsService', () => {
       expect(result.currentSubscription).toBeNull();
     });
 
-    it('should convert priceMonthly from cents to reais', async () => {
+    it('should return priceMonthly in cents', async () => {
       prisma.subscriptionPlan.findMany.mockResolvedValue([mockPlanBasic]);
       prisma.userSubscription.findUnique.mockResolvedValue(null);
 
       const result = await service.getPlans('user-123', 'assoc-1');
 
-      expect(result.plans[0].priceMonthly).toBe(29.9);
+      expect(result.plans[0].priceMonthly).toBe(2990);
     });
   });
 

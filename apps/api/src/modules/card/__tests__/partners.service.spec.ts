@@ -195,7 +195,7 @@ describe('PartnersService', () => {
         eligiblePlanIds: ['plan-gold', 'plan-silver'],
       };
 
-      prisma.userSubscription.findUnique.mockResolvedValue({ id: 'sub-1', planId: 'plan-gold' });
+      prisma.userSubscription.findUnique.mockResolvedValue({ id: 'sub-1', planId: 'plan-gold', status: 'ACTIVE' });
       prisma.partner.findMany.mockResolvedValue([partnerPlanSpecific]);
       prisma.partner.count.mockResolvedValue(1);
 
@@ -214,7 +214,7 @@ describe('PartnersService', () => {
         eligiblePlanIds: ['plan-gold'],
       };
 
-      prisma.userSubscription.findUnique.mockResolvedValue({ id: 'sub-1', planId: 'plan-bronze' });
+      prisma.userSubscription.findUnique.mockResolvedValue({ id: 'sub-1', planId: 'plan-bronze', status: 'ACTIVE' });
       prisma.partner.findMany.mockResolvedValue([partnerPlanSpecific]);
       prisma.partner.count.mockResolvedValue(1);
 
