@@ -1,9 +1,11 @@
 import { Text } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useTheme } from 'tamagui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabsLayout() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -16,8 +18,8 @@ export default function TabsLayout() {
           borderTopColor: theme.borderColor.val,
           borderTopWidth: 1,
           paddingTop: 8,
-          paddingBottom: 8,
-          height: 64,
+          paddingBottom: 8 + insets.bottom,
+          height: 64 + insets.bottom,
         },
         tabBarLabelStyle: {
           fontFamily: 'Inter',
