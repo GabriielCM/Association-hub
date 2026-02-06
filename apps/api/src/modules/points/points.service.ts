@@ -9,6 +9,7 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { TransactionSource, Prisma, NotificationCategory, NotificationType } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { PointsGateway } from './points.gateway';
 import {
   SummaryPeriod,
   HistoryQueryDto,
@@ -24,6 +25,7 @@ export class PointsService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly notificationsGateway: NotificationsGateway,
+    private readonly pointsGateway: PointsGateway,
   ) {}
 
   // ==========================================
@@ -273,6 +275,7 @@ export class PointsService {
           avatar: recipient.avatarUrl,
         },
         senderBalanceAfter: senderNewBalance,
+        receiverBalanceAfter: receiverNewBalance,
         createdAt: senderTx.createdAt,
       };
     });
@@ -290,6 +293,22 @@ export class PointsService {
       sender?.name || 'Alguém',
       message,
     ).catch((err) => this.logger.error('Failed to send transfer notification:', err));
+
+    // Emit real-time balance updates to both parties
+    this.pointsGateway.broadcastPointsUpdate(fromUserId, {
+      type: 'debit',
+      amount,
+      source: 'TRANSFER_OUT',
+      newBalance: result.senderBalanceAfter,
+      description: message || `Transferência para ${recipient.name}`,
+    });
+    this.pointsGateway.broadcastPointsUpdate(toUserId, {
+      type: 'credit',
+      amount,
+      source: 'TRANSFER_IN',
+      newBalance: result.receiverBalanceAfter,
+      description: message || `Transferência de ${sender?.name || 'Alguém'}`,
+    });
 
     return result;
   }
@@ -398,7 +417,7 @@ export class PointsService {
       throw new BadRequestException('Quantidade deve ser maior que zero');
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       let userPoints = await tx.userPoints.findUnique({ where: { userId } });
 
       if (!userPoints) {
@@ -427,8 +446,19 @@ export class PointsService {
         },
       });
 
-      return transaction;
+      return { transaction, newBalance };
     });
+
+    // Emit real-time balance update
+    this.pointsGateway.broadcastPointsUpdate(userId, {
+      type: 'credit',
+      amount,
+      source,
+      newBalance: result.newBalance,
+      description,
+    });
+
+    return result.transaction;
   }
 
   async debitPoints(
@@ -443,7 +473,7 @@ export class PointsService {
       throw new BadRequestException('Quantidade deve ser maior que zero');
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const userPoints = await tx.userPoints.findUnique({ where: { userId } });
 
       if (!userPoints) {
@@ -476,8 +506,19 @@ export class PointsService {
         },
       });
 
-      return transaction;
+      return { transaction, newBalance };
     });
+
+    // Emit real-time balance update
+    this.pointsGateway.broadcastPointsUpdate(userId, {
+      type: 'debit',
+      amount,
+      source,
+      newBalance: result.newBalance,
+      description,
+    });
+
+    return result.transaction;
   }
 
   // ==========================================
@@ -611,7 +652,7 @@ export class PointsService {
 
     const refundAmount = originalTx.amount;
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const userPoints = await tx.userPoints.findUnique({
         where: { userId: originalTx.userId },
       });
@@ -669,6 +710,17 @@ export class PointsService {
         createdAt: refundTx.createdAt,
       };
     });
+
+    // Emit real-time balance update after refund
+    this.pointsGateway.broadcastPointsUpdate(originalTx.userId, {
+      type: refundAmount > 0 ? 'debit' : 'credit',
+      amount: Math.abs(refundAmount),
+      source: 'REFUND',
+      newBalance: result.newBalance,
+      description: reason,
+    });
+
+    return result;
   }
 
   async getConfig(associationId: string) {

@@ -50,7 +50,7 @@ export class PointsController {
   @ApiResponse({ status: 200, description: 'Saldo retornado com sucesso' })
   async getBalance(@CurrentUser() user: JwtPayload) {
     const data = await this.pointsService.getBalance(user.sub);
-    return { data };
+    return { success: true, data };
   }
 
   @Get('history')
@@ -60,7 +60,8 @@ export class PointsController {
     @CurrentUser() user: JwtPayload,
     @Query() query: HistoryQueryDto,
   ) {
-    return this.pointsService.getHistory(user.sub, query);
+    const data = await this.pointsService.getHistory(user.sub, query);
+    return { success: true, data };
   }
 
   @Get('summary')
@@ -74,7 +75,7 @@ export class PointsController {
       user.sub,
       query.period || SummaryPeriod.MONTH,
     );
-    return { data };
+    return { success: true, data };
   }
 
   // ==========================================
@@ -93,6 +94,7 @@ export class PointsController {
       dto.message,
     );
     return {
+      success: true,
       data,
       message: 'Transferência realizada com sucesso',
     };
@@ -109,7 +111,7 @@ export class PointsController {
       user.sub,
       query.limit,
     );
-    return { data };
+    return { success: true, data };
   }
 
   @Get('transfer/search')
@@ -124,7 +126,7 @@ export class PointsController {
       query.q,
       query.limit,
     );
-    return { data };
+    return { success: true, data };
   }
 }
 
@@ -145,7 +147,7 @@ export class AdminPointsController {
   @ApiResponse({ status: 200, description: 'Configurações retornadas' })
   async getConfig(@CurrentUser() user: JwtPayload) {
     const data = await this.pointsService.getConfig(user.associationId);
-    return { data };
+    return { success: true, data };
   }
 
   @Put('config')
@@ -156,7 +158,7 @@ export class AdminPointsController {
     @Body() dto: UpdateConfigDto,
   ) {
     const data = await this.pointsService.updateConfig(user.associationId, dto);
-    return { data };
+    return { success: true, data };
   }
 
   @Post('grant')
@@ -172,7 +174,7 @@ export class AdminPointsController {
       dto.amount,
       dto.reason,
     );
-    return { data };
+    return { success: true, data };
   }
 
   @Post('deduct')
@@ -188,7 +190,7 @@ export class AdminPointsController {
       dto.amount,
       dto.reason,
     );
-    return { data };
+    return { success: true, data };
   }
 
   @Post('refund/:transactionId')
@@ -204,7 +206,7 @@ export class AdminPointsController {
       transactionId,
       dto.reason,
     );
-    return { data };
+    return { success: true, data };
   }
 
   @Get('reports')
@@ -218,6 +220,6 @@ export class AdminPointsController {
       user.associationId,
       query.period || ReportPeriod.MONTH,
     );
-    return { data };
+    return { success: true, data };
   }
 }

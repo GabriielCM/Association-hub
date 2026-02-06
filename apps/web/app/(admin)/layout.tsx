@@ -14,6 +14,8 @@ import {
   LogOut,
   Sun,
   Moon,
+  Coins,
+  Crown,
 } from 'lucide-react';
 
 import { useAuthContext } from '@/lib/providers/auth-provider';
@@ -24,6 +26,8 @@ import { cn } from '@/lib/utils/cn';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Membros', href: '/members', icon: Users },
+  { name: 'Pontos', href: '/points', icon: Coins },
+  { name: 'Assinaturas', href: '/subscriptions', icon: Crown },
   { name: 'Eventos', href: '/events', icon: Calendar },
   { name: 'Loja', href: '/store', icon: ShoppingBag },
   { name: 'Relatórios', href: '/reports', icon: BarChart3 },

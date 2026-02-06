@@ -1,13 +1,27 @@
-import { ScrollView } from 'react-native';
+import { ScrollView, Pressable } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
-import { Text, Heading, Card, Avatar, Badge } from '@ahub/ui';
+import { Text, Heading, Card, Avatar, Badge, Spinner } from '@ahub/ui';
 import { useAuthContext } from '@/providers/AuthProvider';
-import { formatPoints } from '@ahub/shared/utils';
+import { formatPoints, formatRelativeDate } from '@ahub/shared/utils';
+import { useBalance } from '@/features/points/hooks/usePoints';
+import { usePointsHistory } from '@/features/points/hooks/usePointsHistory';
+import { TransactionItem } from '@/features/points/components/TransactionItem';
+import { CelebrationOverlay } from '@/features/points/components/CelebrationOverlay';
+import { usePointsSocket } from '@/features/points/hooks/usePointsSocket';
 
 export default function HomeScreen() {
   const { user } = useAuthContext();
+  const router = useRouter();
+  const { data: balance, isLoading: balanceLoading } = useBalance();
+  const { data: historyData } = usePointsHistory({ limit: 3 });
+
+  usePointsSocket();
+
+  const recentTransactions = historyData?.pages?.[0]?.data ?? [];
+  const displayBalance = balance?.balance ?? 0;
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
@@ -31,65 +45,96 @@ export default function HomeScreen() {
           </XStack>
 
           {/* Points Card */}
-          <Card variant="elevated" pressable>
-            <XStack alignItems="center" justifyContent="space-between">
-              <YStack>
-                <Text color="secondary" size="sm">
-                  Seus pontos
-                </Text>
-                <Heading level={2} color="accent">
-                  {formatPoints(0)}
-                </Heading>
-              </YStack>
-              <Badge variant="primary">Ver histórico</Badge>
-            </XStack>
-          </Card>
+          <Pressable onPress={() => router.push('/points')}>
+            <Card variant="elevated">
+              <XStack alignItems="center" justifyContent="space-between">
+                <YStack>
+                  <Text color="secondary" size="sm">
+                    Seus pontos
+                  </Text>
+                  {balanceLoading ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    <Heading level={2} color="accent">
+                      {formatPoints(displayBalance)}
+                    </Heading>
+                  )}
+                </YStack>
+                <Badge variant="primary">Ver historico</Badge>
+              </XStack>
+            </Card>
+          </Pressable>
 
           {/* Quick Actions */}
           <YStack gap="$2">
             <Text weight="semibold" size="lg">
-              Acesso rápido
+              Acesso rapido
             </Text>
             <XStack gap="$2" flexWrap="wrap">
               <QuickActionCard
                 icon="📅"
                 title="Eventos"
-                subtitle="3 próximos"
+                subtitle="Proximos"
+                onPress={() => router.push('/(tabs)/eventos')}
               />
               <QuickActionCard
-                icon="🛍️"
-                title="Loja"
-                subtitle="Novidades"
-              />
-              <QuickActionCard
-                icon="💳"
-                title="Carteirinha"
-                subtitle="QR Code"
+                icon="💸"
+                title="Transferir"
+                subtitle="Enviar pontos"
+                onPress={() => router.push('/points/transfer')}
               />
               <QuickActionCard
                 icon="🏆"
                 title="Rankings"
                 subtitle="Top 10"
+                onPress={() => router.push('/points/rankings')}
+              />
+              <QuickActionCard
+                icon="⭐"
+                title="Assinaturas"
+                subtitle="Planos"
+                onPress={() => router.push('/subscriptions')}
               />
             </XStack>
           </YStack>
 
           {/* Recent Activity */}
           <YStack gap="$2">
-            <Text weight="semibold" size="lg">
-              Atividade recente
-            </Text>
-            <Card variant="flat">
-              <YStack gap="$2" alignItems="center" paddingVertical="$4">
-                <Text color="secondary">Nenhuma atividade recente</Text>
-                <Text color="secondary" size="sm">
-                  Participe de eventos para ganhar pontos!
-                </Text>
-              </YStack>
-            </Card>
+            <XStack alignItems="center" justifyContent="space-between">
+              <Text weight="semibold" size="lg">
+                Atividade recente
+              </Text>
+              {recentTransactions.length > 0 && (
+                <Pressable onPress={() => router.push('/points')}>
+                  <Text color="accent" size="sm">Ver tudo</Text>
+                </Pressable>
+              )}
+            </XStack>
+            {recentTransactions.length > 0 ? (
+              <Card variant="flat">
+                {recentTransactions.map((tx) => (
+                  <TransactionItem
+                    key={tx.id}
+                    transaction={tx}
+                    onPress={() => router.push('/points')}
+                  />
+                ))}
+              </Card>
+            ) : (
+              <Card variant="flat">
+                <YStack gap="$2" alignItems="center" paddingVertical="$4">
+                  <Text color="secondary">Nenhuma atividade recente</Text>
+                  <Text color="secondary" size="sm">
+                    Participe de eventos para ganhar pontos!
+                  </Text>
+                </YStack>
+              </Card>
+            )}
           </YStack>
         </YStack>
       </ScrollView>
+
+      <CelebrationOverlay />
     </SafeAreaView>
   );
 }
@@ -98,26 +143,24 @@ function QuickActionCard({
   icon,
   title,
   subtitle,
+  onPress,
 }: {
   icon: string;
   title: string;
   subtitle: string;
+  onPress?: () => void;
 }) {
   return (
-    <Card
-      variant="elevated"
-      size="sm"
-      pressable
-      width="47%"
-      marginBottom="$2"
-    >
-      <YStack gap="$1">
-        <Text size="2xl">{icon}</Text>
-        <Text weight="semibold">{title}</Text>
-        <Text color="secondary" size="xs">
-          {subtitle}
-        </Text>
-      </YStack>
-    </Card>
+    <Pressable onPress={onPress} style={{ width: '47%', marginBottom: 8 }}>
+      <Card variant="elevated" size="sm">
+        <YStack gap="$1">
+          <Text size="2xl">{icon}</Text>
+          <Text weight="semibold">{title}</Text>
+          <Text color="secondary" size="xs">
+            {subtitle}
+          </Text>
+        </YStack>
+      </Card>
+    </Pressable>
   );
 }

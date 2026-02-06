@@ -42,7 +42,7 @@ describe('PointsController', () => {
       const result = await controller.getHistory(mockJwtPayload as any, query);
 
       expect(service.getHistory).toHaveBeenCalledWith(mockJwtPayload.sub, query);
-      expect(result).toEqual(mockHistory);
+      expect(result).toEqual({ success: true, data: mockHistory });
     });
   });
 

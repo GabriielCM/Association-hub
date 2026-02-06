@@ -58,11 +58,16 @@ describe('PointsService', () => {
       broadcastNewNotification: vi.fn(),
     };
 
+    const pointsGateway = {
+      broadcastPointsUpdate: vi.fn(),
+    };
+
     // Instantiate service directly with mock
     service = new PointsService(
       prisma,
       notificationsService as any,
       notificationsGateway as any,
+      pointsGateway as any,
     );
   });
 

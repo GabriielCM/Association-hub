@@ -54,21 +54,34 @@ export const updateProfileSchema = z.object({
 // ===========================================
 
 export const transferPointsSchema = z.object({
-  toUserId: z.string().cuid('ID do usuário inválido'),
+  recipientId: z.string().min(1, 'ID do destinatário é obrigatório'),
   amount: z.number().int().positive('Quantidade deve ser maior que zero'),
-  description: z.string().max(255).optional(),
+  message: z.string().max(100, 'Mensagem muito longa').optional(),
+});
+
+export const pointsHistoryQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  type: z.enum(['credit', 'debit']).optional(),
+  source: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 });
 
 export const adminGrantPointsSchema = z.object({
-  userId: z.string().cuid('ID do usuário inválido'),
+  userId: z.string().min(1, 'ID do usuário é obrigatório'),
   amount: z.number().int().positive('Quantidade deve ser maior que zero'),
-  description: z.string().max(255, 'Descrição muito longa'),
+  reason: z.string().min(1, 'Motivo é obrigatório').max(500, 'Motivo muito longo'),
 });
 
 export const adminDeductPointsSchema = z.object({
-  userId: z.string().cuid('ID do usuário inválido'),
+  userId: z.string().min(1, 'ID do usuário é obrigatório'),
   amount: z.number().int().positive('Quantidade deve ser maior que zero'),
-  reason: z.string().min(1, 'Motivo é obrigatório').max(255),
+  reason: z.string().min(1, 'Motivo é obrigatório').max(500, 'Motivo muito longo'),
+});
+
+export const adminRefundSchema = z.object({
+  reason: z.string().min(1, 'Motivo é obrigatório').max(500, 'Motivo muito longo'),
 });
 
 // ===========================================
@@ -76,19 +89,54 @@ export const adminDeductPointsSchema = z.object({
 // ===========================================
 
 export const subscribeSchema = z.object({
-  planId: z.string().cuid('ID do plano inválido'),
+  planId: z.string().min(1, 'ID do plano é obrigatório'),
+});
+
+export const changePlanSchema = z.object({
+  planId: z.string().min(1, 'ID do plano é obrigatório'),
+});
+
+export const cancelSubscriptionSchema = z.object({
+  reason: z.string().max(500, 'Motivo muito longo').optional(),
+});
+
+export const mutatorsSchema = z.object({
+  points_events: z.number().min(0).max(10).default(1.0),
+  points_strava: z.number().min(0).max(10).default(1.0),
+  points_posts: z.number().min(0).max(10).default(1.0),
+  discount_store: z.number().min(0).max(100).default(0),
+  discount_pdv: z.number().min(0).max(100).default(0),
+  discount_spaces: z.number().min(0).max(100).default(0),
+  cashback: z.number().min(0).max(100).default(5.0),
 });
 
 export const createPlanSchema = z.object({
-  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  description: z.string().optional(),
-  price: z.number().int().positive('Preço deve ser maior que zero'),
-  interval: z.enum(['MONTHLY', 'YEARLY']),
-  pointsMultiplier: z.number().min(1).max(10).default(1),
-  storeDiscount: z.number().min(0).max(100).default(0),
-  pdvDiscount: z.number().min(0).max(100).default(0),
-  spaceDiscount: z.number().min(0).max(100).default(0),
-  verifiedBadge: z.boolean().default(false),
+  name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres').max(50, 'Nome muito longo'),
+  description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres').max(500, 'Descrição muito longa'),
+  priceMonthly: z.number().positive('Preço deve ser maior que zero'),
+  iconUrl: z.string().url('URL inválida').optional(),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Cor deve ser hexadecimal').optional(),
+  displayOrder: z.number().int().min(1).max(3).default(1),
+  mutators: mutatorsSchema.optional(),
+});
+
+export const suspendUserSchema = z.object({
+  reason: z.string().min(1, 'Motivo é obrigatório').max(500, 'Motivo muito longo'),
+});
+
+export const adminUpdatePointsConfigSchema = z.object({
+  sources: z.array(z.object({
+    type: z.string(),
+    isActive: z.boolean(),
+    defaultPoints: z.number().int().optional(),
+    pointsPerKm: z.number().optional(),
+    points: z.number().int().optional(),
+  })).optional(),
+  strava: z.object({
+    dailyLimitKm: z.number().min(0).max(100),
+    eligibleActivities: z.array(z.string()),
+  }).optional(),
+  pointsToMoneyRate: z.number().positive().optional(),
 });
 
 // ===========================================
@@ -113,8 +161,15 @@ export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type NewPasswordInput = z.infer<typeof newPasswordSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type TransferPointsInput = z.infer<typeof transferPointsSchema>;
+export type PointsHistoryQueryInput = z.infer<typeof pointsHistoryQuerySchema>;
 export type AdminGrantPointsInput = z.infer<typeof adminGrantPointsSchema>;
 export type AdminDeductPointsInput = z.infer<typeof adminDeductPointsSchema>;
+export type AdminRefundInput = z.infer<typeof adminRefundSchema>;
 export type SubscribeInput = z.infer<typeof subscribeSchema>;
+export type ChangePlanInput = z.infer<typeof changePlanSchema>;
+export type CancelSubscriptionInput = z.infer<typeof cancelSubscriptionSchema>;
+export type MutatorsInput = z.infer<typeof mutatorsSchema>;
 export type CreatePlanInput = z.infer<typeof createPlanSchema>;
+export type SuspendUserInput = z.infer<typeof suspendUserSchema>;
+export type AdminUpdatePointsConfigInput = z.infer<typeof adminUpdatePointsConfigSchema>;
 export type PaginationInput = z.infer<typeof paginationSchema>;

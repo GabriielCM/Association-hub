@@ -1,3 +1,6 @@
+// Ensure Tamagui config is created before any component renders
+import '../tamagui.config';
+
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -40,6 +43,8 @@ function RootLayoutContent() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="points" options={{ headerShown: false }} />
+        <Stack.Screen name="subscriptions" options={{ headerShown: false }} />
       </Stack>
     </>
   );
@@ -57,17 +62,17 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <ErrorBoundary>
-          <QueryProvider>
-            <ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider>
+            <ErrorBoundary>
               <AuthProvider>
                 <WebSocketProvider>
                   <RootLayoutContent />
                 </WebSocketProvider>
               </AuthProvider>
-            </ThemeProvider>
-          </QueryProvider>
-        </ErrorBoundary>
+            </ErrorBoundary>
+          </ThemeProvider>
+        </QueryProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

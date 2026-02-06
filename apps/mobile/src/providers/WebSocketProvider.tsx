@@ -30,11 +30,12 @@ const WebSocketContext = createContext<WebSocketContextValue | undefined>(
 export function WebSocketProvider({ children }: PropsWithChildren) {
   const [connected, setConnected] = useState(false);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
 
   // Initialize socket when authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      initSocket().then(() => {
+    if (isAuthenticated && user?.id) {
+      initSocket(user.id).then(() => {
         setConnected(isConnected());
       });
 
@@ -51,13 +52,13 @@ export function WebSocketProvider({ children }: PropsWithChildren) {
       disconnectSocket();
       setConnected(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.id]);
 
   const reconnect = useCallback(async () => {
     disconnectSocket();
-    await initSocket();
+    await initSocket(user?.id);
     setConnected(isConnected());
-  }, []);
+  }, [user?.id]);
 
   return (
     <WebSocketContext.Provider

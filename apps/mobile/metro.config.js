@@ -31,7 +31,10 @@ config.resolver.disableHierarchicalLookup = true;
 // Tamagui support
 config.resolver.sourceExts = [...config.resolver.sourceExts, 'mjs'];
 
-// Tamagui v2 resolveRequest hook for proper module resolution
+// Tamagui v2 resolveRequest hook for proper module resolution.
+// Adds 'react-native' condition so Tamagui's package.json "exports" resolves
+// to .native.js files instead of web .mjs files, while preserving Metro's
+// default condition names to avoid CJS/ESM dual-package duplication.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (platform === 'web') {
     return context.resolveRequest(context, moduleName, platform);
@@ -43,14 +46,17 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     moduleName.startsWith('@tamagui/');
 
   if (isTamagui) {
-    return context.resolveRequest(
-      {
-        ...context,
-        unstable_conditionNames: ['react-native', 'require', 'default'],
-      },
-      moduleName,
-      platform
-    );
+    const existing = context.unstable_conditionNames || [];
+    if (!existing.includes('react-native')) {
+      return context.resolveRequest(
+        {
+          ...context,
+          unstable_conditionNames: ['react-native', ...existing],
+        },
+        moduleName,
+        platform
+      );
+    }
   }
 
   return context.resolveRequest(context, moduleName, platform);

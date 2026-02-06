@@ -8,6 +8,7 @@ import { useAuthContext } from '@/providers/AuthProvider';
 import { useThemeContext } from '@/providers/ThemeProvider';
 import { useAuth } from '@/hooks/useAuth';
 import { useBiometrics, getBiometricLabel } from '@/hooks/useBiometrics';
+import { VerifiedBadge } from '@/features/subscriptions/components/VerifiedBadge';
 
 export default function PerfilScreen() {
   const { user } = useAuthContext();
@@ -53,9 +54,12 @@ export default function PerfilScreen() {
                 size="2xl"
               />
               <YStack alignItems="center" gap="$1">
-                <Text weight="bold" size="xl">
-                  {user?.name || 'Membro'}
-                </Text>
+                <XStack alignItems="center" gap="$1.5">
+                  <Text weight="bold" size="xl">
+                    {user?.name || 'Membro'}
+                  </Text>
+                  <VerifiedBadge size="md" />
+                </XStack>
                 <Text color="secondary">{user?.email}</Text>
                 <Badge variant={user?.isVerified ? 'success' : 'ghost'}>
                   {user?.isVerified ? 'Verificado' : 'Não verificado'}
@@ -72,6 +76,19 @@ export default function PerfilScreen() {
             <Text weight="semibold" size="lg">
               Configurações
             </Text>
+
+            {/* Subscription */}
+            <Card variant="flat" pressable onPress={() => router.push('/subscriptions/my-subscription')}>
+              <XStack justifyContent="space-between" alignItems="center">
+                <YStack>
+                  <Text weight="medium">Minha Assinatura</Text>
+                  <Text color="secondary" size="sm">
+                    Gerencie seu plano
+                  </Text>
+                </YStack>
+                <Text>⭐</Text>
+              </XStack>
+            </Card>
 
             {/* Theme */}
             <Card variant="flat" pressable onPress={toggleTheme}>

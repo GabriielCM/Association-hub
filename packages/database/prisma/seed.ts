@@ -102,6 +102,42 @@ async function main() {
     console.log(`   ✅ ${user.email} (${user.role})`);
   }
 
+  // 4. Adicionar 500 pontos para todos os usuários
+  console.log('\n💰 Adicionando 500 pontos para todos os usuários...\n');
+
+  const allUsers = await prisma.user.findMany({ select: { id: true, email: true } });
+
+  for (const user of allUsers) {
+    const userPoints = await prisma.userPoints.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!userPoints) continue;
+
+    const newBalance = userPoints.balance + 500;
+
+    await prisma.$transaction([
+      prisma.userPoints.update({
+        where: { userId: user.id },
+        data: {
+          balance: newBalance,
+          lifetimeEarned: userPoints.lifetimeEarned + 500,
+        },
+      }),
+      prisma.pointTransaction.create({
+        data: {
+          userId: user.id,
+          amount: 500,
+          balance: newBalance,
+          source: 'ADMIN_CREDIT',
+          description: 'Seed: bônus inicial de 500 pontos',
+        },
+      }),
+    ]);
+
+    console.log(`   ✅ ${user.email}: +500 pts (saldo: ${newBalance})`);
+  }
+
   console.log('\n🎉 Seed concluído!\n');
   console.log('📋 Credenciais de teste:');
   console.log('   ┌─────────────────────┬─────────────┬───────┐');

@@ -22,7 +22,7 @@ const eventListeners: Map<SocketEvent, Set<EventCallback>> = new Map();
 /**
  * Initialize WebSocket connection
  */
-export async function initSocket(): Promise<Socket | null> {
+export async function initSocket(userId?: string): Promise<Socket | null> {
   if (socket?.connected) {
     return socket;
   }
@@ -34,7 +34,7 @@ export async function initSocket(): Promise<Socket | null> {
   }
 
   socket = io(WS_URL, {
-    auth: { token },
+    auth: { token, userId },
     transports: ['websocket'],
     reconnection: true,
     reconnectionAttempts: MAX_RECONNECT_ATTEMPTS,

@@ -199,41 +199,40 @@ describe('updateProfileSchema', () => {
 // transferPointsSchema
 // ============================================
 describe('transferPointsSchema', () => {
-  // Use a valid CUID for testing
-  const validCuid = 'clxxxxxxxxxxxxxxxxxxxxxxxxx';
+  const validId = 'clxxxxxxxxxxxxxxxxxxxxxxxxx';
 
   it('should validate correct transfer data', () => {
     const result = transferPointsSchema.safeParse({
-      toUserId: validCuid,
+      recipientId: validId,
       amount: 100,
     });
     expect(result.success).toBe(true);
   });
 
-  it('should accept optional description', () => {
+  it('should accept optional message', () => {
     const result = transferPointsSchema.safeParse({
-      toUserId: validCuid,
+      recipientId: validId,
       amount: 50,
-      description: 'Transfer test',
+      message: 'Transfer test',
     });
     expect(result.success).toBe(true);
   });
 
   it('should reject negative amount', () => {
     expect(
-      transferPointsSchema.safeParse({ toUserId: validCuid, amount: -10 }).success
+      transferPointsSchema.safeParse({ recipientId: validId, amount: -10 }).success
     ).toBe(false);
   });
 
   it('should reject zero amount', () => {
     expect(
-      transferPointsSchema.safeParse({ toUserId: validCuid, amount: 0 }).success
+      transferPointsSchema.safeParse({ recipientId: validId, amount: 0 }).success
     ).toBe(false);
   });
 
-  it('should reject invalid userId', () => {
+  it('should reject empty recipientId', () => {
     expect(
-      transferPointsSchema.safeParse({ toUserId: 'invalid', amount: 100 }).success
+      transferPointsSchema.safeParse({ recipientId: '', amount: 100 }).success
     ).toBe(false);
   });
 });
@@ -242,14 +241,14 @@ describe('transferPointsSchema', () => {
 // adminGrantPointsSchema
 // ============================================
 describe('adminGrantPointsSchema', () => {
-  const validCuid = 'clxxxxxxxxxxxxxxxxxxxxxxxxx';
+  const validUserId = 'clxxxxxxxxxxxxxxxxxxxxxxxxx';
 
   it('should validate correct grant data', () => {
     expect(
       adminGrantPointsSchema.safeParse({
-        userId: validCuid,
+        userId: validUserId,
         amount: 500,
-        description: 'Bonus',
+        reason: 'Bonus',
       }).success
     ).toBe(true);
   });
@@ -257,18 +256,29 @@ describe('adminGrantPointsSchema', () => {
   it('should reject zero amount', () => {
     expect(
       adminGrantPointsSchema.safeParse({
-        userId: validCuid,
+        userId: validUserId,
         amount: 0,
+        reason: 'Test',
       }).success
     ).toBe(false);
   });
 
-  it('should reject long description', () => {
+  it('should reject long reason', () => {
     expect(
       adminGrantPointsSchema.safeParse({
-        userId: validCuid,
+        userId: validUserId,
         amount: 100,
-        description: 'x'.repeat(256),
+        reason: 'x'.repeat(501),
+      }).success
+    ).toBe(false);
+  });
+
+  it('should reject empty reason', () => {
+    expect(
+      adminGrantPointsSchema.safeParse({
+        userId: validUserId,
+        amount: 100,
+        reason: '',
       }).success
     ).toBe(false);
   });
@@ -278,12 +288,12 @@ describe('adminGrantPointsSchema', () => {
 // adminDeductPointsSchema
 // ============================================
 describe('adminDeductPointsSchema', () => {
-  const validCuid = 'clxxxxxxxxxxxxxxxxxxxxxxxxx';
+  const validUserId = 'clxxxxxxxxxxxxxxxxxxxxxxxxx';
 
   it('should validate correct deduct data', () => {
     expect(
       adminDeductPointsSchema.safeParse({
-        userId: validCuid,
+        userId: validUserId,
         amount: 50,
         reason: 'Penalty',
       }).success
@@ -293,7 +303,7 @@ describe('adminDeductPointsSchema', () => {
   it('should reject empty reason', () => {
     expect(
       adminDeductPointsSchema.safeParse({
-        userId: validCuid,
+        userId: validUserId,
         amount: 50,
         reason: '',
       }).success
@@ -303,7 +313,7 @@ describe('adminDeductPointsSchema', () => {
   it('should reject missing reason', () => {
     expect(
       adminDeductPointsSchema.safeParse({
-        userId: validCuid,
+        userId: validUserId,
         amount: 50,
       }).success
     ).toBe(false);
@@ -320,9 +330,9 @@ describe('subscribeSchema', () => {
     ).toBe(true);
   });
 
-  it('should reject invalid plan ID', () => {
+  it('should reject empty plan ID', () => {
     expect(
-      subscribeSchema.safeParse({ planId: 'invalid-id' }).success
+      subscribeSchema.safeParse({ planId: '' }).success
     ).toBe(false);
   });
 });
@@ -333,52 +343,81 @@ describe('subscribeSchema', () => {
 describe('createPlanSchema', () => {
   const validPlan = {
     name: 'Premium',
-    price: 2990,
-    interval: 'MONTHLY' as const,
+    description: 'Plano premium com beneficios',
+    priceMonthly: 29.90,
   };
 
   it('should validate correct plan data with defaults', () => {
     const result = createPlanSchema.safeParse(validPlan);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.pointsMultiplier).toBe(1);
-      expect(result.data.storeDiscount).toBe(0);
-      expect(result.data.pdvDiscount).toBe(0);
-      expect(result.data.spaceDiscount).toBe(0);
-      expect(result.data.verifiedBadge).toBe(false);
+      expect(result.data.displayOrder).toBe(1);
+      expect(result.data.mutators).toBeUndefined();
     }
   });
 
-  it('should accept optional description', () => {
+  it('should accept mutators with defaults', () => {
+    const result = createPlanSchema.safeParse({
+      ...validPlan,
+      mutators: {},
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.mutators?.points_events).toBe(1);
+      expect(result.data.mutators?.discount_store).toBe(0);
+      expect(result.data.mutators?.cashback).toBe(5.0);
+    }
+  });
+
+  it('should accept optional color and iconUrl', () => {
     expect(
       createPlanSchema.safeParse({
         ...validPlan,
-        description: 'Premium plan with benefits',
+        color: '#FF5500',
+        iconUrl: 'https://example.com/icon.png',
       }).success
     ).toBe(true);
   });
 
-  it('should reject invalid interval', () => {
-    expect(
-      createPlanSchema.safeParse({ ...validPlan, interval: 'WEEKLY' }).success
-    ).toBe(false);
-  });
-
   it('should reject negative price', () => {
     expect(
-      createPlanSchema.safeParse({ ...validPlan, price: -100 }).success
+      createPlanSchema.safeParse({ ...validPlan, priceMonthly: -100 }).success
     ).toBe(false);
   });
 
-  it('should reject multiplier out of range', () => {
+  it('should reject mutator multiplier out of range', () => {
     expect(
-      createPlanSchema.safeParse({ ...validPlan, pointsMultiplier: 15 }).success
+      createPlanSchema.safeParse({
+        ...validPlan,
+        mutators: { points_events: 15 },
+      }).success
     ).toBe(false);
   });
 
-  it('should reject discount over 100', () => {
+  it('should reject mutator discount over 100', () => {
     expect(
-      createPlanSchema.safeParse({ ...validPlan, storeDiscount: 150 }).success
+      createPlanSchema.safeParse({
+        ...validPlan,
+        mutators: { discount_store: 150 },
+      }).success
+    ).toBe(false);
+  });
+
+  it('should reject invalid color format', () => {
+    expect(
+      createPlanSchema.safeParse({ ...validPlan, color: 'red' }).success
+    ).toBe(false);
+  });
+
+  it('should reject short name', () => {
+    expect(
+      createPlanSchema.safeParse({ ...validPlan, name: 'AB' }).success
+    ).toBe(false);
+  });
+
+  it('should reject short description', () => {
+    expect(
+      createPlanSchema.safeParse({ ...validPlan, description: 'Short' }).success
     ).toBe(false);
   });
 });
