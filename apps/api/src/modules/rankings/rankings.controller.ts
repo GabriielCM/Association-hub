@@ -26,7 +26,7 @@ export class RankingsController {
       query.period || RankingPeriod.ALL_TIME,
       query.limit || 10,
     );
-    return { data };
+    return { success: true, data };
   }
 
   @Get('events')
@@ -42,7 +42,7 @@ export class RankingsController {
       query.period || RankingPeriod.ALL_TIME,
       query.limit || 10,
     );
-    return { data };
+    return { success: true, data };
   }
 
   @Get('strava')
@@ -58,6 +58,6 @@ export class RankingsController {
       query.period || RankingPeriod.ALL_TIME,
       query.limit || 10,
     );
-    return { data };
+    return { success: true, data };
   }
 }

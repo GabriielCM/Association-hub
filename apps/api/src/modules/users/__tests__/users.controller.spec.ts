@@ -32,7 +32,6 @@ const mockProfile = {
 // Mock UsersService
 const mockUsersService = {
   getProfile: vi.fn(),
-  updateProfile: vi.fn(),
 };
 
 describe('UsersController', () => {
@@ -71,43 +70,4 @@ describe('UsersController', () => {
     });
   });
 
-  describe('updateProfile', () => {
-    it('deve atualizar perfil com todos os campos', async () => {
-      const updateData = {
-        name: 'Updated Name',
-        phone: '11888888888',
-        avatarUrl: 'https://example.com/avatar.jpg',
-      };
-      const updatedProfile = { ...mockProfile, ...updateData };
-      mockUsersService.updateProfile.mockResolvedValue(updatedProfile);
-
-      const result = await controller.updateProfile(mockJwtPayload, updateData);
-
-      expect(result.data.name).toBe('Updated Name');
-      expect(result.data.phone).toBe('11888888888');
-      expect(result.data.avatarUrl).toBe('https://example.com/avatar.jpg');
-      expect(mockUsersService.updateProfile).toHaveBeenCalledWith(mockUserId, updateData);
-    });
-
-    it('deve atualizar perfil com campos parciais', async () => {
-      const updateData = { name: 'Only Name' };
-      const updatedProfile = { ...mockProfile, name: 'Only Name' };
-      mockUsersService.updateProfile.mockResolvedValue(updatedProfile);
-
-      const result = await controller.updateProfile(mockJwtPayload, updateData);
-
-      expect(result.data.name).toBe('Only Name');
-      expect(mockUsersService.updateProfile).toHaveBeenCalledWith(mockUserId, updateData);
-    });
-
-    it('deve formatar resposta com success: true', async () => {
-      const updateData = { name: 'New Name' };
-      mockUsersService.updateProfile.mockResolvedValue({ ...mockProfile, ...updateData });
-
-      const result = await controller.updateProfile(mockJwtPayload, updateData);
-
-      expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-    });
-  });
 });

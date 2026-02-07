@@ -90,6 +90,12 @@ export default function HomeScreen() {
                 onPress={() => router.push('/points/rankings')}
               />
               <QuickActionCard
+                icon="💳"
+                title="Carteira"
+                subtitle="Saldo e QR"
+                onPress={() => router.push('/wallet')}
+              />
+              <QuickActionCard
                 icon="⭐"
                 title="Assinaturas"
                 subtitle="Planos"

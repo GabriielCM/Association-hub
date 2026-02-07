@@ -1,85 +1,110 @@
-import { YStack, View } from 'tamagui';
+import { ScrollView, RefreshControl } from 'react-native';
+import { useState } from 'react';
+import { router } from 'expo-router';
+import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Text, Heading, Card, Avatar, Badge } from '@ahub/ui';
-import { useAuthContext } from '@/providers/AuthProvider';
+import { Text, Heading, Button, Spinner } from '@ahub/ui';
+import { useBrightness } from '@/hooks/useBrightness';
+import { useCard, useCardQrCode } from '@/features/card/hooks/useCard';
+import { useMySubscription } from '@/features/subscriptions/hooks/useMySubscription';
+import { useCachedCard, useCachedQrCode } from '@/stores/card.store';
+import { FlipCard } from '@/features/card/components/FlipCard';
+import { CardFront } from '@/features/card/components/CardFront';
+import { CardBack } from '@/features/card/components/CardBack';
 
 export default function CarteirinhaScreen() {
-  const { user } = useAuthContext();
+  const { data: card, isLoading, refetch } = useCard();
+  const { data: qrCode } = useCardQrCode();
+  const { data: subscription } = useMySubscription();
+  const cachedCard = useCachedCard();
+  const cachedQrCode = useCachedQrCode();
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Increase brightness when card is visible
+  useBrightness();
+
+  const displayCard = card || cachedCard;
+  const displayQr = qrCode || cachedQrCode;
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
+
+  if (isLoading && !displayCard) {
+    return (
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <YStack flex={1} justifyContent="center" alignItems="center">
+          <Spinner size="large" />
+          <Text color="secondary" marginTop="$2">
+            Carregando carteirinha...
+          </Text>
+        </YStack>
+      </SafeAreaView>
+    );
+  }
+
+  if (!displayCard) {
+    return (
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" gap="$4">
+          <Text style={{ fontSize: 48 }}>💳</Text>
+          <Text color="secondary" align="center">
+            Não foi possível carregar sua carteirinha.
+          </Text>
+          <Button variant="outline" onPress={() => refetch()}>
+            Tentar novamente
+          </Button>
+        </YStack>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <YStack flex={1} padding="$4" gap="$4">
-        <Heading level={3}>Carteirinha Digital</Heading>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
+        <YStack padding="$4" gap="$4">
+          <Heading level={3}>Carteirinha Digital</Heading>
 
-        {/* Card Preview */}
-        <Card
-          variant="elevated"
-          padding="$4"
-          backgroundColor="$primary"
-        >
-          <YStack gap="$3">
-            {/* Header */}
-            <Text color="primary" size="lg" weight="bold" style={{ color: '#fff' }}>
-              A-hub
-            </Text>
-
-            {/* User Info */}
-            <YStack alignItems="center" gap="$2" paddingVertical="$2">
-              <Avatar
-                src={user?.avatarUrl}
-                name={user?.name}
-                size="xl"
-                bordered
+          {/* Flip Card */}
+          <FlipCard
+            front={
+              <CardFront
+                card={displayCard}
+                qrCode={displayQr}
+                subscription={subscription ? { planName: subscription.plan.name } : null}
               />
-              <Text weight="bold" size="lg" style={{ color: '#fff' }}>
-                {user?.name || 'Membro'}
-              </Text>
-              <Badge variant="secondary">
-                {user?.role === 'ADMIN' ? 'Administrador' : 'Membro'}
-              </Badge>
-            </YStack>
+            }
+            back={<CardBack card={displayCard} />}
+          />
 
-            {/* QR Code Placeholder */}
-            <View
-              backgroundColor="$surface"
-              borderRadius="$lg"
-              padding="$4"
-              alignItems="center"
-              justifyContent="center"
-              height={200}
+          {/* Quick Actions */}
+          <XStack gap="$2" justifyContent="center">
+            <Button
+              variant="outline"
+              size="md"
+              flex={1}
+              onPress={() => router.push('/card/benefits')}
             >
-              <Text color="secondary" align="center">
-                QR Code será exibido aqui
-              </Text>
-              <Text color="secondary" size="sm" align="center" marginTop="$2">
-                Use para check-in em eventos
-              </Text>
-            </View>
-
-            {/* Member ID */}
-            <Text align="center" size="sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              ID: {user?.memberId || user?.id?.slice(0, 8) || '---'}
-            </Text>
-          </YStack>
-        </Card>
-
-        {/* Instructions */}
-        <Card variant="flat">
-          <YStack gap="$2">
-            <Text weight="semibold">Como usar</Text>
-            <Text color="secondary" size="sm">
-              1. Apresente o QR Code para o organizador do evento
-            </Text>
-            <Text color="secondary" size="sm">
-              2. Aguarde a confirmação do check-in
-            </Text>
-            <Text color="secondary" size="sm">
-              3. Pronto! Seus pontos serão creditados automaticamente
-            </Text>
-          </YStack>
-        </Card>
-      </YStack>
+              Benefícios
+            </Button>
+            <Button
+              variant="outline"
+              size="md"
+              flex={1}
+              onPress={() => router.push('/card/history')}
+            >
+              Histórico
+            </Button>
+          </XStack>
+        </YStack>
+      </ScrollView>
     </SafeAreaView>
   );
 }

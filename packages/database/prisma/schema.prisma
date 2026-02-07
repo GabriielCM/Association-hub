@@ -40,7 +40,8 @@ model User {
   status       UserStatus @default(PENDING)
   isVerified   Boolean    @default(false) @map("is_verified")
   verifiedAt   DateTime?  @map("verified_at")
-  lastLoginAt  DateTime?  @map("last_login_at")
+  lastLoginAt       DateTime?  @map("last_login_at")
+  usernameChangedAt DateTime?  @map("username_changed_at")
 
   // Associação
   associationId String      @map("association_id")

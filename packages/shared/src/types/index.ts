@@ -6,6 +6,8 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  username?: string;
+  bio?: string;
   avatarUrl?: string;
   phone?: string;
   role: UserRole;
@@ -14,6 +16,7 @@ export interface User {
   verifiedAt?: Date;
   associationId: string;
   memberId?: string;
+  usernameChangedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -319,7 +322,329 @@ export interface AdminSubscriptionReport {
   }>;
 }
 
-// Profile update types (inferred from updateProfileSchema in validation/index.ts)
+// ===========================================
+// PROFILE TYPES
+// ===========================================
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  username?: string;
+  bio?: string;
+  avatarUrl?: string;
+  isVerified: boolean;
+  isMe: boolean;
+  stats: {
+    points: number;
+    lifetimePoints: number;
+  };
+  badges: ProfileBadge[];
+  subscription: string | null;
+  memberSince: Date;
+}
+
+export interface ProfileBadge {
+  id: string;
+  name: string;
+  iconUrl?: string;
+  description?: string;
+  earnedAt?: Date;
+}
+
+export interface UserBadge {
+  id: string;
+  name: string;
+  iconUrl?: string;
+  description?: string;
+  criteria: {
+    type: string;
+    value: number;
+  };
+  earnedAt: Date;
+  isFeatured: boolean;
+}
+
+export interface UserBadgesResponse {
+  data: UserBadge[];
+  total: number;
+  featured: number;
+}
+
+export interface UserRankingEntry {
+  type: string;
+  name: string;
+  position: number | null;
+  totalParticipants: number | null;
+  value: number;
+  unit: string;
+}
+
+export interface UserRankingsResponse {
+  data: UserRankingEntry[];
+}
+
+export interface UsernameCheckResponse {
+  username: string;
+  isAvailable: boolean;
+}
+
+export interface UpdateProfileResult {
+  id: string;
+  name: string;
+  username?: string;
+  bio?: string;
+  phone?: string;
+  avatarUrl?: string;
+  usernameChangedAt?: Date;
+  updatedAt: Date;
+}
+
+export interface AvatarUploadResult {
+  id: string;
+  avatarUrl: string;
+  updatedAt: Date;
+}
+
+export interface UpdateBadgesDisplayResult {
+  featuredBadges: Array<{
+    id: string;
+    name: string;
+    iconUrl?: string;
+  }>;
+}
+
+// ===========================================
+// CARD (CARTEIRINHA) TYPES
+// ===========================================
+
+export type CardStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BLOCKED';
+export type CardUsageType = 'CHECKIN' | 'BENEFIT_USED' | 'EVENT_VALIDATION' | 'QR_SCANNED';
+
+export interface MemberCard {
+  id: string;
+  cardNumber: string;
+  status: CardStatus;
+  statusReason?: string;
+  issuedAt: Date;
+  expiresAt?: Date;
+  user: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+    memberId?: string;
+  };
+  association: {
+    id: string;
+    name: string;
+    logoUrl?: string;
+    phone?: string;
+    email?: string;
+    website?: string;
+    address?: string;
+  };
+}
+
+export interface CardQrCode {
+  qrCodeData: string;
+  qrCodeHash: string;
+  cardNumber: string;
+}
+
+export interface CardUsageLog {
+  id: string;
+  type: CardUsageType;
+  location?: string;
+  address?: string;
+  partner?: {
+    id: string;
+    name: string;
+    logoUrl?: string;
+  };
+  scannedAt: Date;
+  metadata?: Record<string, unknown>;
+}
+
+export interface CardHistoryResponse {
+  data: CardUsageLog[];
+  meta: {
+    currentPage: number;
+    perPage: number;
+    totalPages: number;
+    totalCount: number;
+  };
+}
+
+// ===========================================
+// PARTNER / BENEFITS TYPES
+// ===========================================
+
+export type AudienceType = 'ALL' | 'SUBSCRIBERS' | 'NON_SUBSCRIBERS' | 'SPECIFIC_PLANS';
+
+export interface PartnerCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string;
+  color: string;
+  partnersCount?: number;
+}
+
+export interface PartnerListItem {
+  id: string;
+  name: string;
+  logoUrl?: string;
+  benefit: string;
+  category: PartnerCategory;
+  isEligible: boolean;
+  isNew: boolean;
+  city?: string;
+  state?: string;
+}
+
+export interface PartnerDetail {
+  id: string;
+  name: string;
+  logoUrl?: string;
+  bannerUrl?: string;
+  benefit: string;
+  instructions?: string;
+  category: PartnerCategory;
+  address: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    lat?: number;
+    lng?: number;
+  };
+  contact: {
+    phone?: string;
+    website?: string;
+    instagram?: string;
+    facebook?: string;
+    whatsapp?: string;
+  };
+  businessHours?: Record<string, string>;
+  isOpenNow?: boolean;
+  isEligible: boolean;
+  isNew: boolean;
+}
+
+export interface BenefitsFilter {
+  page?: number;
+  perPage?: number;
+  search?: string;
+  category?: string;
+  sortBy?: 'name' | 'recent';
+}
+
+export interface BenefitsListResponse {
+  data: PartnerListItem[];
+  meta: {
+    currentPage: number;
+    perPage: number;
+    totalPages: number;
+    totalCount: number;
+  };
+}
+
+// ===========================================
+// WALLET TYPES
+// ===========================================
+
+export type WalletSummaryPeriod = 'today' | 'week' | 'month' | 'year';
+
+export interface WalletSummary {
+  period: WalletSummaryPeriod;
+  startDate: Date;
+  endDate: Date;
+  earned: number;
+  spent: number;
+  net: number;
+}
+
+export interface WalletRecipient {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  lastTransferAt: Date;
+  transferCount: number;
+}
+
+export interface StravaStatus {
+  connected: boolean;
+  athleteName: string | null;
+  kmUsedToday: number;
+  kmRemainingToday: number;
+  lastSyncAt: Date | null;
+  connectedAt: Date | null;
+}
+
+export interface WalletDashboard {
+  balance: number;
+  lifetimeEarned: number;
+  lifetimeSpent: number;
+  qrCode: {
+    data: string;
+    hash: string;
+    cardNumber: string;
+  } | null;
+  summary: WalletSummary;
+  strava: StravaStatus;
+  recentRecipients: WalletRecipient[];
+}
+
+// ===========================================
+// QR SCANNER TYPES
+// ===========================================
+
+export type QrCodeType = 'member_card' | 'event_checkin' | 'user_transfer' | 'pdv_payment';
+
+export interface QrScanResult {
+  type: QrCodeType;
+  valid: boolean;
+  error?: string;
+  data?: Record<string, unknown>;
+  action?: string;
+}
+
+// ===========================================
+// PDV CHECKOUT TYPES
+// ===========================================
+
+export type CheckoutStatus = 'PENDING' | 'PAID' | 'EXPIRED' | 'AWAITING_PIX' | 'CANCELLED';
+
+export interface PdvCheckoutItem {
+  product_id: string;
+  name: string;
+  quantity: number;
+  unit_price_points: number;
+  unit_price_money: number;
+}
+
+export interface PdvCheckoutDetails {
+  code: string;
+  items: PdvCheckoutItem[];
+  totalPoints: number;
+  totalMoney: number;
+  expiresAt: Date;
+  pdv: {
+    name: string;
+    location: string;
+  };
+  user: {
+    balance: number;
+    canPayWithPoints: boolean;
+  };
+}
+
+export interface PdvPaymentResult {
+  success: boolean;
+  transactionId: string;
+  newBalance: number;
+  orderId: string;
+  orderCode: string;
+}
 
 // Notification types
 export interface AppNotification {

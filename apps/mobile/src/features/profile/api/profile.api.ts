@@ -1,0 +1,64 @@
+import { get, put, post } from '@/services/api/client';
+import { api } from '@/services/api/client';
+import type {
+  UserProfile,
+  UserBadgesResponse,
+  UserRankingsResponse,
+  UsernameCheckResponse,
+  UpdateProfileResult,
+  AvatarUploadResult,
+  UpdateBadgesDisplayResult,
+} from '@ahub/shared/types';
+
+export async function getProfile(userId: string): Promise<UserProfile> {
+  return get<UserProfile>(`/user/${userId}/profile`);
+}
+
+export async function getUserBadges(userId: string): Promise<UserBadgesResponse> {
+  return get<UserBadgesResponse>(`/user/${userId}/badges`);
+}
+
+export async function getUserRankings(userId: string): Promise<UserRankingsResponse> {
+  return get<UserRankingsResponse>(`/user/${userId}/rankings`);
+}
+
+export async function updateProfile(data: {
+  name?: string;
+  username?: string;
+  bio?: string;
+  phone?: string;
+}): Promise<UpdateProfileResult> {
+  return put<UpdateProfileResult>('/user/profile', data);
+}
+
+export async function uploadAvatar(file: {
+  uri: string;
+  name: string;
+  type: string;
+}): Promise<AvatarUploadResult> {
+  const formData = new FormData();
+  formData.append('file', file as unknown as Blob);
+
+  // Don't set Content-Type manually — let the transport layer
+  // add the correct multipart boundary automatically
+  const response = await api.post('/user/avatar', formData, {
+    headers: { 'Content-Type': undefined as unknown as string },
+  });
+
+  if (!response.data.success) {
+    throw new Error(response.data.error?.message || 'Upload failed');
+  }
+  return response.data.data;
+}
+
+export async function updateBadgesDisplay(
+  badgeIds: string[]
+): Promise<UpdateBadgesDisplayResult> {
+  return put<UpdateBadgesDisplayResult>('/user/badges/display', { badgeIds });
+}
+
+export async function checkUsername(
+  username: string
+): Promise<UsernameCheckResponse> {
+  return get<UsernameCheckResponse>('/user/username/check', { username });
+}

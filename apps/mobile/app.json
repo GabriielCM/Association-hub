@@ -17,7 +17,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.ahub.app",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Usamos Face ID para autenticação rápida e segura."
+        "NSFaceIDUsageDescription": "Usamos Face ID para autenticação rápida e segura.",
+        "NSCameraUsageDescription": "Permitir que A-hub acesse sua camera para escanear QR Codes."
       }
     },
     "android": {
@@ -27,7 +28,8 @@
       "package": "com.ahub.app",
       "permissions": [
         "USE_BIOMETRIC",
-        "USE_FINGERPRINT"
+        "USE_FINGERPRINT",
+        "CAMERA"
       ]
     },
     "web": {
@@ -44,7 +46,13 @@
         }
       ],
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permitir que A-hub acesse sua camera para escanear QR Codes."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

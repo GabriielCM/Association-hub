@@ -43,21 +43,24 @@ export class BenefitsController {
   @ApiOperation({ summary: 'Listar parceiros/benefícios' })
   @ApiResponse({ status: 200, description: 'Parceiros retornados com sucesso' })
   async listBenefits(@CurrentUser() user: JwtPayload, @Query() query: BenefitsQueryDto) {
-    return this.partnersService.listBenefits(user.associationId, user.sub, query);
+    const data = await this.partnersService.listBenefits(user.associationId, user.sub, query);
+    return { success: true, data };
   }
 
   @Get('categories')
   @ApiOperation({ summary: 'Listar categorias de parceiros' })
   @ApiResponse({ status: 200, description: 'Categorias retornadas com sucesso' })
   async listCategories(@CurrentUser() user: JwtPayload) {
-    return this.partnersService.listCategories(user.associationId);
+    const data = await this.partnersService.listCategories(user.associationId);
+    return { success: true, data };
   }
 
   @Post('nearby')
   @ApiOperation({ summary: 'Buscar parceiros próximos' })
   @ApiResponse({ status: 200, description: 'Parceiros próximos retornados' })
   async getNearbyPartners(@CurrentUser() user: JwtPayload, @Body() query: NearbyQueryDto) {
-    return this.partnersService.getNearbyPartners(user.associationId, user.sub, query);
+    const data = await this.partnersService.getNearbyPartners(user.associationId, user.sub, query);
+    return { success: true, data };
   }
 
   @Get(':id')
@@ -66,7 +69,7 @@ export class BenefitsController {
   @ApiResponse({ status: 404, description: 'Parceiro não encontrado' })
   async getPartnerDetails(@Param('id') partnerId: string, @CurrentUser() user: JwtPayload) {
     const data = await this.partnersService.getPartnerDetails(partnerId, user.sub);
-    return { data };
+    return { success: true, data };
   }
 }
 
@@ -81,6 +84,31 @@ export class BenefitsController {
 @Controller('admin/partners')
 export class AdminPartnersController {
   constructor(private readonly partnersService: PartnersService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Listar todos os parceiros (admin)' })
+  @ApiResponse({ status: 200, description: 'Parceiros retornados com sucesso' })
+  async listPartners(@CurrentUser() user: JwtPayload, @Query() query: BenefitsQueryDto) {
+    const data = await this.partnersService.listAdminPartners(user.associationId, query);
+    return { success: true, data };
+  }
+
+  @Get('categories')
+  @ApiOperation({ summary: 'Listar todas as categorias (admin)' })
+  @ApiResponse({ status: 200, description: 'Categorias retornadas com sucesso' })
+  async listCategories(@CurrentUser() user: JwtPayload) {
+    const data = await this.partnersService.listAdminCategories(user.associationId);
+    return { success: true, data };
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Obter detalhes completos de um parceiro (admin)' })
+  @ApiResponse({ status: 200, description: 'Parceiro retornado com sucesso' })
+  @ApiResponse({ status: 404, description: 'Parceiro não encontrado' })
+  async getPartner(@Param('id') partnerId: string, @CurrentUser() user: JwtPayload) {
+    const data = await this.partnersService.getAdminPartnerDetail(partnerId, user.associationId);
+    return { success: true, data };
+  }
 
   @Post()
   @ApiOperation({ summary: 'Criar parceiro' })

@@ -50,6 +50,33 @@ export const updateProfileSchema = z.object({
 });
 
 // ===========================================
+// PROFILE SCHEMAS
+// ===========================================
+
+export const updateProfileFullSchema = z.object({
+  name: z
+    .string()
+    .min(3, 'Nome deve ter pelo menos 3 caracteres')
+    .max(50, 'Nome muito longo')
+    .optional(),
+  username: z
+    .string()
+    .min(3, 'Username deve ter pelo menos 3 caracteres')
+    .max(30, 'Username muito longo')
+    .regex(/^[a-z0-9_]+$/, 'Apenas letras minúsculas, números e underscore')
+    .optional(),
+  bio: z.string().max(150, 'Bio muito longa').optional(),
+  phone: z.string().optional(),
+});
+
+export const updateBadgesDisplaySchema = z.object({
+  badgeIds: z
+    .array(z.string().min(1))
+    .min(1, 'Selecione pelo menos 1 badge')
+    .max(3, 'Máximo 3 badges'),
+});
+
+// ===========================================
 // POINTS SCHEMAS
 // ===========================================
 
@@ -140,6 +167,24 @@ export const adminUpdatePointsConfigSchema = z.object({
 });
 
 // ===========================================
+// WALLET / QR SCHEMAS
+// ===========================================
+
+export const scanQrSchema = z.object({
+  qrCodeData: z.string().min(1, 'Dados do QR são obrigatórios'),
+  qrCodeHash: z.string().min(1, 'Hash do QR é obrigatório'),
+});
+
+export const pdvPaymentSchema = z.object({
+  checkoutCode: z.string().min(1, 'Código do checkout é obrigatório'),
+  biometricConfirmed: z.boolean().optional(),
+});
+
+export const walletSummaryQuerySchema = z.object({
+  period: z.enum(['today', 'week', 'month', 'year']).default('month'),
+});
+
+// ===========================================
 // PAGINATION SCHEMA
 // ===========================================
 
@@ -160,6 +205,8 @@ export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type NewPasswordInput = z.infer<typeof newPasswordSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type UpdateProfileFullInput = z.infer<typeof updateProfileFullSchema>;
+export type UpdateBadgesDisplayInput = z.infer<typeof updateBadgesDisplaySchema>;
 export type TransferPointsInput = z.infer<typeof transferPointsSchema>;
 export type PointsHistoryQueryInput = z.infer<typeof pointsHistoryQuerySchema>;
 export type AdminGrantPointsInput = z.infer<typeof adminGrantPointsSchema>;
@@ -172,4 +219,7 @@ export type MutatorsInput = z.infer<typeof mutatorsSchema>;
 export type CreatePlanInput = z.infer<typeof createPlanSchema>;
 export type SuspendUserInput = z.infer<typeof suspendUserSchema>;
 export type AdminUpdatePointsConfigInput = z.infer<typeof adminUpdatePointsConfigSchema>;
+export type ScanQrInput = z.infer<typeof scanQrSchema>;
+export type PdvPaymentInput = z.infer<typeof pdvPaymentSchema>;
+export type WalletSummaryQueryInput = z.infer<typeof walletSummaryQuerySchema>;
 export type PaginationInput = z.infer<typeof paginationSchema>;

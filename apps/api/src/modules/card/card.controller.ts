@@ -31,7 +31,7 @@ export class CardController {
   @ApiResponse({ status: 200, description: 'Carteirinha retornada com sucesso' })
   async getCard(@CurrentUser() user: JwtPayload) {
     const data = await this.cardService.getCard(user.sub);
-    return { data };
+    return { success: true, data };
   }
 
   @Get('status')
@@ -39,7 +39,7 @@ export class CardController {
   @ApiResponse({ status: 200, description: 'Status retornado com sucesso' })
   async getCardStatus(@CurrentUser() user: JwtPayload) {
     const data = await this.cardService.getCardStatus(user.sub);
-    return { data };
+    return { success: true, data };
   }
 
   @Get('qrcode')
@@ -48,14 +48,15 @@ export class CardController {
   @ApiResponse({ status: 400, description: 'Carteirinha inativa' })
   async getQrCode(@CurrentUser() user: JwtPayload) {
     const data = await this.cardService.getQrCode(user.sub);
-    return { data };
+    return { success: true, data };
   }
 
   @Get('history')
   @ApiOperation({ summary: 'Obter histórico de uso da carteirinha' })
   @ApiResponse({ status: 200, description: 'Histórico retornado com sucesso' })
   async getCardHistory(@CurrentUser() user: JwtPayload, @Query() query: CardHistoryQueryDto) {
-    return this.cardService.getCardHistory(user.sub, query);
+    const data = await this.cardService.getCardHistory(user.sub, query);
+    return { success: true, data };
   }
 }
 
@@ -75,7 +76,8 @@ export class AdminCardController {
   @ApiOperation({ summary: 'Listar carteirinhas' })
   @ApiResponse({ status: 200, description: 'Carteirinhas retornadas com sucesso' })
   async listCards(@CurrentUser() user: JwtPayload, @Query() query: ListCardsQueryDto) {
-    return this.cardService.listCards(user.associationId, query);
+    const data = await this.cardService.listCards(user.associationId, query);
+    return { success: true, data };
   }
 
   @Put(':id/status')

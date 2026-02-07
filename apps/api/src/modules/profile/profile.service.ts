@@ -226,15 +226,39 @@ export class ProfileService {
   // ===========================================
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
-    // Check username availability if provided
+    let usernameIsChanging = false;
+
     if (dto.username) {
-      const existingUser = await this.prisma.user.findUnique({
-        where: { username: dto.username },
-        select: { id: true },
+      // Fetch current user to check username change cooldown
+      const currentUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { username: true, usernameChangedAt: true },
       });
 
-      if (existingUser && existingUser.id !== userId) {
-        throw new ConflictException('Este username já está em uso');
+      usernameIsChanging = currentUser?.username !== dto.username;
+
+      if (usernameIsChanging) {
+        // Enforce 30-day cooldown
+        if (currentUser?.usernameChangedAt) {
+          const cooldownMs = 30 * 24 * 60 * 60 * 1000;
+          const elapsed = Date.now() - currentUser.usernameChangedAt.getTime();
+          if (elapsed < cooldownMs) {
+            const daysRemaining = Math.ceil((cooldownMs - elapsed) / (24 * 60 * 60 * 1000));
+            throw new BadRequestException(
+              `Você só pode alterar o username a cada 30 dias. Tente novamente em ${daysRemaining} dia(s).`,
+            );
+          }
+        }
+
+        // Check username availability
+        const existingUser = await this.prisma.user.findUnique({
+          where: { username: dto.username },
+          select: { id: true },
+        });
+
+        if (existingUser && existingUser.id !== userId) {
+          throw new ConflictException('Este username já está em uso');
+        }
       }
     }
 
@@ -245,6 +269,7 @@ export class ProfileService {
         ...(dto.username && { username: dto.username }),
         ...(dto.bio !== undefined && { bio: dto.bio }),
         ...(dto.phone !== undefined && { phone: dto.phone }),
+        ...(usernameIsChanging && { usernameChangedAt: new Date() }),
       },
       select: {
         id: true,
@@ -253,6 +278,7 @@ export class ProfileService {
         bio: true,
         phone: true,
         avatarUrl: true,
+        usernameChangedAt: true,
         updatedAt: true,
       },
     });

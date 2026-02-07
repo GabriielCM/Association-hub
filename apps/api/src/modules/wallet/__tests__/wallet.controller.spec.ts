@@ -103,7 +103,7 @@ describe('WalletController', () => {
     it('should return dashboard data wrapped in data object', async () => {
       const result = await controller.getDashboard(mockUser);
 
-      expect(result).toEqual({ data: mockDashboard });
+      expect(result).toEqual({ success: true, data: mockDashboard });
       expect(walletService.getDashboard).toHaveBeenCalledWith('user-123');
     });
 
@@ -139,7 +139,7 @@ describe('WalletController', () => {
 
       const result = await controller.getSummary(mockUser, query);
 
-      expect(result).toEqual({ data: mockSummary });
+      expect(result).toEqual({ success: true, data: mockSummary });
       expect(walletService.getSummary).toHaveBeenCalledWith('user-123', SummaryPeriod.MONTH);
     });
 
@@ -178,7 +178,7 @@ describe('WalletController', () => {
 
       const result = await controller.scanQrCode(mockUser, dto);
 
-      expect(result).toEqual({ data: mockQrScanResult });
+      expect(result).toEqual({ success: true, data: mockQrScanResult });
       expect(qrScannerService.processQrCode).toHaveBeenCalledWith(
         dto.qrCodeData,
         dto.qrCodeHash,
@@ -236,7 +236,7 @@ describe('WalletController', () => {
     it('should return checkout details wrapped in data object', async () => {
       const result = await controller.getCheckoutDetails('checkout-123', mockUser);
 
-      expect(result).toEqual({ data: mockCheckoutDetails });
+      expect(result).toEqual({ success: true, data: mockCheckoutDetails });
       expect(walletService.getCheckoutDetails).toHaveBeenCalledWith('checkout-123', 'user-123');
     });
 
@@ -253,22 +253,22 @@ describe('WalletController', () => {
   // ===========================================
 
   describe('processPdvPayment', () => {
-    it('should return payment result directly', async () => {
+    it('should return payment result wrapped in success', async () => {
       const dto = { checkoutCode: 'checkout-123' };
 
       const result = await controller.processPdvPayment(mockUser, dto);
 
-      expect(result).toEqual(mockPdvPaymentResult);
+      expect(result).toEqual({ success: true, data: mockPdvPaymentResult });
       expect(walletService.processPdvPayment).toHaveBeenCalledWith('checkout-123', 'user-123');
     });
 
-    it('should return success and new balance', async () => {
+    it('should return success and new balance in data', async () => {
       const dto = { checkoutCode: 'checkout-123' };
 
       const result = await controller.processPdvPayment(mockUser, dto);
 
       expect(result.success).toBe(true);
-      expect(result.newBalance).toBe(900);
+      expect(result.data.newBalance).toBe(900);
     });
   });
 });

@@ -295,7 +295,11 @@ describe('ProfileService', () => {
 
   describe('updateProfile', () => {
     it('should update profile successfully', async () => {
-      prisma.user.findUnique.mockResolvedValue(null); // No existing username
+      // First call: fetch current user (by id) — username differs, no cooldown
+      // Second call: check availability (by username) — not taken
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ username: 'oldusername', usernameChangedAt: null })
+        .mockResolvedValueOnce(null);
       prisma.user.update.mockResolvedValue({
         id: 'user-123',
         name: 'João Atualizado',
@@ -303,6 +307,7 @@ describe('ProfileService', () => {
         bio: 'Nova bio',
         phone: '11999999999',
         avatarUrl: 'https://example.com/avatar.jpg',
+        usernameChangedAt: new Date(),
         updatedAt: new Date(),
       });
 
@@ -317,7 +322,11 @@ describe('ProfileService', () => {
     });
 
     it('should throw ConflictException when username already taken', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: 'other-user' });
+      // First call: current user
+      // Second call: username check — taken by another user
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ username: 'oldusername', usernameChangedAt: null })
+        .mockResolvedValueOnce({ id: 'other-user' });
 
       await expect(
         service.updateProfile('user-123', { username: 'takenusername' }),
@@ -325,7 +334,8 @@ describe('ProfileService', () => {
     });
 
     it('should allow keeping same username', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: 'user-123' }); // Same user
+      // First call: current user — same username
+      prisma.user.findUnique.mockResolvedValueOnce({ username: 'sameusername', usernameChangedAt: null });
       prisma.user.update.mockResolvedValue({
         id: 'user-123',
         username: 'sameusername',
@@ -333,12 +343,66 @@ describe('ProfileService', () => {
         bio: null,
         phone: null,
         avatarUrl: null,
+        usernameChangedAt: null,
         updatedAt: new Date(),
       });
 
       const result = await service.updateProfile('user-123', { username: 'sameusername' });
 
       expect(result.username).toBe('sameusername');
+    });
+
+    it('should throw BadRequestException when username changed less than 30 days ago', async () => {
+      const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+      prisma.user.findUnique.mockResolvedValueOnce({
+        username: 'oldusername',
+        usernameChangedAt: fiveDaysAgo,
+      });
+
+      await expect(
+        service.updateProfile('user-123', { username: 'newusername' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should allow username change after 30 days', async () => {
+      const thirtyOneDaysAgo = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ username: 'oldusername', usernameChangedAt: thirtyOneDaysAgo })
+        .mockResolvedValueOnce(null); // availability check
+      prisma.user.update.mockResolvedValue({
+        id: 'user-123',
+        name: 'João',
+        username: 'newusername',
+        bio: null,
+        phone: null,
+        avatarUrl: null,
+        usernameChangedAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await service.updateProfile('user-123', { username: 'newusername' });
+
+      expect(result.username).toBe('newusername');
+    });
+
+    it('should allow first username change when usernameChangedAt is null', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ username: null, usernameChangedAt: null })
+        .mockResolvedValueOnce(null);
+      prisma.user.update.mockResolvedValue({
+        id: 'user-123',
+        name: 'João',
+        username: 'firstusername',
+        bio: null,
+        phone: null,
+        avatarUrl: null,
+        usernameChangedAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await service.updateProfile('user-123', { username: 'firstusername' });
+
+      expect(result.username).toBe('firstusername');
     });
   });
 

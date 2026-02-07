@@ -16,6 +16,7 @@ import {
   Moon,
   Coins,
   Crown,
+  Handshake,
 } from 'lucide-react';
 
 import { useAuthContext } from '@/lib/providers/auth-provider';
@@ -28,6 +29,7 @@ const navigation = [
   { name: 'Membros', href: '/members', icon: Users },
   { name: 'Pontos', href: '/points', icon: Coins },
   { name: 'Assinaturas', href: '/subscriptions', icon: Crown },
+  { name: 'Parceiros', href: '/partners', icon: Handshake },
   { name: 'Eventos', href: '/events', icon: Calendar },
   { name: 'Loja', href: '/store', icon: ShoppingBag },
   { name: 'Relatórios', href: '/reports', icon: BarChart3 },

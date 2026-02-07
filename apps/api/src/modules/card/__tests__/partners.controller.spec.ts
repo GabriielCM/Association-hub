@@ -119,7 +119,7 @@ describe('BenefitsController', () => {
 
       const result = await controller.listBenefits(mockUser, query);
 
-      expect(result).toEqual(mockBenefitsList);
+      expect(result).toEqual({ success: true, data: mockBenefitsList });
       expect(service.listBenefits).toHaveBeenCalledWith('assoc-1', 'user-123', query);
     });
 
@@ -148,7 +148,7 @@ describe('BenefitsController', () => {
     it('should return categories from service', async () => {
       const result = await controller.listCategories(mockUser);
 
-      expect(result).toEqual(mockCategories);
+      expect(result).toEqual({ success: true, data: mockCategories });
       expect(service.listCategories).toHaveBeenCalledWith('assoc-1');
     });
   });
@@ -163,7 +163,7 @@ describe('BenefitsController', () => {
 
       const result = await controller.getNearbyPartners(mockUser, query);
 
-      expect(result).toEqual(mockNearbyPartners);
+      expect(result).toEqual({ success: true, data: mockNearbyPartners });
       expect(service.getNearbyPartners).toHaveBeenCalledWith('assoc-1', 'user-123', query);
     });
 
@@ -177,8 +177,8 @@ describe('BenefitsController', () => {
 
       const result = await controller.getNearbyPartners(mockUser, query);
 
-      expect(result.data).toHaveLength(0);
-      expect(result.message).toBe('Localização não fornecida');
+      expect(result.data.data).toHaveLength(0);
+      expect(result.data.message).toBe('Localização não fornecida');
     });
   });
 
@@ -190,7 +190,7 @@ describe('BenefitsController', () => {
     it('should return partner details wrapped in data object', async () => {
       const result = await controller.getPartnerDetails('partner-1', mockUser);
 
-      expect(result).toEqual({ data: mockPartnerDetails });
+      expect(result).toEqual({ success: true, data: mockPartnerDetails });
       expect(service.getPartnerDetails).toHaveBeenCalledWith('partner-1', 'user-123');
     });
 

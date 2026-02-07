@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   Query,
+  Req,
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -13,6 +14,8 @@ import {
   MaxFileSizeValidator,
   FileTypeValidator,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
@@ -22,6 +25,9 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { writeFile } from 'fs/promises';
 import { JwtAuthGuard } from '../../common/guards';
 import { CurrentUser } from '../../common/decorators';
 import { JwtPayload } from '../../common/types';
@@ -33,7 +39,10 @@ import { UpdateProfileDto, UpdateBadgesDisplayDto } from './dto';
 @UseGuards(JwtAuthGuard)
 @Controller('user')
 export class ProfileController {
-  constructor(private readonly profileService: ProfileService) {}
+  constructor(
+    private readonly profileService: ProfileService,
+    private readonly configService: ConfigService,
+  ) {}
 
   // ===========================================
   // PUBLIC PROFILE ENDPOINTS
@@ -45,7 +54,7 @@ export class ProfileController {
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
   async getProfile(@Param('id') userId: string, @CurrentUser() user: JwtPayload) {
     const data = await this.profileService.getProfile(userId, user.sub);
-    return { data };
+    return { success: true, data };
   }
 
   @Get(':id/badges')
@@ -53,8 +62,8 @@ export class ProfileController {
   @ApiResponse({ status: 200, description: 'Badges retornados com sucesso' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
   async getUserBadges(@Param('id') userId: string) {
-    const result = await this.profileService.getUserBadges(userId);
-    return result;
+    const data = await this.profileService.getUserBadges(userId);
+    return { success: true, data };
   }
 
   @Get(':id/rankings')
@@ -62,8 +71,8 @@ export class ProfileController {
   @ApiResponse({ status: 200, description: 'Rankings retornados com sucesso' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
   async getUserRankings(@Param('id') userId: string, @CurrentUser() user: JwtPayload) {
-    const result = await this.profileService.getUserRankings(userId, user.associationId);
-    return result;
+    const data = await this.profileService.getUserRankings(userId, user.associationId);
+    return { success: true, data };
   }
 
   // ===========================================
@@ -76,7 +85,7 @@ export class ProfileController {
   @ApiResponse({ status: 409, description: 'Username já em uso' })
   async updateProfile(@CurrentUser() user: JwtPayload, @Body() dto: UpdateProfileDto) {
     const data = await this.profileService.updateProfile(user.sub, dto);
-    return { data, message: 'Perfil atualizado com sucesso' };
+    return { success: true, data, message: 'Perfil atualizado com sucesso' };
   }
 
   @Post('avatar')
@@ -99,6 +108,7 @@ export class ProfileController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadAvatar(
     @CurrentUser() user: JwtPayload,
+    @Req() req: Request,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -109,12 +119,23 @@ export class ProfileController {
     )
     file: Express.Multer.File,
   ) {
-    // TODO: Upload to S3 and get URL
-    // For now, we'll use a placeholder URL
-    const avatarUrl = `https://storage.ahub.com.br/avatars/${user.sub}/${Date.now()}-${file.originalname}`;
+    // Save file to local disk (TODO: migrate to S3 in production)
+    const uploadsDir = join(process.cwd(), 'uploads', 'avatars', user.sub);
+    if (!existsSync(uploadsDir)) {
+      mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const fileName = `${Date.now()}-${file.originalname}`;
+    const filePath = join(uploadsDir, fileName);
+    await writeFile(filePath, file.buffer);
+
+    // Use request host so the URL is reachable from the client
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const avatarUrl = `${protocol}://${host}/uploads/avatars/${user.sub}/${fileName}`;
 
     const data = await this.profileService.updateAvatar(user.sub, avatarUrl);
-    return { data, message: 'Avatar atualizado com sucesso' };
+    return { success: true, data, message: 'Avatar atualizado com sucesso' };
   }
 
   @Put('badges/display')
@@ -123,7 +144,7 @@ export class ProfileController {
   @ApiResponse({ status: 400, description: 'Badges inválidos' })
   async updateBadgesDisplay(@CurrentUser() user: JwtPayload, @Body() dto: UpdateBadgesDisplayDto) {
     const data = await this.profileService.updateBadgesDisplay(user.sub, dto);
-    return { data, message: 'Badges atualizados com sucesso' };
+    return { success: true, data, message: 'Badges atualizados com sucesso' };
   }
 
   // ===========================================
@@ -135,6 +156,6 @@ export class ProfileController {
   @ApiResponse({ status: 200, description: 'Disponibilidade verificada' })
   async checkUsername(@Query('username') username: string, @CurrentUser() user: JwtPayload) {
     const data = await this.profileService.checkUsernameAvailability(username, user.sub);
-    return { data };
+    return { success: true, data };
   }
 }

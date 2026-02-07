@@ -18,8 +18,8 @@ export default function PlanDetailScreen() {
   const subscribeMutation = useSubscribe();
   const changeMutation = useChangePlan();
 
-  const isCurrent = mySubscription?.plan?.id === planId;
-  const hasSubscription = !!mySubscription;
+  const hasActiveSubscription = mySubscription?.status === 'ACTIVE';
+  const isCurrent = hasActiveSubscription && mySubscription?.plan?.id === planId;
 
   const handleSubscribe = () => {
     Alert.alert(
@@ -111,7 +111,7 @@ export default function PlanDetailScreen() {
                   </Text>
                 </YStack>
               </Card>
-            ) : hasSubscription ? (
+            ) : hasActiveSubscription ? (
               <Button
                 onPress={handleChangePlan}
                 disabled={changeMutation.isPending}

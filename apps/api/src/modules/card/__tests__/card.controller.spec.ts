@@ -92,7 +92,7 @@ describe('CardController', () => {
     it('should return card data wrapped in data object', async () => {
       const result = await controller.getCard(mockUser);
 
-      expect(result).toEqual({ data: mockCard });
+      expect(result).toEqual({ success: true, data: mockCard });
       expect(service.getCard).toHaveBeenCalledWith('user-123');
     });
 
@@ -116,6 +116,7 @@ describe('CardController', () => {
       const result = await controller.getCardStatus(mockUser);
 
       expect(result).toEqual({
+        success: true,
         data: {
           status: 'ACTIVE',
           statusReason: null,
@@ -134,7 +135,7 @@ describe('CardController', () => {
     it('should return QR code data wrapped in data object', async () => {
       const result = await controller.getQrCode(mockUser);
 
-      expect(result).toEqual({ data: mockQrCode });
+      expect(result).toEqual({ success: true, data: mockQrCode });
       expect(service.getQrCode).toHaveBeenCalledWith('user-123');
     });
 
@@ -157,7 +158,7 @@ describe('CardController', () => {
 
       const result = await controller.getCardHistory(mockUser, query);
 
-      expect(result).toEqual(mockHistory);
+      expect(result).toEqual({ success: true, data: mockHistory });
       expect(service.getCardHistory).toHaveBeenCalledWith('user-123', query);
     });
 
@@ -232,7 +233,7 @@ describe('AdminCardController', () => {
 
       const result = await controller.listCards(mockAdminUser, query);
 
-      expect(result).toEqual(mockCardsList);
+      expect(result).toEqual({ success: true, data: mockCardsList });
       expect(service.listCards).toHaveBeenCalledWith('assoc-1', query);
     });
 

@@ -1,21 +1,41 @@
-import { ScrollView, Alert } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, Alert, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Text, Heading, Card, Avatar, Badge, Button } from '@ahub/ui';
+import { Text, Heading, Card, Badge, Button } from '@ahub/ui';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useThemeContext } from '@/providers/ThemeProvider';
 import { useAuth } from '@/hooks/useAuth';
 import { useBiometrics, getBiometricLabel } from '@/hooks/useBiometrics';
-import { VerifiedBadge } from '@/features/subscriptions/components/VerifiedBadge';
+import { useProfile, useUserBadges } from '@/features/profile/hooks/useProfile';
+import { useUpdateBadgesDisplay } from '@/features/profile/hooks/useEditProfile';
+import { ProfileHeader } from '@/features/profile/components/ProfileHeader';
+import { ProfileStats } from '@/features/profile/components/ProfileStats';
+import { ProfileActions } from '@/features/profile/components/ProfileActions';
+import { BadgesModal } from '@/features/profile/components/BadgesModal';
 
 export default function PerfilScreen() {
   const { user } = useAuthContext();
   const { theme, themeMode, toggleTheme } = useThemeContext();
-  const { logout, isLoading } = useAuth();
+  const { logout, isLoading: logoutLoading } = useAuth();
   const { isAvailable, isEnabled, biometricType, enableBiometrics, disableBiometrics } =
     useBiometrics();
+
+  const userId = user?.id || '';
+  const { data: profile, isLoading, refetch } = useProfile(userId);
+  const { data: badgesData } = useUserBadges(userId);
+  const updateBadges = useUpdateBadgesDisplay();
+
+  const [showBadgesModal, setShowBadgesModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
 
   const handleLogout = () => {
     Alert.alert('Sair', 'Tem certeza que deseja sair?', [
@@ -39,37 +59,45 @@ export default function PerfilScreen() {
     }
   };
 
+  const handleSaveBadges = async (selectedIds: string[]) => {
+    try {
+      await updateBadges.mutateAsync(selectedIds);
+      setShowBadgesModal(false);
+      Alert.alert('Sucesso', 'Badges atualizados!');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível atualizar os badges.');
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
         <YStack padding="$4" gap="$4">
           <Heading level={3}>Perfil</Heading>
 
           {/* Profile Card */}
-          <Card variant="elevated">
-            <YStack alignItems="center" gap="$3" paddingVertical="$2">
-              <Avatar
-                src={user?.avatarUrl}
-                name={user?.name}
-                size="2xl"
+          {profile ? (
+            <Card variant="elevated">
+              <ProfileHeader
+                profile={profile}
+                onAvatarPress={() => router.push('/profile/edit')}
               />
-              <YStack alignItems="center" gap="$1">
-                <XStack alignItems="center" gap="$1.5">
-                  <Text weight="bold" size="xl">
-                    {user?.name || 'Membro'}
-                  </Text>
-                  <VerifiedBadge size="md" />
-                </XStack>
-                <Text color="secondary">{user?.email}</Text>
-                <Badge variant={user?.isVerified ? 'success' : 'ghost'}>
-                  {user?.isVerified ? 'Verificado' : 'Não verificado'}
-                </Badge>
+              <ProfileStats profile={profile} />
+            </Card>
+          ) : (
+            <Card variant="elevated">
+              <YStack alignItems="center" gap="$3" paddingVertical="$4">
+                <Text color="secondary">Carregando perfil...</Text>
               </YStack>
-              <Button variant="outline" size="sm">
-                Editar perfil
-              </Button>
-            </YStack>
-          </Card>
+            </Card>
+          )}
+
+          {/* Actions */}
+          <ProfileActions isMe={true} userId={userId} />
 
           {/* Settings */}
           <YStack gap="$2">
@@ -83,7 +111,7 @@ export default function PerfilScreen() {
                 <YStack>
                   <Text weight="medium">Minha Assinatura</Text>
                   <Text color="secondary" size="sm">
-                    Gerencie seu plano
+                    {profile?.subscription || 'Gerencie seu plano'}
                   </Text>
                 </YStack>
                 <Text>⭐</Text>
@@ -174,7 +202,7 @@ export default function PerfilScreen() {
             size="lg"
             fullWidth
             onPress={handleLogout}
-            loading={isLoading}
+            loading={logoutLoading}
             marginTop="$4"
           >
             Sair da conta
@@ -186,6 +214,15 @@ export default function PerfilScreen() {
           </Text>
         </YStack>
       </ScrollView>
+
+      {/* Badges Modal */}
+      <BadgesModal
+        visible={showBadgesModal}
+        onClose={() => setShowBadgesModal(false)}
+        badges={badgesData?.data || []}
+        onSave={handleSaveBadges}
+        isSaving={updateBadges.isPending}
+      />
     </SafeAreaView>
   );
 }

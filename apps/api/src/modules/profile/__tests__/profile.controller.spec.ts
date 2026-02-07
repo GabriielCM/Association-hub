@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { ConfigService } from '@nestjs/config';
 import { ProfileController } from '../profile.controller';
 import { ProfileService } from '../profile.service';
 import { JwtPayload } from '../../../common/types';
@@ -6,6 +7,7 @@ import { JwtPayload } from '../../../common/types';
 describe('ProfileController', () => {
   let controller: ProfileController;
   let service: ProfileService;
+  let configService: ConfigService;
 
   const mockUser: JwtPayload = {
     sub: 'user-123',
@@ -85,7 +87,15 @@ describe('ProfileController', () => {
       }),
     } as unknown as ProfileService;
 
-    controller = new ProfileController(service);
+    configService = {
+      get: vi.fn((key: string) => {
+        if (key === 'PORT') return '3001';
+        if (key === 'API_URL') return 'http://localhost:3001';
+        return undefined;
+      }),
+    } as unknown as ConfigService;
+
+    controller = new ProfileController(service, configService);
   });
 
   // ===========================================
@@ -96,7 +106,7 @@ describe('ProfileController', () => {
     it('should return profile data wrapped in data object', async () => {
       const result = await controller.getProfile('user-123', mockUser);
 
-      expect(result).toEqual({ data: mockProfile });
+      expect(result).toEqual({ success: true, data: mockProfile });
       expect(service.getProfile).toHaveBeenCalledWith('user-123', 'user-123');
     });
 
@@ -115,7 +125,7 @@ describe('ProfileController', () => {
     it('should return badges data', async () => {
       const result = await controller.getUserBadges('user-123');
 
-      expect(result).toEqual(mockBadges);
+      expect(result).toEqual({ success: true, data: mockBadges });
       expect(service.getUserBadges).toHaveBeenCalledWith('user-123');
     });
   });
@@ -128,7 +138,7 @@ describe('ProfileController', () => {
     it('should return rankings data', async () => {
       const result = await controller.getUserRankings('user-123', mockUser);
 
-      expect(result).toEqual(mockRankings);
+      expect(result).toEqual({ success: true, data: mockRankings });
       expect(service.getUserRankings).toHaveBeenCalledWith('user-123', 'assoc-1');
     });
   });
@@ -160,10 +170,29 @@ describe('ProfileController', () => {
         buffer: Buffer.from('fake-image'),
       } as Express.Multer.File;
 
-      const result = await controller.uploadAvatar(mockUser, mockFile);
+      // Mock fs operations
+      vi.mock('fs', async () => {
+        const actual = await vi.importActual<typeof import('fs')>('fs');
+        return { ...actual, existsSync: vi.fn().mockReturnValue(true), mkdirSync: vi.fn() };
+      });
+      vi.mock('fs/promises', async () => {
+        const actual = await vi.importActual<typeof import('fs/promises')>('fs/promises');
+        return { ...actual, writeFile: vi.fn().mockResolvedValue(undefined) };
+      });
+
+      const mockReq = {
+        protocol: 'http',
+        get: vi.fn().mockReturnValue('localhost:3001'),
+      } as unknown as import('express').Request;
+
+      const result = await controller.uploadAvatar(mockUser, mockReq, mockFile);
 
       expect(result.message).toBe('Avatar atualizado com sucesso');
       expect(service.updateAvatar).toHaveBeenCalled();
+      // Verify the URL contains the user ID and filename
+      const avatarUrlArg = (service.updateAvatar as ReturnType<typeof vi.fn>).mock.calls[0][1] as string;
+      expect(avatarUrlArg).toContain('user-123');
+      expect(avatarUrlArg).toContain('avatar.jpg');
     });
   });
 
@@ -192,6 +221,7 @@ describe('ProfileController', () => {
       const result = await controller.checkUsername('testuser', mockUser);
 
       expect(result).toEqual({
+        success: true,
         data: { username: 'testuser', isAvailable: true },
       });
       expect(service.checkUsernameAvailability).toHaveBeenCalledWith('testuser', 'user-123');

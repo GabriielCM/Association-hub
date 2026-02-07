@@ -54,6 +54,10 @@ android/app/build/
 ios/Pods/
 ios/build/
 
+# Uploads (user-generated content)
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep
+
 # Playwright
 playwright-report/
 test-results/
