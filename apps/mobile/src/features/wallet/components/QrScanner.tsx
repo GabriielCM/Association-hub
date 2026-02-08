@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
 import { YStack } from 'tamagui';
 import { Text, Button, Spinner } from '@ahub/ui';
@@ -16,10 +16,20 @@ export function QrScanner({ onScan, isProcessing }: QrScannerProps) {
   const [permission, requestPermission] = useCameraPermissions();
   const flashEnabled = useWalletStore((s) => s.flashEnabled);
   const toggleFlash = useWalletStore((s) => s.toggleFlash);
+  const scanLock = useRef(false);
+
+  // Reset lock when parent allows scanning again
+  useEffect(() => {
+    if (!isProcessing) {
+      scanLock.current = false;
+    }
+  }, [isProcessing]);
 
   const handleBarCodeScanned = useCallback(
     (result: BarcodeScanningResult) => {
-      if (isProcessing) return;
+      // useRef updates synchronously - blocks BEFORE next queued callback
+      if (scanLock.current || isProcessing) return;
+      scanLock.current = true;
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       onScan(result.data);
     },
@@ -52,40 +62,41 @@ export function QrScanner({ onScan, isProcessing }: QrScannerProps) {
 
   return (
     <View style={styles.container}>
-      {/* Camera */}
-      <CameraView
-        style={StyleSheet.absoluteFillObject}
-        facing="back"
-        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-        onBarcodeScanned={isProcessing ? undefined : handleBarCodeScanned}
-        enableTorch={flashEnabled}
-      />
-
-      {/* Viewfinder Overlay */}
-      <View style={styles.overlay}>
-        <View style={styles.viewfinder}>
-          <View style={[styles.corner, styles.cornerTL]} />
-          <View style={[styles.corner, styles.cornerTR]} />
-          <View style={[styles.corner, styles.cornerBL]} />
-          <View style={[styles.corner, styles.cornerBR]} />
-        </View>
-      </View>
-
-      {/* Processing Indicator */}
-      {isProcessing && (
+      {isProcessing ? (
         <View style={styles.processingOverlay}>
           <Spinner size="large" />
           <Text style={styles.processingText}>Processando...</Text>
         </View>
-      )}
+      ) : (
+        <>
+          {/* Camera - unmounted during processing to stop all barcode events */}
+          <CameraView
+            style={StyleSheet.absoluteFillObject}
+            facing="back"
+            barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+            onBarcodeScanned={handleBarCodeScanned}
+            enableTorch={flashEnabled}
+          />
 
-      {/* Flash Toggle */}
-      <Pressable
-        onPress={toggleFlash}
-        style={[styles.flashButton, flashEnabled && styles.flashActive]}
-      >
-        <Text style={{ fontSize: 20 }}>{flashEnabled ? '🔦' : '💡'}</Text>
-      </Pressable>
+          {/* Viewfinder Overlay */}
+          <View style={styles.overlay}>
+            <View style={styles.viewfinder}>
+              <View style={[styles.corner, styles.cornerTL]} />
+              <View style={[styles.corner, styles.cornerTR]} />
+              <View style={[styles.corner, styles.cornerBL]} />
+              <View style={[styles.corner, styles.cornerBR]} />
+            </View>
+          </View>
+
+          {/* Flash Toggle */}
+          <Pressable
+            onPress={toggleFlash}
+            style={[styles.flashButton, flashEnabled && styles.flashActive]}
+          >
+            <Text style={{ fontSize: 20 }}>{flashEnabled ? '🔦' : '💡'}</Text>
+          </Pressable>
+        </>
+      )}
     </View>
   );
 }

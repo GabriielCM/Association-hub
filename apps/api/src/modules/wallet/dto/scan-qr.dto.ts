@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class ScanQrDto {
   @ApiProperty({ description: 'Dados do QR Code escaneado (JSON string)' })
@@ -9,8 +9,8 @@ export class ScanQrDto {
 
   @ApiProperty({ description: 'Hash do QR Code para validação' })
   @IsString()
-  @IsNotEmpty()
-  qrCodeHash: string;
+  @IsOptional()
+  qrCodeHash?: string;
 }
 
 export enum QrCodeType {

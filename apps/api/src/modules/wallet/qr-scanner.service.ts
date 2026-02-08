@@ -18,7 +18,7 @@ export class QrScannerService {
    */
   async processQrCode(
     qrCodeData: string,
-    qrCodeHash: string,
+    qrCodeHash: string = '',
     userId: string,
   ): Promise<QrScanResult> {
     // Validate hash first
@@ -91,12 +91,9 @@ export class QrScannerService {
       select: { role: true },
     });
 
+    // Usuarios comuns: redirecionar para fluxo de transferencia de pontos
     if (scanner?.role !== 'ADMIN' && scanner?.role !== 'DISPLAY') {
-      return {
-        type: QrCodeType.MEMBER_CARD,
-        valid: false,
-        error: 'Você não tem permissão para escanear carteirinhas',
-      };
+      return this.processUserTransfer(data, scannerId);
     }
 
     // Validate card
@@ -175,6 +172,7 @@ export class QrScannerService {
       select: {
         id: true,
         name: true,
+        username: true,
         avatarUrl: true,
         status: true,
       },
@@ -206,6 +204,7 @@ export class QrScannerService {
         recipient: {
           id: recipient.id,
           name: recipient.name,
+          username: recipient.username,
           avatarUrl: recipient.avatarUrl,
         },
         senderBalance: senderBalance.balance,

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { router } from 'expo-router';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,32 +11,51 @@ import type { QrScanResult } from '@ahub/shared/types';
 
 export default function ScannerScreen() {
   const [showResult, setShowResult] = useState(false);
+  const [scanned, setScanned] = useState(false);
   const scanMutation = useScanQr();
   const lastScanResult = useWalletStore((s) => s.lastScanResult);
   const isProcessing = useWalletStore((s) => s.isProcessing);
   const resetScanner = useWalletStore((s) => s.resetScanner);
+  const scanLockRef = useRef(false);
 
   const handleScan = useCallback(
     (data: string) => {
+      if (scanLockRef.current) return;
+      scanLockRef.current = true;
+      setScanned(true);
+
+      let qrCodeData = data;
+      let qrCodeHash = '';
+
       try {
         const parsed = JSON.parse(data);
-        scanMutation.mutate(
-          { qrCodeData: data, qrCodeHash: parsed.hash ?? '' },
-          {
-            onSuccess: () => setShowResult(true),
-            onError: () => setShowResult(true),
-          }
-        );
+        if (parsed.data && typeof parsed.data === 'string') {
+          // Envelope format: { data: "...", hash: "..." }
+          qrCodeData = parsed.data;
+          qrCodeHash = parsed.hash ?? '';
+        } else {
+          // Legacy format: hash field in the data itself
+          qrCodeHash = parsed.hash ?? '';
+        }
       } catch {
-        // Not valid JSON, try raw
-        scanMutation.mutate(
-          { qrCodeData: data, qrCodeHash: '' },
-          {
-            onSuccess: () => setShowResult(true),
-            onError: () => setShowResult(true),
-          }
-        );
+        // Not valid JSON, use raw data
       }
+
+      scanMutation.mutate(
+        { qrCodeData, qrCodeHash },
+        {
+          onSuccess: () => setShowResult(true),
+          onError: (error) => {
+            const errorResult: QrScanResult = {
+              type: 'user_transfer',
+              valid: false,
+              error: error.message ?? 'Erro ao processar QR Code.',
+            };
+            useWalletStore.getState().setLastScanResult(errorResult);
+            setShowResult(true);
+          },
+        }
+      );
     },
     [scanMutation]
   );
@@ -44,6 +63,8 @@ export default function ScannerScreen() {
   const handleAction = useCallback(
     (result: QrScanResult) => {
       setShowResult(false);
+      setScanned(false);
+      scanLockRef.current = false;
       resetScanner();
 
       switch (result.type) {
@@ -52,9 +73,18 @@ export default function ScannerScreen() {
           if (code) router.push(`/wallet/pdv-checkout?code=${code}`);
           break;
         }
-        case 'user_transfer':
-          router.push('/wallet/transfer');
+        case 'user_transfer': {
+          const data = result.data as Record<string, unknown> | undefined;
+          const recipient = data?.recipient as Record<string, string> | undefined;
+          if (recipient?.id) {
+            router.push(
+              `/wallet/transfer?recipientId=${recipient.id}&recipientName=${encodeURIComponent(recipient.name ?? '')}`
+            );
+          } else {
+            router.push('/wallet/transfer');
+          }
           break;
+        }
         case 'event_checkin':
           // Navigate to event check-in flow
           break;
@@ -67,6 +97,8 @@ export default function ScannerScreen() {
 
   const handleClose = useCallback(() => {
     setShowResult(false);
+    setScanned(false);
+    scanLockRef.current = false;
     resetScanner();
   }, [resetScanner]);
 
@@ -90,7 +122,7 @@ export default function ScannerScreen() {
       </XStack>
 
       {/* Scanner */}
-      <QrScanner onScan={handleScan} isProcessing={isProcessing} />
+      <QrScanner onScan={handleScan} isProcessing={isProcessing || scanned} />
 
       {/* Hint */}
       <YStack

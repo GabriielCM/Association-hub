@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Heading, Button, Spinner } from '@ahub/ui';
@@ -14,8 +14,17 @@ import type { RecentRecipient } from '@ahub/shared/types';
 type Step = 'recipient' | 'amount' | 'confirm';
 
 export default function WalletTransferScreen() {
-  const [step, setStep] = useState<Step>('recipient');
-  const [recipient, setRecipient] = useState<RecentRecipient | null>(null);
+  const { recipientId, recipientName } = useLocalSearchParams<{
+    recipientId?: string;
+    recipientName?: string;
+  }>();
+
+  const [step, setStep] = useState<Step>(recipientId ? 'amount' : 'recipient');
+  const [recipient, setRecipient] = useState<RecentRecipient | null>(
+    recipientId
+      ? { userId: recipientId, name: recipientName ?? '', lastTransferAt: new Date() }
+      : null
+  );
   const [amount, setAmount] = useState(0);
   const [message, setMessage] = useState('');
   const transferMutation = useTransfer();

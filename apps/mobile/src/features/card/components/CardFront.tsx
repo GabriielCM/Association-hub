@@ -56,7 +56,10 @@ export function CardFront({ card, qrCode, subscription }: CardFrontProps) {
       {/* QR Code */}
       {qrCode && card.status === 'ACTIVE' ? (
         <View style={styles.qrContainer}>
-          <QrCodeDisplay data={qrCode.qrCodeData} size={140} />
+          <QrCodeDisplay
+            data={JSON.stringify({ data: qrCode.qrCodeData, hash: qrCode.qrCodeHash })}
+            size={140}
+          />
         </View>
       ) : (
         <View style={styles.inactiveOverlay}>

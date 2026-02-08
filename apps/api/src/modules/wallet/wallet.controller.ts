@@ -53,7 +53,7 @@ export class WalletController {
   async scanQrCode(@CurrentUser() user: JwtPayload, @Body() dto: ScanQrDto) {
     const result = await this.qrScannerService.processQrCode(
       dto.qrCodeData,
-      dto.qrCodeHash,
+      dto.qrCodeHash ?? '',
       user.sub,
     );
     return { success: true, data: result };
