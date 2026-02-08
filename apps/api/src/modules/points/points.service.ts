@@ -171,11 +171,17 @@ export class PointsService {
       throw new BadRequestException('Quantidade deve ser maior que zero');
     }
 
-    // Get recipient info
-    const recipient = await this.prisma.user.findUnique({
-      where: { id: toUserId },
-      select: { id: true, name: true, avatarUrl: true },
-    });
+    // Get recipient and sender info
+    const [recipient, sender] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: toUserId },
+        select: { id: true, name: true, avatarUrl: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: fromUserId },
+        select: { id: true, name: true },
+      }),
+    ]);
 
     if (!recipient) {
       throw new NotFoundException('Destinatário não encontrado');
@@ -241,8 +247,9 @@ export class PointsService {
           amount,
           balance: receiverNewBalance,
           source: 'TRANSFER_IN',
-          description: message || 'Transferência recebida',
+          description: message || `Transferência de ${sender?.name ?? 'Alguém'}`,
           relatedUserId: fromUserId,
+          metadata: { senderName: sender?.name ?? 'Alguém' },
         },
       });
 
@@ -278,12 +285,6 @@ export class PointsService {
         receiverBalanceAfter: receiverNewBalance,
         createdAt: senderTx.createdAt,
       };
-    });
-
-    // Get sender name for notification
-    const sender = await this.prisma.user.findUnique({
-      where: { id: fromUserId },
-      select: { name: true },
     });
 
     // Send notification to recipient (async, non-blocking)

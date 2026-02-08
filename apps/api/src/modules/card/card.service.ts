@@ -381,6 +381,7 @@ export class CardService {
             select: {
               id: true,
               name: true,
+              username: true,
               avatarUrl: true,
               status: true,
             },
@@ -405,6 +406,7 @@ export class CardService {
         user: {
           id: card.user.id,
           name: card.user.name,
+          username: card.user.username,
           avatarUrl: card.user.avatarUrl,
         },
         card: {

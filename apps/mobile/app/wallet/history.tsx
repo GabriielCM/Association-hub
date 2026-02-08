@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
 import { router } from 'expo-router';
 import { YStack, XStack } from 'tamagui';
@@ -6,12 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Heading, Button, Spinner } from '@ahub/ui';
 import { usePointsHistory } from '@/features/points/hooks/usePointsHistory';
 import { TransactionItem } from '@/features/points/components/TransactionItem';
+import { TransactionDetail } from '@/features/points/components/TransactionDetail';
 import { FilterBar } from '@/features/points/components/FilterBar';
 import type { PointTransaction, TransactionType } from '@ahub/shared/types';
-import { useState } from 'react';
 
 export default function WalletHistoryScreen() {
   const [typeFilter, setTypeFilter] = useState<TransactionType | undefined>();
+  const [selectedTransaction, setSelectedTransaction] = useState<PointTransaction | null>(null);
 
   const {
     data,
@@ -27,7 +28,7 @@ export default function WalletHistoryScreen() {
   );
 
   const renderItem = ({ item }: { item: PointTransaction }) => (
-    <TransactionItem transaction={item} />
+    <TransactionItem transaction={item} onPress={setSelectedTransaction} />
   );
 
   return (
@@ -80,6 +81,12 @@ export default function WalletHistoryScreen() {
               </YStack>
             ) : null
           }
+        />
+
+        <TransactionDetail
+          transaction={selectedTransaction}
+          visible={!!selectedTransaction}
+          onClose={() => setSelectedTransaction(null)}
         />
       </YStack>
     </SafeAreaView>

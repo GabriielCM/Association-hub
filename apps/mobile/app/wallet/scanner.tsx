@@ -73,6 +73,16 @@ export default function ScannerScreen() {
           if (code) router.push(`/wallet/pdv-checkout?code=${code}`);
           break;
         }
+        case 'member_card': {
+          const mcData = result.data as Record<string, unknown> | undefined;
+          const user = mcData?.user as Record<string, string> | undefined;
+          if (user?.id) {
+            router.push(
+              `/wallet/transfer?recipientId=${user.id}&recipientName=${encodeURIComponent(user.name ?? '')}`
+            );
+          }
+          break;
+        }
         case 'user_transfer': {
           const data = result.data as Record<string, unknown> | undefined;
           const recipient = data?.recipient as Record<string, string> | undefined;

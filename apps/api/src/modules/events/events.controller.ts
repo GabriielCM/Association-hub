@@ -37,11 +37,12 @@ export class EventsController {
   @ApiOperation({ summary: 'Listar eventos' })
   @ApiResponse({ status: 200, description: 'Lista de eventos retornada com sucesso' })
   async listEvents(@CurrentUser() user: JwtPayload, @Query() query: EventQueryDto) {
-    return this.eventsService.listEvents(
+    const data = await this.eventsService.listEvents(
       user.sub,
       user.associationId,
       query,
     );
+    return { success: true, data };
   }
 
   @Get(':id')
@@ -50,7 +51,8 @@ export class EventsController {
   @ApiResponse({ status: 200, description: 'Evento retornado com sucesso' })
   @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   async getEvent(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.eventsService.getEvent(id, user.sub);
+    const data = await this.eventsService.getEvent(id, user.sub);
+    return { success: true, data };
   }
 
   @Post(':id/confirm')
@@ -60,7 +62,8 @@ export class EventsController {
   @ApiResponse({ status: 400, description: 'Já confirmou presença ou evento lotado' })
   @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   async confirmEvent(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.eventsService.confirmEvent(id, user.sub);
+    const data = await this.eventsService.confirmEvent(id, user.sub);
+    return { success: true, data };
   }
 
   @Delete(':id/confirm')
@@ -70,7 +73,8 @@ export class EventsController {
   @ApiResponse({ status: 400, description: 'Não havia confirmação' })
   @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   async removeConfirmation(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.eventsService.removeConfirmation(id, user.sub);
+    const data = await this.eventsService.removeConfirmation(id, user.sub);
+    return { success: true, data };
   }
 
   @Post(':id/checkin')
@@ -82,7 +86,8 @@ export class EventsController {
   async checkin(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto: CheckinDto) {
     // Override eventId from URL for security
     dto.eventId = id;
-    return this.eventsService.processCheckin(user.sub, dto);
+    const data = await this.eventsService.processCheckin(user.sub, dto);
+    return { success: true, data };
   }
 
   @Get(':id/comments')
@@ -91,7 +96,8 @@ export class EventsController {
   @ApiResponse({ status: 200, description: 'Comentários retornados com sucesso' })
   @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   async getComments(@Param('id') id: string, @Query() query: CommentQueryDto) {
-    return this.eventsService.getComments(id, query);
+    const data = await this.eventsService.getComments(id, query);
+    return { success: true, data };
   }
 
   @Post(':id/comments')
@@ -105,6 +111,7 @@ export class EventsController {
     @Param('id') id: string,
     @Body() dto: CreateCommentDto,
   ) {
-    return this.eventsService.createComment(id, user.sub, dto);
+    const data = await this.eventsService.createComment(id, user.sub, dto);
+    return { success: true, data };
   }
 }

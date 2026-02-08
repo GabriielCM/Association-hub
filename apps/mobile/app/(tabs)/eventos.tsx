@@ -1,77 +1,84 @@
-import { ScrollView } from 'react-native';
-import { YStack, XStack, View } from 'tamagui';
+import { useState, useCallback } from 'react';
+import { FlatList, RefreshControl } from 'react-native';
+import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { Text, Heading, Card, Badge, Button } from '@ahub/ui';
+import { Text, Heading, Card, Spinner } from '@ahub/ui';
+import { useEvents } from '@/features/events/hooks/useEvents';
+import { EventCard } from '@/features/events/components/EventCard';
+import { EventFilters } from '@/features/events/components/EventFilters';
+import type { EventFilter, EventCategory, EventListItem } from '@ahub/shared/types';
 
 export default function EventosScreen() {
+  const [filter, setFilter] = useState<EventFilter>('upcoming');
+  const [category, setCategory] = useState<EventCategory | undefined>();
+  const [search, setSearch] = useState('');
+
+  const { data, isLoading, isRefetching, refetch } = useEvents({
+    filter,
+    category,
+    search: search || undefined,
+  });
+
+  const events = data?.data ?? [];
+
+  const renderItem = useCallback(
+    ({ item }: { item: EventListItem }) => <EventCard event={item} />,
+    []
+  );
+
+  const keyExtractor = useCallback(
+    (item: EventListItem) => item.id,
+    []
+  );
+
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <ScrollView>
-        <YStack padding="$4" gap="$4">
-          <Heading level={3}>Eventos</Heading>
-
-          {/* Filter tabs */}
-          <XStack gap="$2">
-            <Badge variant="primary">Próximos</Badge>
-            <Badge variant="ghost">Confirmados</Badge>
-            <Badge variant="ghost">Passados</Badge>
-          </XStack>
-
-          {/* Empty state */}
-          <Card variant="flat">
-            <YStack
-              gap="$3"
-              alignItems="center"
-              justifyContent="center"
-              paddingVertical="$6"
-            >
-              <Text size="2xl">📅</Text>
-              <Text weight="semibold">Nenhum evento disponível</Text>
-              <Text color="secondary" size="sm" align="center">
-                Novos eventos serão exibidos aqui quando disponíveis
-              </Text>
+      <FlatList
+        data={events}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        contentContainerStyle={{ padding: 16, gap: 12 }}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+        }
+        ListHeaderComponent={
+          <YStack gap="$3" marginBottom="$2">
+            <Heading level={3}>Eventos</Heading>
+            <EventFilters
+              filter={filter}
+              category={category}
+              search={search}
+              onFilterChange={setFilter}
+              onCategoryChange={setCategory}
+              onSearchChange={setSearch}
+            />
+          </YStack>
+        }
+        ListEmptyComponent={
+          isLoading ? (
+            <YStack alignItems="center" paddingVertical="$6">
+              <Spinner size="lg" />
             </YStack>
-          </Card>
-
-          {/* Example Event Card (for UI preview) */}
-          <Card variant="elevated" pressable>
-            <YStack gap="$2">
-              {/* Event Image Placeholder */}
-              <View
-                backgroundColor="$backgroundHover"
-                borderRadius="$md"
-                height={120}
+          ) : (
+            <Card variant="flat">
+              <YStack
+                gap="$3"
                 alignItems="center"
                 justifyContent="center"
+                paddingVertical="$6"
               >
-                <Text color="secondary">Imagem do evento</Text>
-              </View>
-
-              {/* Event Info */}
-              <XStack justifyContent="space-between" alignItems="flex-start">
-                <YStack flex={1} gap="$1">
-                  <Text weight="bold" size="lg">
-                    Evento de Exemplo
-                  </Text>
-                  <Text color="secondary" size="sm">
-                    📍 Local do Evento
-                  </Text>
-                  <Text color="secondary" size="sm">
-                    📅 25 Jan 2026, 19:00
-                  </Text>
-                </YStack>
-                <Badge variant="success">+50 pts</Badge>
-              </XStack>
-
-              {/* Action */}
-              <Button variant="primary" size="md" fullWidth marginTop="$2">
-                Confirmar presença
-              </Button>
-            </YStack>
-          </Card>
-        </YStack>
-      </ScrollView>
+                <Text size="2xl">📅</Text>
+                <Text weight="semibold">Nenhum evento encontrado</Text>
+                <Text color="secondary" size="sm" align="center">
+                  {filter === 'upcoming'
+                    ? 'Novos eventos serao exibidos aqui quando disponiveis'
+                    : 'Tente ajustar os filtros para encontrar eventos'}
+                </Text>
+              </YStack>
+            </Card>
+          )
+        }
+      />
     </SafeAreaView>
   );
 }

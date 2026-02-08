@@ -646,6 +646,212 @@ export interface PdvPaymentResult {
   orderCode: string;
 }
 
+// ===========================================
+// EVENT TYPES
+// ===========================================
+
+export type EventCategory =
+  | 'SOCIAL'
+  | 'SPORTS'
+  | 'CULTURAL'
+  | 'EDUCATIONAL'
+  | 'NETWORKING'
+  | 'GASTRO'
+  | 'MUSIC'
+  | 'ART'
+  | 'GAMES'
+  | 'INSTITUTIONAL';
+
+export type EventStatus = 'DRAFT' | 'SCHEDULED' | 'ONGOING' | 'ENDED' | 'CANCELED';
+
+export type EventFilter = 'all' | 'upcoming' | 'ongoing' | 'past' | 'confirmed';
+
+export type BadgeCriteria = 'FIRST_CHECKIN' | 'ALL_CHECKINS' | 'AT_LEAST_ONE';
+
+export interface EventListItem {
+  id: string;
+  title: string;
+  category: EventCategory;
+  color: string | null;
+  startDate: Date;
+  endDate: Date;
+  locationName: string;
+  bannerFeed: string | null;
+  bannerDisplay: string[];
+  pointsTotal: number;
+  checkinsCount: number;
+  status: EventStatus;
+  capacity: number | null;
+  confirmationsCount: number;
+  isConfirmed: boolean;
+}
+
+export interface EventsListResponse {
+  data: EventListItem[];
+  meta: {
+    currentPage: number;
+    perPage: number;
+    totalPages: number;
+    totalCount: number;
+  };
+}
+
+export interface EventsFilterParams {
+  page?: number | undefined;
+  perPage?: number | undefined;
+  filter?: EventFilter | undefined;
+  category?: EventCategory | undefined;
+  search?: string | undefined;
+}
+
+export interface EventBadge {
+  id: string;
+  name: string;
+  description?: string;
+  iconUrl?: string;
+}
+
+export interface EventUserCheckIn {
+  id: string;
+  checkinNumber: number;
+  pointsAwarded: number;
+  badgeAwarded: boolean;
+  createdAt: Date;
+}
+
+export interface EventDetail {
+  id: string;
+  title: string;
+  description: string;
+  category: EventCategory;
+  color: string | null;
+  startDate: Date;
+  endDate: Date;
+  locationName: string;
+  locationAddress: string | null;
+  bannerFeed: string | null;
+  bannerDisplay: string[];
+  pointsTotal: number;
+  checkinsCount: number;
+  checkinInterval: number;
+  status: EventStatus;
+  isPaused: boolean;
+  capacity: number | null;
+  externalLink: string | null;
+  badge: EventBadge | null;
+  badgeCriteria: BadgeCriteria | null;
+  confirmationsCount: number;
+  checkInsCount: number;
+  commentsCount: number;
+  currentCheckinNumber: number;
+  // User-specific
+  isConfirmed: boolean;
+  confirmedAt: Date | null;
+  userCheckIns: EventUserCheckIn[];
+  userCheckInsCompleted: number;
+}
+
+export interface CheckinRequest {
+  eventId: string;
+  checkinNumber: number;
+  securityToken: string;
+  timestamp: number;
+}
+
+export interface CheckinResponse {
+  success: boolean;
+  checkinNumber: number;
+  pointsAwarded: number;
+  badgeAwarded: boolean;
+  progress: {
+    completed: number;
+    total: number;
+    percentage: number;
+  };
+}
+
+export interface EventConfirmResponse {
+  confirmed: boolean;
+  confirmedAt?: Date;
+}
+
+export interface EventComment {
+  id: string;
+  text: string;
+  author: {
+    id: string;
+    name: string;
+    avatarUrl: string | null;
+  };
+  createdAt: Date;
+}
+
+export interface EventCommentsResponse {
+  data: EventComment[];
+  meta: {
+    currentPage: number;
+    perPage: number;
+    totalPages: number;
+    totalCount: number;
+  };
+}
+
+// Admin Event types
+export interface AdminEventListItem extends EventListItem {
+  createdAt: Date;
+  publishedAt: Date | null;
+  checkInsTotal: number;
+}
+
+export interface EventAnalytics {
+  confirmations: number;
+  checkIns: number;
+  attendanceRate: number;
+  pointsDistributed: number;
+  badgesEarned: number;
+  checkinsByNumber: Array<{
+    checkinNumber: number;
+    count: number;
+  }>;
+  checkinTimeline: Array<{
+    time: string;
+    count: number;
+  }>;
+}
+
+export interface EventParticipant {
+  userId: string;
+  userName: string;
+  userAvatar: string | null;
+  confirmedAt: Date | null;
+  checkIns: number[];
+  totalPoints: number;
+  hasBadge: boolean;
+}
+
+// Display types
+export interface DisplayData {
+  event: {
+    id: string;
+    title: string;
+    color: string | null;
+    startDate: Date;
+    endDate: Date;
+    bannerDisplay: string[];
+    status: EventStatus;
+    isPaused: boolean;
+  };
+  qrCode: {
+    data: string;
+    expiresAt: number;
+  };
+  currentCheckin: number;
+  totalCheckins: number;
+  pointsPerCheckin: number;
+  counter: number;
+  associationLogo: string | null;
+}
+
 // Notification types
 export interface AppNotification {
   id: string;

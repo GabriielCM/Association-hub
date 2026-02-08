@@ -7,18 +7,30 @@ import {
   Body,
   Param,
   Query,
+  Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  ParseIntPipe,
   Res,
   Header,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiConsumes,
 } from '@nestjs/swagger';
-import { Response } from 'express';
+import type { Request, Response } from 'express';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { writeFile } from 'fs/promises';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators';
 import type { JwtPayload } from '../../common/types';
@@ -42,6 +54,15 @@ export class AdminEventsController {
   @ApiResponse({ status: 200, description: 'Lista de eventos retornada com sucesso' })
   async listEvents(@CurrentUser() user: JwtPayload, @Query() query: AdminEventQueryDto) {
     return this.eventsService.adminListEvents(user.associationId, query);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Obter detalhes do evento (admin)' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiResponse({ status: 200, description: 'Detalhes do evento retornados com sucesso' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
+  async getEvent(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.eventsService.getEvent(id, user.sub);
   }
 
   @Post()
@@ -157,6 +178,111 @@ export class AdminEventsController {
       page || 1,
       perPage || 50,
     );
+  }
+
+  @Post(':id/banner-feed')
+  @ApiOperation({ summary: 'Upload do banner feed do evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 200, description: 'Banner feed atualizado com sucesso' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadBannerFeed(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Req() req: Request,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const uploadsDir = join(process.cwd(), 'uploads', 'events', id);
+    if (!existsSync(uploadsDir)) {
+      mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const ext = file.originalname.split('.').pop();
+    const fileName = `feed-${Date.now()}.${ext}`;
+    const filePath = join(uploadsDir, fileName);
+    await writeFile(filePath, file.buffer);
+
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const bannerUrl = `${protocol}://${host}/uploads/events/${id}/${fileName}`;
+
+    const data = await this.eventsService.updateBannerFeed(
+      id,
+      user.associationId,
+      bannerUrl,
+    );
+    return { success: true, data };
+  }
+
+  @Post(':id/banner-display')
+  @ApiOperation({ summary: 'Adicionar banner display ao evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 200, description: 'Banner display adicionado com sucesso' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadBannerDisplay(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Req() req: Request,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const uploadsDir = join(process.cwd(), 'uploads', 'events', id);
+    if (!existsSync(uploadsDir)) {
+      mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const ext = file.originalname.split('.').pop();
+    const fileName = `display-${Date.now()}.${ext}`;
+    const filePath = join(uploadsDir, fileName);
+    await writeFile(filePath, file.buffer);
+
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const bannerUrl = `${protocol}://${host}/uploads/events/${id}/${fileName}`;
+
+    const data = await this.eventsService.addBannerDisplay(
+      id,
+      user.associationId,
+      bannerUrl,
+    );
+    return { success: true, data };
+  }
+
+  @Delete(':id/banner-display/:index')
+  @ApiOperation({ summary: 'Remover banner display do evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiParam({ name: 'index', description: 'Índice do banner a remover' })
+  @ApiResponse({ status: 200, description: 'Banner display removido com sucesso' })
+  @ApiResponse({ status: 404, description: 'Evento não encontrado' })
+  async removeBannerDisplay(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Param('index', ParseIntPipe) index: number,
+  ) {
+    const data = await this.eventsService.removeBannerDisplay(
+      id,
+      user.associationId,
+      index,
+    );
+    return { success: true, data };
   }
 
   @Get(':id/export/csv')

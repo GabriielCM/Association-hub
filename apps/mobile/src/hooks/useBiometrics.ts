@@ -7,12 +7,14 @@ import {
 import { FEATURES } from '@/config/constants';
 
 export type BiometricType = 'fingerprint' | 'facial' | 'iris' | null;
+export type AuthMethod = 'biometric' | 'device_credential' | 'none';
 
 interface UseBiometricsReturn {
   // State
   isAvailable: boolean;
   isEnrolled: boolean;
   biometricType: BiometricType;
+  authMethod: AuthMethod;
   isEnabled: boolean;
   isLoading: boolean;
 
@@ -28,6 +30,7 @@ export function useBiometrics(): UseBiometricsReturn {
   const [isAvailable, setIsAvailable] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [biometricType, setBiometricType] = useState<BiometricType>(null);
+  const [securityLevel, setSecurityLevel] = useState(0);
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -40,14 +43,13 @@ export function useBiometrics(): UseBiometricsReturn {
 
     async function checkBiometrics() {
       try {
+        // Check device security level (PIN/password/biometric)
+        const level = await LocalAuthentication.getEnrolledLevelAsync();
+        setSecurityLevel(level);
+
         // Check if hardware is available
         const hasHardware = await LocalAuthentication.hasHardwareAsync();
         setIsAvailable(hasHardware);
-
-        if (!hasHardware) {
-          setIsLoading(false);
-          return;
-        }
 
         // Check if user has enrolled biometrics
         const enrolled = await LocalAuthentication.isEnrolledAsync();
@@ -88,30 +90,51 @@ export function useBiometrics(): UseBiometricsReturn {
     checkBiometrics();
   }, []);
 
-  // Authenticate with biometrics
+  // Computed auth method
+  const authMethod: AuthMethod = isEnrolled
+    ? 'biometric'
+    : securityLevel >= LocalAuthentication.SecurityLevel.SECRET
+      ? 'device_credential'
+      : 'none';
+
+  // Authenticate with biometrics, device credential, or auto-pass
   const authenticate = useCallback(
     async (
       promptMessage = 'Autentique-se para continuar'
     ): Promise<LocalAuthentication.LocalAuthenticationResult> => {
-      if (!isAvailable || !isEnrolled) {
-        return { success: false, error: 'not_available' };
+      // Biometrics available and enrolled
+      if (isAvailable && isEnrolled) {
+        try {
+          return await LocalAuthentication.authenticateAsync({
+            promptMessage,
+            cancelLabel: 'Cancelar',
+            fallbackLabel: 'Usar senha',
+            disableDeviceFallback: false,
+          });
+        } catch (error) {
+          console.error('Biometric authentication error:', error);
+          return { success: false, error: 'unknown' };
+        }
       }
 
-      try {
-        const result = await LocalAuthentication.authenticateAsync({
-          promptMessage,
-          cancelLabel: 'Cancelar',
-          fallbackLabel: 'Usar senha',
-          disableDeviceFallback: false,
-        });
-
-        return result;
-      } catch (error) {
-        console.error('Biometric authentication error:', error);
-        return { success: false, error: 'unknown' };
+      // Device has PIN/password/pattern
+      if (securityLevel >= LocalAuthentication.SecurityLevel.SECRET) {
+        try {
+          return await LocalAuthentication.authenticateAsync({
+            promptMessage,
+            cancelLabel: 'Cancelar',
+            disableDeviceFallback: false,
+          });
+        } catch (error) {
+          console.error('Device credential authentication error:', error);
+          return { success: false, error: 'unknown' };
+        }
       }
+
+      // No authentication available - auto-pass
+      return { success: true };
     },
-    [isAvailable, isEnrolled]
+    [isAvailable, isEnrolled, securityLevel]
   );
 
   // Enable biometrics in app
@@ -142,6 +165,7 @@ export function useBiometrics(): UseBiometricsReturn {
     isAvailable,
     isEnrolled,
     biometricType,
+    authMethod,
     isEnabled,
     isLoading,
     authenticate,

@@ -185,6 +185,66 @@ export const walletSummaryQuerySchema = z.object({
 });
 
 // ===========================================
+// EVENT SCHEMAS
+// ===========================================
+
+export const eventCategoryValues = [
+  'SOCIAL', 'SPORTS', 'CULTURAL', 'EDUCATIONAL', 'NETWORKING',
+  'GASTRO', 'MUSIC', 'ART', 'GAMES', 'INSTITUTIONAL',
+] as const;
+
+export const badgeCriteriaValues = ['FIRST_CHECKIN', 'ALL_CHECKINS', 'AT_LEAST_ONE'] as const;
+
+export const createEventSchema = z.object({
+  title: z.string().min(5, 'Titulo deve ter pelo menos 5 caracteres').max(100, 'Titulo muito longo'),
+  description: z.string().min(10, 'Descricao deve ter pelo menos 10 caracteres').max(2000, 'Descricao muito longa'),
+  category: z.enum(eventCategoryValues),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Cor deve ser hexadecimal').optional(),
+  startDate: z.string().min(1, 'Data de inicio e obrigatoria'),
+  endDate: z.string().min(1, 'Data de termino e obrigatoria'),
+  locationName: z.string().min(3, 'Local deve ter pelo menos 3 caracteres').max(200, 'Local muito longo'),
+  locationAddress: z.string().max(500, 'Endereco muito longo').optional(),
+  bannerFeed: z.string().url('URL invalida').optional(),
+  bannerDisplay: z.array(z.string().url('URL invalida')).optional(),
+  pointsTotal: z.number().int().min(1, 'Minimo 1 ponto').max(10000, 'Maximo 10.000 pontos'),
+  checkinsCount: z.number().int().min(1, 'Minimo 1 check-in').max(20, 'Maximo 20 check-ins'),
+  checkinInterval: z.number().int().min(0).max(1440).optional(),
+  badgeId: z.string().optional(),
+  badgeCriteria: z.enum(badgeCriteriaValues).optional(),
+  capacity: z.number().int().min(1).optional(),
+  externalLink: z.string().url('URL invalida').optional(),
+});
+
+export const checkinSchema = z.object({
+  eventId: z.string().min(1),
+  checkinNumber: z.number().int().min(1),
+  securityToken: z.string().min(1),
+  timestamp: z.number(),
+});
+
+export const createEventCommentSchema = z.object({
+  text: z.string().min(1, 'Comentario nao pode ser vazio').max(500, 'Comentario muito longo'),
+});
+
+export const eventsFilterSchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  perPage: z.coerce.number().int().min(1).max(50).default(20),
+  filter: z.enum(['all', 'upcoming', 'ongoing', 'past', 'confirmed']).default('upcoming'),
+  category: z.enum(eventCategoryValues).optional(),
+  search: z.string().optional(),
+});
+
+export const manualCheckinSchema = z.object({
+  userId: z.string().min(1, 'ID do usuario e obrigatorio'),
+  checkinNumber: z.number().int().min(1, 'Numero do check-in e obrigatorio'),
+  reason: z.string().min(5, 'Motivo deve ter pelo menos 5 caracteres').max(500, 'Motivo muito longo'),
+});
+
+export const cancelEventSchema = z.object({
+  reason: z.string().min(1, 'Motivo e obrigatorio').max(500, 'Motivo muito longo'),
+});
+
+// ===========================================
 // PAGINATION SCHEMA
 // ===========================================
 
@@ -223,3 +283,9 @@ export type ScanQrInput = z.infer<typeof scanQrSchema>;
 export type PdvPaymentInput = z.infer<typeof pdvPaymentSchema>;
 export type WalletSummaryQueryInput = z.infer<typeof walletSummaryQuerySchema>;
 export type PaginationInput = z.infer<typeof paginationSchema>;
+export type CreateEventInput = z.infer<typeof createEventSchema>;
+export type CheckinInput = z.infer<typeof checkinSchema>;
+export type CreateEventCommentInput = z.infer<typeof createEventCommentSchema>;
+export type EventsFilterInput = z.infer<typeof eventsFilterSchema>;
+export type ManualCheckinInput = z.infer<typeof manualCheckinSchema>;
+export type CancelEventInput = z.infer<typeof cancelEventSchema>;

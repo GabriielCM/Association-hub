@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 
 import { Text, Heading, Input, Button, Card } from '@ahub/ui';
@@ -36,6 +37,7 @@ export function TransferForm({ onSubmit, onBack, recipientName }: TransferFormPr
   };
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <YStack gap="$4" flex={1}>
       <Card variant="flat">
         <XStack alignItems="center" justifyContent="space-between">
@@ -110,5 +112,6 @@ export function TransferForm({ onSubmit, onBack, recipientName }: TransferFormPr
         </Button>
       </YStack>
     </YStack>
+    </TouchableWithoutFeedback>
   );
 }

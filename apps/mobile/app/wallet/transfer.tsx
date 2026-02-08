@@ -6,12 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Heading, Button, Spinner } from '@ahub/ui';
 import { RecipientPicker } from '@/features/points/components/RecipientPicker';
 import { TransferForm } from '@/features/points/components/TransferForm';
+import { TransferReceipt } from '@/features/points/components/TransferReceipt';
 import { useTransfer } from '@/features/points/hooks/useTransfer';
 import { useBiometrics } from '@/hooks/useBiometrics';
 import { usePointsStore } from '@/stores/points.store';
-import type { RecentRecipient } from '@ahub/shared/types';
+import type { RecentRecipient, TransferResult } from '@ahub/shared/types';
 
-type Step = 'recipient' | 'amount' | 'confirm';
+type Step = 'recipient' | 'amount' | 'confirm' | 'receipt';
 
 export default function WalletTransferScreen() {
   const { recipientId, recipientName } = useLocalSearchParams<{
@@ -27,8 +28,9 @@ export default function WalletTransferScreen() {
   );
   const [amount, setAmount] = useState(0);
   const [message, setMessage] = useState('');
+  const [transferResult, setTransferResult] = useState<TransferResult | null>(null);
   const transferMutation = useTransfer();
-  const { authenticate } = useBiometrics();
+  const { authenticate, authMethod } = useBiometrics();
   const showCelebration = usePointsStore((s) => s.showCelebration);
 
   const handleSelectRecipient = useCallback((r: RecentRecipient) => {
@@ -45,12 +47,8 @@ export default function WalletTransferScreen() {
   const handleConfirm = useCallback(async () => {
     if (!recipient) return;
 
-    // Biometric check
-    const biometricResult = await authenticate('Confirme a transferência');
-    if (!biometricResult.success) {
-      Alert.alert('Cancelado', 'Autenticação biométrica necessária.');
-      return;
-    }
+    const authResult = await authenticate('Confirme a transferência');
+    if (!authResult.success) return;
 
     transferMutation.mutate(
       {
@@ -61,7 +59,8 @@ export default function WalletTransferScreen() {
       {
         onSuccess: (result) => {
           showCelebration(amount, `Transferência para ${recipient.name}`);
-          router.back();
+          setTransferResult(result);
+          setStep('receipt');
         },
         onError: (error) => {
           Alert.alert('Erro', error.message ?? 'Não foi possível transferir.');
@@ -74,20 +73,22 @@ export default function WalletTransferScreen() {
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <YStack flex={1} padding="$4" gap="$4">
         {/* Header */}
-        <XStack alignItems="center" gap="$2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onPress={() => {
-              if (step === 'amount') setStep('recipient');
-              else if (step === 'confirm') setStep('amount');
-              else router.back();
-            }}
-          >
-            ←
-          </Button>
-          <Heading level={4}>Transferir Pontos</Heading>
-        </XStack>
+        {step !== 'receipt' && (
+          <XStack alignItems="center" gap="$2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={() => {
+                if (step === 'amount') setStep('recipient');
+                else if (step === 'confirm') setStep('amount');
+                else router.back();
+              }}
+            >
+              ←
+            </Button>
+            <Heading level={4}>Transferir Pontos</Heading>
+          </XStack>
+        )}
 
         {/* Steps */}
         {step === 'recipient' && (
@@ -126,8 +127,12 @@ export default function WalletTransferScreen() {
               >
                 {transferMutation.isPending ? (
                   <Spinner size="small" />
-                ) : (
+                ) : authMethod === 'biometric' ? (
                   'Confirmar com biometria'
+                ) : authMethod === 'device_credential' ? (
+                  'Confirmar com senha'
+                ) : (
+                  'Confirmar transferência'
                 )}
               </Button>
               <Button variant="outline" onPress={() => setStep('amount')}>
@@ -135,6 +140,14 @@ export default function WalletTransferScreen() {
               </Button>
             </YStack>
           </YStack>
+        )}
+
+        {step === 'receipt' && transferResult && (
+          <TransferReceipt
+            result={transferResult}
+            message={message || undefined}
+            onClose={() => router.back()}
+          />
         )}
       </YStack>
     </SafeAreaView>

@@ -102,6 +102,7 @@ export class EventsService {
           endDate: true,
           locationName: true,
           bannerFeed: true,
+          bannerDisplay: true,
           pointsTotal: true,
           checkinsCount: true,
           status: true,
@@ -642,7 +643,9 @@ export class EventsService {
       ];
     }
 
-    const [events, total] = await Promise.all([
+    const assocWhere: Prisma.EventWhereInput = { associationId };
+
+    const [events, total, statsAgg, activeCount] = await Promise.all([
       this.prisma.event.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -652,12 +655,18 @@ export class EventsService {
           id: true,
           title: true,
           category: true,
+          color: true,
           startDate: true,
           endDate: true,
+          locationName: true,
+          bannerFeed: true,
           status: true,
           isPaused: true,
           pointsTotal: true,
           checkinsCount: true,
+          capacity: true,
+          createdAt: true,
+          publishedAt: true,
           _count: {
             select: {
               confirmations: true,
@@ -667,14 +676,35 @@ export class EventsService {
         },
       }),
       this.prisma.event.count({ where }),
+      this.prisma.event.aggregate({
+        where: assocWhere,
+        _sum: { pointsTotal: true },
+        _count: true,
+      }),
+      this.prisma.event.count({
+        where: {
+          associationId,
+          status: { in: ['SCHEDULED', 'ONGOING'] },
+        },
+      }),
     ]);
+
+    const totalCheckIns = await this.prisma.eventCheckIn.count({
+      where: { event: { associationId } },
+    });
 
     return {
       data: events.map((e) => ({
         ...e,
         confirmationsCount: e._count.confirmations,
-        checkInsCount: e._count.checkIns,
+        checkInsTotal: e._count.checkIns,
       })),
+      stats: {
+        totalEvents: statsAgg._count,
+        activeEvents: activeCount,
+        totalCheckIns,
+        totalPointsDistributed: statsAgg._sum.pointsTotal ?? 0,
+      },
       meta: {
         currentPage: page,
         perPage,
@@ -1382,26 +1412,130 @@ export class EventsService {
   }
 
   // Auto-transition events based on time
-  async transitionEventStatuses() {
+  // Returns which events transitioned so the scheduler can broadcast via WebSocket
+  async transitionEventStatuses(): Promise<{
+    toOngoing: { id: string; isPaused: boolean }[];
+    toEnded: { id: string }[];
+  }> {
     const now = new Date();
 
-    // SCHEDULED -> ONGOING
-    await this.prisma.event.updateMany({
+    // Find events that need to transition BEFORE updating
+    const toOngoing = await this.prisma.event.findMany({
       where: {
         status: 'SCHEDULED',
         startDate: { lte: now },
       },
-      data: { status: 'ONGOING' },
+      select: { id: true, isPaused: true },
     });
 
-    // ONGOING -> ENDED
-    await this.prisma.event.updateMany({
+    const toEnded = await this.prisma.event.findMany({
       where: {
         status: 'ONGOING',
         endDate: { lte: now },
       },
-      data: { status: 'ENDED' },
+      select: { id: true },
     });
+
+    // SCHEDULED -> ONGOING
+    if (toOngoing.length > 0) {
+      await this.prisma.event.updateMany({
+        where: { id: { in: toOngoing.map((e) => e.id) } },
+        data: { status: 'ONGOING' },
+      });
+    }
+
+    // ONGOING -> ENDED
+    if (toEnded.length > 0) {
+      await this.prisma.event.updateMany({
+        where: { id: { in: toEnded.map((e) => e.id) } },
+        data: { status: 'ENDED' },
+      });
+    }
+
+    return { toOngoing, toEnded };
+  }
+
+  // ===========================================
+  // BANNERS
+  // ===========================================
+
+  async updateBannerFeed(
+    eventId: string,
+    associationId: string,
+    bannerUrl: string,
+  ) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, associationId: true },
+    });
+
+    if (!event) throw new NotFoundException('Evento nao encontrado');
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao para este evento');
+    }
+
+    const updated = await this.prisma.event.update({
+      where: { id: eventId },
+      data: { bannerFeed: bannerUrl },
+      select: { bannerFeed: true },
+    });
+
+    return updated;
+  }
+
+  async addBannerDisplay(
+    eventId: string,
+    associationId: string,
+    bannerUrl: string,
+  ) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, associationId: true, bannerDisplay: true },
+    });
+
+    if (!event) throw new NotFoundException('Evento nao encontrado');
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao para este evento');
+    }
+
+    const updated = await this.prisma.event.update({
+      where: { id: eventId },
+      data: { bannerDisplay: [...event.bannerDisplay, bannerUrl] },
+      select: { bannerDisplay: true },
+    });
+
+    return updated;
+  }
+
+  async removeBannerDisplay(
+    eventId: string,
+    associationId: string,
+    index: number,
+  ) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, associationId: true, bannerDisplay: true },
+    });
+
+    if (!event) throw new NotFoundException('Evento nao encontrado');
+    if (event.associationId !== associationId) {
+      throw new ForbiddenException('Sem permissao para este evento');
+    }
+
+    if (index < 0 || index >= event.bannerDisplay.length) {
+      throw new BadRequestException('Indice de banner invalido');
+    }
+
+    const newBanners = [...event.bannerDisplay];
+    newBanners.splice(index, 1);
+
+    const updated = await this.prisma.event.update({
+      where: { id: eventId },
+      data: { bannerDisplay: newBanners },
+      select: { bannerDisplay: true },
+    });
+
+    return updated;
   }
 
   // ===========================================

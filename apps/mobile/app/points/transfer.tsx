@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Alert, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,9 +8,11 @@ import { Text, Heading, Button, Card, Avatar, Spinner } from '@ahub/ui';
 import { formatPoints } from '@ahub/shared/utils';
 import { RecipientPicker } from '@/features/points/components/RecipientPicker';
 import { TransferForm } from '@/features/points/components/TransferForm';
+import { TransferReceipt } from '@/features/points/components/TransferReceipt';
 import { useTransfer } from '@/features/points/hooks/useTransfer';
 import { useTransferWizard, usePointsStore } from '@/stores/points.store';
 import { useBiometrics } from '@/hooks/useBiometrics';
+import type { TransferResult } from '@ahub/shared/types';
 
 export default function TransferScreen() {
   const router = useRouter();
@@ -22,7 +25,9 @@ export default function TransferScreen() {
     resetTransfer,
   } = usePointsStore();
   const transfer = useTransfer();
-  const { authenticate, isAvailable } = useBiometrics();
+  const { authenticate, authMethod } = useBiometrics();
+  const showCelebration = usePointsStore((s) => s.showCelebration);
+  const [transferResult, setTransferResult] = useState<TransferResult | null>(null);
 
   const handleAmountSubmit = (amount: number, message: string) => {
     setTransferAmount(amount);
@@ -33,14 +38,8 @@ export default function TransferScreen() {
   const handleConfirm = async () => {
     if (!wizard.recipient) return;
 
-    // Biometric auth
-    if (isAvailable) {
-      const success = await authenticate('Confirme a transferencia de pontos');
-      if (!success) {
-        Alert.alert('Falha na autenticacao', 'Tente novamente');
-        return;
-      }
-    }
+    const authResult = await authenticate('Confirme a transferência');
+    if (!authResult.success) return;
 
     transfer.mutate(
       {
@@ -50,11 +49,9 @@ export default function TransferScreen() {
       },
       {
         onSuccess: (result) => {
-          Alert.alert(
-            'Transferencia realizada!',
-            `${formatPoints(result.amount)} pontos enviados para ${result.recipient.name}`,
-            [{ text: 'OK', onPress: () => { resetTransfer(); router.back(); } }]
-          );
+          showCelebration(result.amount, `Transferência para ${result.recipient.name}`);
+          setTransferResult(result);
+          setTransferStep('receipt');
         },
         onError: (error) => {
           Alert.alert('Erro', error.message);
@@ -67,36 +64,40 @@ export default function TransferScreen() {
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <YStack flex={1} padding="$4" gap="$3">
-        <XStack alignItems="center" justifyContent="space-between">
-          <Heading level={3}>Transferir Pontos</Heading>
-          <Button
-            variant="ghost"
-            size="sm"
-            onPress={() => {
-              resetTransfer();
-              router.back();
-            }}
-          >
-            Cancelar
-          </Button>
-        </XStack>
+        {wizard.step !== 'receipt' && (
+          <>
+            <XStack alignItems="center" justifyContent="space-between">
+              <Heading level={3}>Transferir Pontos</Heading>
+              <Button
+                variant="ghost"
+                size="sm"
+                onPress={() => {
+                  resetTransfer();
+                  router.back();
+                }}
+              >
+                Cancelar
+              </Button>
+            </XStack>
 
-        {/* Step indicators */}
-        <XStack gap="$2" justifyContent="center">
-          {(['recipient', 'amount', 'confirm'] as const).map((step, i) => (
-            <YStack
-              key={step}
-              width={40}
-              height={4}
-              borderRadius="$full"
-              backgroundColor={
-                i <= ['recipient', 'amount', 'confirm'].indexOf(wizard.step)
-                  ? '$primary'
-                  : '$borderColor'
-              }
-            />
-          ))}
-        </XStack>
+            {/* Step indicators */}
+            <XStack gap="$2" justifyContent="center">
+              {(['recipient', 'amount', 'confirm'] as const).map((step, i) => (
+                <YStack
+                  key={step}
+                  width={40}
+                  height={4}
+                  borderRadius="$full"
+                  backgroundColor={
+                    i <= ['recipient', 'amount', 'confirm'].indexOf(wizard.step)
+                      ? '$primary'
+                      : '$borderColor'
+                  }
+                />
+              ))}
+            </XStack>
+          </>
+        )}
 
         {/* Step 1: Select Recipient */}
         {wizard.step === 'recipient' && (
@@ -144,19 +145,17 @@ export default function TransferScreen() {
               </YStack>
             </Card>
 
-            <Text color="secondary" size="xs" align="center">
-              {isAvailable
-                ? 'Autenticacao biometrica sera solicitada'
-                : 'A transferencia e irreversivel'}
-            </Text>
-
             <YStack gap="$2" marginTop="auto">
               {transfer.isPending ? (
                 <Spinner />
               ) : (
                 <>
                   <Button onPress={handleConfirm}>
-                    Confirmar Transferencia
+                    {authMethod === 'biometric'
+                      ? 'Confirmar com biometria'
+                      : authMethod === 'device_credential'
+                        ? 'Confirmar com senha'
+                        : 'Confirmar transferência'}
                   </Button>
                   <Button
                     variant="outline"
@@ -168,6 +167,18 @@ export default function TransferScreen() {
               )}
             </YStack>
           </YStack>
+        )}
+
+        {/* Step 4: Receipt */}
+        {wizard.step === 'receipt' && transferResult && (
+          <TransferReceipt
+            result={transferResult}
+            message={wizard.message || undefined}
+            onClose={() => {
+              resetTransfer();
+              router.back();
+            }}
+          />
         )}
       </YStack>
       </TouchableWithoutFeedback>

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { RecentRecipient } from '@ahub/shared/types';
 
 interface TransferWizardState {
-  step: 'recipient' | 'amount' | 'confirm';
+  step: 'recipient' | 'amount' | 'confirm' | 'receipt';
   recipient: RecentRecipient | null;
   amount: number;
   message: string;

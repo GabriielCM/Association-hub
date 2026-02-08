@@ -145,6 +145,17 @@ api.interceptors.response.use(
       }
     }
 
+    // Extract validation error messages from NestJS response
+    if (error.response?.data) {
+      const data = error.response.data as Record<string, unknown>;
+      const msg = Array.isArray(data.message)
+        ? (data.message as string[]).join(', ')
+        : (data.message as string);
+      if (msg) {
+        return Promise.reject(new Error(msg));
+      }
+    }
+
     return Promise.reject(error);
   }
 );

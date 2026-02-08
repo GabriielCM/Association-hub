@@ -68,6 +68,11 @@ export function ScanResultModal({
     ? (result.data as { recipient: { id: string; name: string; username?: string; avatarUrl?: string }; senderBalance: number } | undefined)
     : undefined;
 
+  // Extract member card user data (admin scan)
+  const memberCardData = result.type === 'member_card' && result.valid && result.data
+    ? (result.data as { user: { id: string; name: string; username?: string; avatarUrl?: string }; card: { cardNumber: string } } | undefined)
+    : undefined;
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.backdrop}>
@@ -94,6 +99,31 @@ export function ScanResultModal({
                   <Text weight="bold" size="lg">
                     {formatPoints(transferData.senderBalance)} pts
                   </Text>
+                </View>
+              </>
+            ) : memberCardData ? (
+              <>
+                <Avatar
+                  src={memberCardData.user.avatarUrl}
+                  name={memberCardData.user.name}
+                  size="xl"
+                />
+                <YStack alignItems="center" gap={2}>
+                  <Heading level={3}>{memberCardData.user.name}</Heading>
+                  {memberCardData.user.username && (
+                    <Text color="secondary" size="sm">
+                      @{memberCardData.user.username}
+                    </Text>
+                  )}
+                </YStack>
+                <View style={styles.cardInfoRow}>
+                  <Text style={{ fontSize: 16 }}>🪪</Text>
+                  <Text color="secondary" size="sm">
+                    {memberCardData.card.cardNumber}
+                  </Text>
+                </View>
+                <View style={styles.successBadge}>
+                  <Text style={styles.successText}>Carteirinha válida</Text>
                 </View>
               </>
             ) : (
@@ -125,7 +155,7 @@ export function ScanResultModal({
             <YStack gap="$2" width="100%" marginTop="$2">
               {result.valid && onAction && (
                 <Button onPress={() => onAction(result)}>
-                  {transferData ? 'Transferir pontos' : 'Continuar'}
+                  {transferData || memberCardData ? 'Transferir pontos' : 'Continuar'}
                 </Button>
               )}
               <Button variant="outline" onPress={onClose}>
@@ -183,5 +213,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center' as const,
     gap: 2,
+  },
+  cardInfoRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
   },
 });

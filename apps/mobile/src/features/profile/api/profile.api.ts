@@ -37,12 +37,15 @@ export async function uploadAvatar(file: {
   type: string;
 }): Promise<AvatarUploadResult> {
   const formData = new FormData();
-  formData.append('file', file as unknown as Blob);
+  formData.append('file', {
+    uri: file.uri,
+    name: file.name,
+    type: file.type,
+  } as unknown as Blob);
 
-  // Don't set Content-Type manually — let the transport layer
-  // add the correct multipart boundary automatically
   const response = await api.post('/user/avatar', formData, {
-    headers: { 'Content-Type': undefined as unknown as string },
+    headers: { 'Content-Type': 'multipart/form-data' },
+    transformRequest: (data) => data,
   });
 
   if (!response.data.success) {

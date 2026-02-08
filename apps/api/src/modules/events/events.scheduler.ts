@@ -37,11 +37,32 @@ export class EventsScheduler {
     }
   }
 
-  // Check event status transitions every minute
+  // Check event status transitions every minute and broadcast changes
   @Cron(CronExpression.EVERY_MINUTE)
   async checkEventTransitions() {
     try {
-      await this.eventsService.transitionEventStatuses();
+      const { toOngoing, toEnded } =
+        await this.eventsService.transitionEventStatuses();
+
+      // Broadcast status changes via WebSocket so Display and admin update in real-time
+      for (const event of toOngoing) {
+        this.eventsGateway.broadcastStatusChange(
+          event.id,
+          'ONGOING',
+          event.isPaused,
+        );
+        this.logger.log(`Event ${event.id} transitioned SCHEDULED -> ONGOING`);
+      }
+
+      for (const event of toEnded) {
+        this.eventsGateway.broadcastStatusChange(
+          event.id,
+          'ENDED',
+          false,
+          'Evento encerrado',
+        );
+        this.logger.log(`Event ${event.id} transitioned ONGOING -> ENDED`);
+      }
     } catch (error) {
       this.logger.error('Error transitioning event statuses:', error);
     }
