@@ -7,7 +7,6 @@ import {
   Body,
   Param,
   Query,
-  Req,
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -27,7 +26,7 @@ import {
   ApiParam,
   ApiConsumes,
 } from '@nestjs/swagger';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { writeFile } from 'fs/promises';
@@ -190,7 +189,6 @@ export class AdminEventsController {
   async uploadBannerFeed(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
-    @Req() req: Request,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -211,9 +209,7 @@ export class AdminEventsController {
     const filePath = join(uploadsDir, fileName);
     await writeFile(filePath, file.buffer);
 
-    const protocol = req.protocol;
-    const host = req.get('host');
-    const bannerUrl = `${protocol}://${host}/uploads/events/${id}/${fileName}`;
+    const bannerUrl = `/uploads/events/${id}/${fileName}`;
 
     const data = await this.eventsService.updateBannerFeed(
       id,
@@ -233,7 +229,6 @@ export class AdminEventsController {
   async uploadBannerDisplay(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
-    @Req() req: Request,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -254,9 +249,7 @@ export class AdminEventsController {
     const filePath = join(uploadsDir, fileName);
     await writeFile(filePath, file.buffer);
 
-    const protocol = req.protocol;
-    const host = req.get('host');
-    const bannerUrl = `${protocol}://${host}/uploads/events/${id}/${fileName}`;
+    const bannerUrl = `/uploads/events/${id}/${fileName}`;
 
     const data = await this.eventsService.addBannerDisplay(
       id,

@@ -3,6 +3,7 @@ import { Image, StyleSheet } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { Text, Heading, Badge } from '@ahub/ui';
 import type { EventDetail } from '@ahub/shared/types';
+import { resolveUploadUrl } from '@/config/constants';
 
 interface EventHeaderProps {
   event: EventDetail;
@@ -33,10 +34,10 @@ export function EventHeader({ event }: EventHeaderProps) {
 
   // Only bannerDisplay images rotate; bannerFeed is a separate static fallback
   const banners = useMemo(
-    () => event.bannerDisplay ?? [],
+    () => (event.bannerDisplay ?? []).map((u) => resolveUploadUrl(u)!),
     [event.bannerDisplay]
   );
-  const fallbackImage = event.bannerFeed;
+  const fallbackImage = resolveUploadUrl(event.bannerFeed);
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -121,7 +122,7 @@ export function EventHeader({ event }: EventHeaderProps) {
       </View>
 
       {/* Title + Status */}
-      <YStack padding="$4" gap="$2">
+      <YStack paddingHorizontal="$4" paddingTop="$3" gap="$2">
         <YStack gap="$1" flexDirection="row" flexWrap="wrap" alignItems="center">
           <Badge
             variant={isOngoing ? 'error' : 'primary'}

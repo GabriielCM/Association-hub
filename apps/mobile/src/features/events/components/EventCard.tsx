@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Image, Pressable, StyleSheet } from 'react-native';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Animated, Pressable, StyleSheet } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
 import { router } from 'expo-router';
 import { Card, Text, Badge } from '@ahub/ui';
 import type { EventListItem } from '@ahub/shared/types';
+import { resolveUploadUrl } from '@/config/constants';
 
 interface EventCardProps {
   event: EventListItem;
@@ -39,17 +40,42 @@ export function EventCard({ event }: EventCardProps) {
 
   // Banner carousel: prefer bannerDisplay array, fallback to bannerFeed
   const banners = useMemo(() => {
-    if (event.bannerDisplay?.length > 0) return event.bannerDisplay;
-    if (event.bannerFeed) return [event.bannerFeed];
+    if (event.bannerDisplay?.length > 0)
+      return event.bannerDisplay.map((u) => resolveUploadUrl(u)!);
+    const feed = resolveUploadUrl(event.bannerFeed);
+    if (feed) return [feed];
     return [];
   }, [event.bannerDisplay, event.bannerFeed]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Animated opacity values for crossfade
+  const opacities = useRef<Animated.Value[]>([]);
+  if (opacities.current.length !== banners.length) {
+    opacities.current = banners.map(
+      (_, i) => new Animated.Value(i === 0 ? 1 : 0),
+    );
+  }
+
   useEffect(() => {
     if (banners.length <= 1) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % banners.length);
+      setCurrentIndex((prev) => {
+        const next = (prev + 1) % banners.length;
+        Animated.parallel([
+          Animated.timing(opacities.current[prev], {
+            toValue: 0,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacities.current[next], {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]).start();
+        return next;
+      });
     }, 4000);
     return () => clearInterval(interval);
   }, [banners.length]);
@@ -63,7 +89,7 @@ export function EventCard({ event }: EventCardProps) {
 
   return (
     <Pressable onPress={handlePress}>
-      <Card variant="elevated" pressable>
+      <Card variant="elevated">
         <YStack gap="$2">
           {/* Banner */}
           {banners.length > 0 ? (
@@ -73,39 +99,17 @@ export function EventCard({ event }: EventCardProps) {
               overflow="hidden"
               backgroundColor="$backgroundHover"
             >
-              <Image
-                source={{ uri: banners[currentIndex] }}
-                style={StyleSheet.absoluteFill}
-                resizeMode="cover"
-              />
-              <View
-                flex={1}
-                backgroundColor={event.color ?? '$backgroundHover'}
-                opacity={0.3}
-              />
-              {/* Dot indicators */}
-              {banners.length > 1 && (
-                <XStack
-                  position="absolute"
-                  bottom={8}
-                  alignSelf="center"
-                  gap={4}
-                >
-                  {banners.map((_, i) => (
-                    <View
-                      key={i}
-                      width={6}
-                      height={6}
-                      borderRadius={3}
-                      backgroundColor={
-                        i === currentIndex
-                          ? 'white'
-                          : 'rgba(255,255,255,0.5)'
-                      }
-                    />
-                  ))}
-                </XStack>
-              )}
+              {banners.map((uri, i) => (
+                <Animated.Image
+                  key={uri}
+                  source={{ uri }}
+                  style={[
+                    StyleSheet.absoluteFill,
+                    { opacity: opacities.current[i] ?? 1 },
+                  ]}
+                  resizeMode="cover"
+                />
+              ))}
             </View>
           ) : (
             <View

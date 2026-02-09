@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,7 +9,7 @@ import * as Haptics from 'expo-haptics';
 import { Text, Heading, Button, Spinner } from '@ahub/ui';
 import { useEvent } from '@/features/events/hooks/useEvents';
 import { useCheckin } from '@/features/events/hooks/useEventMutations';
-import { useEventsStore } from '@/stores/events.store';
+import { useEventsStore, useCheckinCelebration } from '@/stores/events.store';
 import { CelebrationOverlay } from '@/features/events/components/CelebrationOverlay';
 import type { CheckinResponse } from '@ahub/shared/types';
 
@@ -24,6 +24,18 @@ export default function CheckInScreen() {
   const { data: event } = useEvent(eventId);
   const checkinMutation = useCheckin(eventId);
   const showCelebration = useEventsStore((s) => s.showCheckinCelebration);
+  const celebration = useCheckinCelebration();
+  const wasVisible = useRef(false);
+
+  // Auto-close camera screen after celebration overlay dismisses
+  useEffect(() => {
+    if (celebration.visible) {
+      wasVisible.current = true;
+    } else if (wasVisible.current) {
+      wasVisible.current = false;
+      router.back();
+    }
+  }, [celebration.visible]);
 
   const handleBarCodeScanned = useCallback(
     (result: BarcodeScanningResult) => {

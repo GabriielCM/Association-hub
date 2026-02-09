@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useDisplayWebSocket } from '@/features/display/hooks/useDisplayWebSocket';
 import { QRCodeDisplay } from './components/QRCodeDisplay';
+import { resolveUploadUrl } from '@/config/constants';
 
 export default function DisplayPage({
   params,
@@ -14,7 +15,7 @@ export default function DisplayPage({
 
   // Banner rotation (every 10 seconds) with crossfade
   const banners = useMemo(
-    () => data?.event.bannerDisplay ?? [],
+    () => (data?.event.bannerDisplay ?? []).map((u) => resolveUploadUrl(u)!),
     [data?.event.bannerDisplay]
   );
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
@@ -161,12 +162,6 @@ export default function DisplayPage({
         ))}
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative z-10 text-center text-white">
-          {/* Association name */}
-          {association.name && (
-            <p className="mb-6 text-lg font-medium text-white/80">
-              {association.name}
-            </p>
-          )}
           <p className="text-4xl font-bold">{event.title}</p>
           <p className="mt-4 text-2xl text-white/80">
             Evento comeca em
@@ -210,13 +205,6 @@ export default function DisplayPage({
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center gap-8 text-center text-white">
-        {/* Association name */}
-        {association.name && (
-          <p className="text-lg font-medium text-white/80">
-            {association.name}
-          </p>
-        )}
-
         {/* Event title */}
         <div>
           <h1 className="text-4xl font-bold drop-shadow-lg">
@@ -249,9 +237,9 @@ export default function DisplayPage({
             Escaneie para Check-in
           </p>
           <p className="mt-1 text-xl text-white/80">
-            CHECK-IN {currentCheckin.number} de {event.checkinsCount} •{' '}
+            CHECK-IN&apos;s DISPONÍVEIS: {event.checkinsCount} •{' '}
             <span className="font-bold text-yellow-300">
-              +{currentCheckin.points} pontos
+              Total de pontos: {event.pointsTotal}
             </span>
           </p>
         </div>

@@ -102,6 +102,57 @@ async function main() {
     console.log(`   ✅ ${user.email} (${user.role})`);
   }
 
+  // 3.5. Criar plano de assinatura e vincular a um membro
+  console.log('\n💎 Criando plano de assinatura...\n');
+
+  const plan = await prisma.subscriptionPlan.upsert({
+    where: { id: 'seed-plan-premium' },
+    update: { name: 'Premium', priceMonthly: 4990 },
+    create: {
+      id: 'seed-plan-premium',
+      associationId: association.id,
+      name: 'Premium',
+      description: 'Acesso completo com multiplicadores de pontos',
+      priceMonthly: 4990,
+      color: '#8B5CF6',
+      pointsMultiplier: 1.5,
+      storeDiscount: 10,
+      pdvDiscount: 10,
+      spaceDiscount: 15,
+      mutators: {
+        points_events: 1.5,
+        points_strava: 1.5,
+        points_posts: 2.0,
+        discount_store: 10.0,
+        discount_pdv: 10.0,
+        discount_spaces: 15.0,
+        cashback: 10.0,
+      },
+    },
+  });
+  console.log(`   ✅ Plano: ${plan.name} (R$ ${(plan.priceMonthly / 100).toFixed(2)}/mes)`);
+
+  // Vincular membro ao plano
+  const membroUser = await prisma.user.findUnique({ where: { email: 'membro@ahub.test' } });
+  if (membroUser) {
+    const now = new Date();
+    const periodEnd = new Date(now);
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+    await prisma.userSubscription.upsert({
+      where: { userId: membroUser.id },
+      update: { status: 'ACTIVE', planId: plan.id },
+      create: {
+        userId: membroUser.id,
+        planId: plan.id,
+        status: 'ACTIVE',
+        currentPeriodStart: now,
+        currentPeriodEnd: periodEnd,
+      },
+    });
+    console.log(`   ✅ ${membroUser.email} → ${plan.name} (ACTIVE)`);
+  }
+
   // 4. Adicionar 500 pontos para todos os usuários
   console.log('\n💰 Adicionando 500 pontos para todos os usuários...\n');
 

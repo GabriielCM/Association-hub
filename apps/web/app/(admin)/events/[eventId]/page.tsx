@@ -332,6 +332,9 @@ export default function EventDetailPage({
               <tr className="border-b bg-muted/50">
                 <th className="px-4 py-2 text-left font-medium">Nome</th>
                 <th className="px-4 py-2 text-center font-medium">
+                  Plano
+                </th>
+                <th className="px-4 py-2 text-center font-medium">
                   Check-ins
                 </th>
                 <th className="px-4 py-2 text-center font-medium">
@@ -348,10 +351,19 @@ export default function EventDetailPage({
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold">
-                        {p.userName.charAt(0)}
+                        {(p.userName ?? p.userEmail ?? '?').charAt(0)}
                       </div>
-                      {p.userName}
+                      {p.userName ?? p.userEmail ?? 'Usuario'}
                     </div>
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    {p.subscriptionPlan ? (
+                      <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                        {p.subscriptionPlan}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">–</span>
+                    )}
                   </td>
                   <td className="px-4 py-2 text-center">
                     {p.checkIns.length}/{event.checkinsCount}
@@ -367,7 +379,7 @@ export default function EventDetailPage({
               {participants.length === 0 && (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-4 py-6 text-center text-muted-foreground"
                   >
                     Nenhum participante ainda

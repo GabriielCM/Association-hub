@@ -212,12 +212,21 @@ describe('EventsService', () => {
       deleteEventPost: vi.fn().mockResolvedValue(undefined),
     };
 
+    const eventsGateway = {
+      broadcastCounterUpdate: vi.fn(),
+      broadcastQrUpdate: vi.fn(),
+      broadcastCheckinChange: vi.fn(),
+      broadcastStatusChange: vi.fn(),
+      broadcastNewCheckin: vi.fn(),
+    };
+
     service = new EventsService(
       prisma,
       pointsService,
       subscriptionsService,
       notificationsService as any,
       notificationsGateway as any,
+      eventsGateway as any,
       postsService as any,
     );
   });
@@ -1591,23 +1600,24 @@ describe('EventsService', () => {
         associationId: mockAssociationId,
         checkinsCount: 4,
       });
-      prisma.$queryRaw.mockResolvedValueOnce([
-        { id: 'u1', name: 'User 1', email: 'u1@test.com', avatar_url: null },
+      prisma.user.findMany.mockResolvedValue([
+        { id: 'u1', name: 'User 1', email: 'u1@test.com', avatarUrl: null },
       ]);
-      prisma.$queryRaw.mockResolvedValueOnce([{ count: 1 }]);
+      prisma.user.count.mockResolvedValue(1);
       prisma.eventConfirmation.findMany.mockResolvedValue([
         { userId: 'u1', confirmedAt: new Date() },
       ]);
       prisma.eventCheckIn.findMany.mockResolvedValue([
         { userId: 'u1', checkinNumber: 1, pointsAwarded: 25, badgeAwarded: false, createdAt: new Date() },
       ]);
+      prisma.userSubscription.findMany.mockResolvedValue([]);
 
       const result = await service.getParticipants('event-123', mockAssociationId);
 
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].name).toBe('User 1');
-      expect(result.data[0].confirmed).toBe(true);
-      expect(result.data[0].checkInsCompleted).toBe(1);
+      expect(result.data[0].userName).toBe('User 1');
+      expect(result.data[0].confirmedAt).toBeTruthy();
+      expect(result.data[0].checkIns).toEqual([1]);
     });
 
     it('should throw NotFoundException for non-existent event', async () => {

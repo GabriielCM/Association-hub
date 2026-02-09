@@ -11,6 +11,7 @@ import {
   uploadBannerDisplay,
   removeBannerDisplay,
 } from '@/lib/api/events.api';
+import { resolveUploadUrl } from '@/config/constants';
 
 const categoryOptions = [
   { value: 'SOCIAL', label: 'Social' },
@@ -208,7 +209,7 @@ export default function EditEventPage({
           {bannerFeedUrl ? (
             <div className="relative inline-block">
               <img
-                src={bannerFeedUrl}
+                src={resolveUploadUrl(bannerFeedUrl) ?? ''}
                 alt="Banner feed"
                 className="h-32 w-auto rounded-lg border object-cover"
               />
@@ -283,7 +284,7 @@ export default function EditEventPage({
             {bannerDisplayUrls.map((url, index) => (
               <div key={index} className="relative">
                 <img
-                  src={url}
+                  src={resolveUploadUrl(url) ?? ''}
                   alt={`Display ${index + 1}`}
                   className="h-24 w-40 rounded-lg border object-cover"
                 />

@@ -12,6 +12,7 @@ import { PointsService } from '../points/points.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { EventsGateway } from './events.gateway';
 import { PostsService } from '../dashboard/services/posts.service';
 import { EventStatus, Prisma, NotificationCategory, NotificationType, PostType } from '@prisma/client';
 import { createHmac, randomBytes } from 'crypto';
@@ -37,6 +38,7 @@ export class EventsService {
     private readonly subscriptionsService: SubscriptionsService,
     private readonly notificationsService: NotificationsService,
     private readonly notificationsGateway: NotificationsGateway,
+    private readonly eventsGateway: EventsGateway,
     @Inject(forwardRef(() => PostsService))
     private readonly postsService: PostsService,
   ) {}
@@ -129,6 +131,7 @@ export class EventsService {
         endDate: event.endDate,
         locationName: event.locationName,
         bannerFeed: event.bannerFeed,
+        bannerDisplay: event.bannerDisplay,
         pointsTotal: event.pointsTotal,
         checkinsCount: event.checkinsCount,
         status: event.status,
@@ -186,8 +189,8 @@ export class EventsService {
       throw new NotFoundException('Evento nao encontrado');
     }
 
-    // Calculate current check-in number based on time
-    const currentCheckinNumber = this.calculateCurrentCheckinNumber(event);
+    // User's next sequential check-in number (capped at total)
+    const currentCheckinNumber = Math.min(event.checkIns.length + 1, event.checkinsCount);
 
     return {
       id: event.id,
@@ -302,6 +305,7 @@ export class EventsService {
         title: true,
         status: true,
         isPaused: true,
+        startDate: true,
         pointsTotal: true,
         checkinsCount: true,
         checkinInterval: true,
@@ -325,13 +329,7 @@ export class EventsService {
       throw new BadRequestException('Check-ins estao temporariamente pausados');
     }
 
-    // 3. Validate check-in number
-    const currentCheckinNumber = this.calculateCurrentCheckinNumber(event as any);
-    if (checkinNumber !== currentCheckinNumber) {
-      throw new BadRequestException(`Check-in ${checkinNumber} nao esta disponivel. Check-in atual: ${currentCheckinNumber}`);
-    }
-
-    // 4. Validate security token (HMAC-SHA256)
+    // 3. Validate security token (HMAC-SHA256)
     const now = Math.floor(Date.now() / 1000);
     const tokenAge = now - timestamp;
 
@@ -344,42 +342,34 @@ export class EventsService {
       throw new BadRequestException('QR Code invalido');
     }
 
-    // 5. Check if user already did this check-in
-    const existingCheckin = await this.prisma.eventCheckIn.findUnique({
-      where: {
-        eventId_userId_checkinNumber: {
-          eventId,
-          userId,
-          checkinNumber,
-        },
-      },
+    // 4. Determine user's next sequential check-in number
+    const userCheckins = await this.prisma.eventCheckIn.findMany({
+      where: { eventId, userId },
+      orderBy: { createdAt: 'desc' },
+      select: { checkinNumber: true, createdAt: true },
     });
-
-    if (existingCheckin) {
-      throw new BadRequestException(`Voce ja fez o check-in ${checkinNumber}`);
+    // Find next available sequential number (handles legacy data gaps)
+    const existingNumbers = new Set(userCheckins.map(c => c.checkinNumber));
+    let userNextCheckin = 1;
+    while (existingNumbers.has(userNextCheckin)) {
+      userNextCheckin++;
     }
 
-    // 6. Check interval since last check-in
-    if (checkinNumber > 1) {
-      const lastCheckin = await this.prisma.eventCheckIn.findFirst({
-        where: {
-          eventId,
-          userId,
-          checkinNumber: checkinNumber - 1,
-        },
-        select: { createdAt: true },
-      });
+    if (userNextCheckin > event.checkinsCount) {
+      throw new BadRequestException('Voce ja completou todos os check-ins');
+    }
 
-      if (lastCheckin) {
-        const minsSinceLastCheckin = (Date.now() - lastCheckin.createdAt.getTime()) / (1000 * 60);
-        if (minsSinceLastCheckin < event.checkinInterval) {
-          const remaining = Math.ceil(event.checkinInterval - minsSinceLastCheckin);
-          throw new BadRequestException(`Aguarde ${remaining} minutos para o proximo check-in`);
-        }
+    // 5. Check interval since user's last check-in
+    if (userCheckins.length > 0) {
+      const lastCheckin = userCheckins[0]; // most recent (ordered desc)
+      const minsSinceLast = (Date.now() - lastCheckin.createdAt.getTime()) / (1000 * 60);
+      if (minsSinceLast < event.checkinInterval) {
+        const remaining = Math.ceil(event.checkinInterval - minsSinceLast);
+        throw new BadRequestException(`Aguarde ${remaining} minutos para o proximo check-in`);
       }
     }
 
-    // 7. Calculate points with subscription multiplier
+    // 6. Calculate points with subscription multiplier
     const basePoints = Math.floor(event.pointsTotal / event.checkinsCount);
     let finalPoints = basePoints;
 
@@ -391,14 +381,14 @@ export class EventsService {
       // User has no subscription, use base points
     }
 
-    // 8. Execute check-in in transaction
+    // 7. Execute check-in in transaction
     const result = await this.prisma.$transaction(async (tx) => {
-      // Create check-in record
+      // Create check-in record with sequential number
       const checkIn = await tx.eventCheckIn.create({
         data: {
           eventId,
           userId,
-          checkinNumber,
+          checkinNumber: userNextCheckin,
           pointsAwarded: finalPoints,
         },
       });
@@ -408,8 +398,8 @@ export class EventsService {
         userId,
         finalPoints,
         'EVENT_CHECKIN',
-        `Check-in ${checkinNumber} - ${event.title}`,
-        { event_id: eventId, checkin_number: checkinNumber },
+        `Check-in ${userNextCheckin} - ${event.title}`,
+        { event_id: eventId, checkin_number: userNextCheckin },
         eventId,
       );
 
@@ -430,20 +420,29 @@ export class EventsService {
       return { checkIn, badgeAwarded };
     });
 
-    // 9. Get user's progress
-    const totalUserCheckins = await this.prisma.eventCheckIn.count({
-      where: { eventId, userId },
-    });
+    // Broadcast counter update to display via WebSocket
+    try {
+      const [totalCheckIns, uniqueUsers] = await Promise.all([
+        this.prisma.eventCheckIn.count({ where: { eventId } }),
+        this.prisma.eventCheckIn.groupBy({
+          by: ['userId'],
+          where: { eventId },
+        }).then((groups) => groups.length),
+      ]);
+      this.eventsGateway.broadcastCounterUpdate(eventId, totalCheckIns, uniqueUsers);
+    } catch (err) {
+      this.logger.warn(`Failed to broadcast counter update: ${err}`);
+    }
 
     return {
       success: true,
-      checkinNumber,
+      checkinNumber: userNextCheckin,
       pointsAwarded: finalPoints,
       badgeAwarded: result.badgeAwarded,
       progress: {
-        completed: totalUserCheckins,
+        completed: userCheckins.length + 1,
         total: event.checkinsCount,
-        percentage: Math.round((totalUserCheckins / event.checkinsCount) * 100),
+        percentage: Math.round(((userCheckins.length + 1) / event.checkinsCount) * 100),
       },
     };
   }
@@ -572,7 +571,7 @@ export class EventsService {
         id: c.id,
         text: c.text,
         createdAt: c.createdAt,
-        user: c.user,
+        author: c.user,
       })),
       meta: {
         currentPage: page,
@@ -1251,29 +1250,28 @@ export class EventsService {
 
     const skip = (page - 1) * perPage;
 
-    // Get all users who have check-ins or confirmations
-    const [participants, total] = await Promise.all([
-      this.prisma.$queryRaw`
-        SELECT DISTINCT u.id, u.name, u.email, u.avatar_url
-        FROM users u
-        LEFT JOIN event_confirmations ec ON ec.user_id = u.id AND ec.event_id = ${eventId}
-        LEFT JOIN event_checkins eci ON eci.user_id = u.id AND eci.event_id = ${eventId}
-        WHERE ec.id IS NOT NULL OR eci.id IS NOT NULL
-        ORDER BY u.name
-        LIMIT ${perPage} OFFSET ${skip}
-      ` as Promise<Array<{ id: string; name: string; email: string; avatar_url: string }>>,
-      this.prisma.$queryRaw`
-        SELECT COUNT(DISTINCT u.id)::int as count
-        FROM users u
-        LEFT JOIN event_confirmations ec ON ec.user_id = u.id AND ec.event_id = ${eventId}
-        LEFT JOIN event_checkins eci ON eci.user_id = u.id AND eci.event_id = ${eventId}
-        WHERE ec.id IS NOT NULL OR eci.id IS NOT NULL
-      ` as Promise<Array<{ count: number }>>,
+    // Get all users who have check-ins or confirmations (Prisma Client)
+    const participantWhere = {
+      OR: [
+        { eventConfirmations: { some: { eventId } } },
+        { eventCheckIns: { some: { eventId } } },
+      ],
+    };
+
+    const [participants, totalCount] = await Promise.all([
+      this.prisma.user.findMany({
+        where: participantWhere,
+        select: { id: true, name: true, email: true, avatarUrl: true },
+        orderBy: { name: 'asc' },
+        take: perPage,
+        skip,
+      }),
+      this.prisma.user.count({ where: participantWhere }),
     ]);
 
-    // Get check-ins for each participant
+    // Get check-ins, confirmations, and subscriptions for each participant
     const participantIds = participants.map((p) => p.id);
-    const [confirmations, checkIns] = await Promise.all([
+    const [confirmations, checkIns, subscriptions] = await Promise.all([
       this.prisma.eventConfirmation.findMany({
         where: { eventId, userId: { in: participantIds } },
         select: { userId: true, confirmedAt: true },
@@ -1289,6 +1287,16 @@ export class EventsService {
         },
         orderBy: { checkinNumber: 'asc' },
       }),
+      this.prisma.userSubscription.findMany({
+        where: {
+          userId: { in: participantIds },
+          status: 'ACTIVE',
+        },
+        select: {
+          userId: true,
+          plan: { select: { name: true } },
+        },
+      }),
     ]);
 
     const confirmationMap = new Map(confirmations.map((c) => [c.userId, c]));
@@ -1299,30 +1307,31 @@ export class EventsService {
       }
       checkInsMap.get(ci.userId)!.push(ci);
     }
+    const subscriptionMap = new Map(
+      subscriptions.map((s) => [s.userId, s.plan.name]),
+    );
 
     return {
       data: participants.map((p) => {
         const userCheckIns = checkInsMap.get(p.id) || [];
         const confirmation = confirmationMap.get(p.id);
         return {
-          id: p.id,
-          name: p.name,
-          email: p.email,
-          avatarUrl: p.avatar_url,
-          confirmed: !!confirmation,
+          userId: p.id,
+          userName: p.name,
+          userEmail: p.email,
+          userAvatar: p.avatarUrl,
           confirmedAt: confirmation?.confirmedAt || null,
-          checkInsCompleted: userCheckIns.length,
-          totalCheckIns: event.checkinsCount,
+          checkIns: userCheckIns.map((ci) => ci.checkinNumber),
           totalPoints: userCheckIns.reduce((sum, ci) => sum + ci.pointsAwarded, 0),
-          badgeAwarded: userCheckIns.some((ci) => ci.badgeAwarded),
-          checkIns: userCheckIns,
+          hasBadge: userCheckIns.some((ci) => ci.badgeAwarded),
+          subscriptionPlan: subscriptionMap.get(p.id) || null,
         };
       }),
       meta: {
         currentPage: page,
         perPage,
-        totalPages: Math.ceil((total[0]?.count || 0) / perPage),
-        totalCount: total[0]?.count || 0,
+        totalPages: Math.ceil(totalCount / perPage),
+        totalCount,
       },
     };
   }
@@ -1361,35 +1370,45 @@ export class EventsService {
 
   // Used by DisplayService
   async getEventForDisplay(eventId: string) {
-    return this.prisma.event.findUnique({
-      where: { id: eventId },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        category: true,
-        color: true,
-        startDate: true,
-        endDate: true,
-        locationName: true,
-        bannerDisplay: true,
-        pointsTotal: true,
-        checkinsCount: true,
-        checkinInterval: true,
-        status: true,
-        isPaused: true,
-        qrSecret: true,
-        association: {
-          select: {
-            name: true,
-            logoUrl: true,
+    const [event, uniqueUsersGroups] = await Promise.all([
+      this.prisma.event.findUnique({
+        where: { id: eventId },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          category: true,
+          color: true,
+          startDate: true,
+          endDate: true,
+          locationName: true,
+          bannerDisplay: true,
+          pointsTotal: true,
+          checkinsCount: true,
+          checkinInterval: true,
+          status: true,
+          isPaused: true,
+          qrSecret: true,
+          association: {
+            select: {
+              name: true,
+              logoUrl: true,
+            },
           },
         },
-        _count: {
-          select: { checkIns: true },
-        },
-      },
-    });
+      }),
+      this.prisma.eventCheckIn.groupBy({
+        by: ['userId'],
+        where: { eventId },
+      }),
+    ]);
+
+    if (!event) return null;
+
+    return {
+      ...event,
+      _count: { checkIns: uniqueUsersGroups.length },
+    };
   }
 
   async getOngoingEvents(associationId?: string) {
@@ -1559,7 +1578,7 @@ export class EventsService {
     const data = await this.getParticipants(eventId, associationId, 1, 10000);
 
     // CSV Header
-    const headers = ['Nome', 'Email', 'Confirmado', 'Data Confirmacao', 'Check-ins', 'Pontos', 'Badge'];
+    const headers = ['Nome', 'Email', 'Plano', 'Confirmado', 'Data Confirmacao', 'Check-ins', 'Pontos', 'Badge'];
 
     // CSV Rows
     const rows = data.data.map((p) => {
@@ -1567,13 +1586,14 @@ export class EventsService {
         ? new Date(p.confirmedAt).toLocaleString('pt-BR')
         : '';
       return [
-        `"${p.name.replace(/"/g, '""')}"`,
-        p.email,
-        p.confirmed ? 'Sim' : 'Nao',
+        `"${p.userName.replace(/"/g, '""')}"`,
+        p.userEmail,
+        p.subscriptionPlan || '',
+        p.confirmedAt ? 'Sim' : 'Nao',
         confirmedAt,
-        `${p.checkInsCompleted}/${p.totalCheckIns}`,
+        `${p.checkIns.length}/${event.checkinsCount}`,
         p.totalPoints,
-        p.badgeAwarded ? 'Sim' : 'Nao',
+        p.hasBadge ? 'Sim' : 'Nao',
       ].join(',');
     });
 
@@ -1727,6 +1747,7 @@ export class EventsService {
       <tr>
         <th>Nome</th>
         <th>Email</th>
+        <th>Plano</th>
         <th>Confirmado</th>
         <th>Check-ins</th>
         <th>Pontos</th>
@@ -1738,12 +1759,13 @@ export class EventsService {
         .map(
           (p) => `
         <tr>
-          <td>${p.name}</td>
-          <td>${p.email}</td>
-          <td>${p.confirmed ? 'Sim' : 'Nao'}</td>
-          <td>${p.checkInsCompleted}/${p.totalCheckIns}</td>
+          <td>${p.userName}</td>
+          <td>${p.userEmail}</td>
+          <td>${p.subscriptionPlan || '–'}</td>
+          <td>${p.confirmedAt ? 'Sim' : 'Nao'}</td>
+          <td>${p.checkIns.length}/${event.checkinsCount}</td>
           <td>${p.totalPoints}</td>
-          <td class="${p.badgeAwarded ? 'badge-yes' : 'badge-no'}">${p.badgeAwarded ? 'Sim' : 'Nao'}</td>
+          <td class="${p.hasBadge ? 'badge-yes' : 'badge-no'}">${p.hasBadge ? 'Sim' : 'Nao'}</td>
         </tr>
       `,
         )

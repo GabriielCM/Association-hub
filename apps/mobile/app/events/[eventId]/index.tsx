@@ -75,7 +75,7 @@ export default function EventDetailScreen() {
             <Card variant="flat">
               <YStack padding="$3">
                 <CheckInProgress
-                  completed={event.userCheckInsCompleted}
+                  completedCheckins={event.userCheckIns.map(ci => ci.checkinNumber)}
                   total={event.checkinsCount}
                   pointsTotal={event.pointsTotal}
                 />

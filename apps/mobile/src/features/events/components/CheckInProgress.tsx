@@ -2,16 +2,18 @@ import { XStack, YStack, View } from 'tamagui';
 import { Text } from '@ahub/ui';
 
 interface CheckInProgressProps {
-  completed: number;
+  completedCheckins: number[];
   total: number;
   pointsTotal: number;
 }
 
 export function CheckInProgress({
-  completed,
+  completedCheckins,
   total,
   pointsTotal,
 }: CheckInProgressProps) {
+  const completed = completedCheckins.length;
+  const completedSet = new Set(completedCheckins);
   const percentage = total > 0 ? (completed / total) * 100 : 0;
   const pointsEarned = total > 0
     ? Math.floor((completed / total) * pointsTotal)
@@ -52,7 +54,7 @@ export function CheckInProgress({
             height={24}
             borderRadius="$full"
             backgroundColor={
-              i < completed ? '$primary' : '$backgroundHover'
+              completedSet.has(i + 1) ? '$primary' : '$backgroundHover'
             }
             alignItems="center"
             justifyContent="center"
@@ -60,7 +62,7 @@ export function CheckInProgress({
             <Text
               size="xs"
               style={{
-                color: i < completed ? '#fff' : undefined,
+                color: completedSet.has(i + 1) ? '#fff' : undefined,
               }}
             >
               {i + 1}

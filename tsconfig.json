@@ -39,5 +39,6 @@
     "build",
     ".next",
     ".expo"
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }

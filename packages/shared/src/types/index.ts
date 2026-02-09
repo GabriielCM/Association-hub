@@ -822,11 +822,13 @@ export interface EventAnalytics {
 export interface EventParticipant {
   userId: string;
   userName: string;
+  userEmail: string;
   userAvatar: string | null;
   confirmedAt: Date | null;
   checkIns: number[];
   totalPoints: number;
   hasBadge: boolean;
+  subscriptionPlan: string | null;
 }
 
 // Display types

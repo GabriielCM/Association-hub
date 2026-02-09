@@ -1,4 +1,5 @@
-import { XStack, YStack } from 'tamagui';
+import { useState, useEffect } from 'react';
+import { XStack, YStack, View } from 'tamagui';
 import { Text, Card } from '@ahub/ui';
 import type { EventDetail } from '@ahub/shared/types';
 
@@ -24,14 +25,61 @@ function formatTime(date: Date): string {
   });
 }
 
+function formatCountdown(ms: number): string {
+  const totalMinutes = Math.floor(ms / 60_000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0 || parts.length === 0) parts.push(`${minutes}min`);
+  return parts.join(' ');
+}
+
+function EventCountdown({ startDate }: { startDate: Date }) {
+  const [now, setNow] = useState(Date.now());
+  const target = new Date(startDate).getTime();
+  const remaining = Math.max(0, target - now);
+
+  useEffect(() => {
+    if (remaining <= 0) return;
+    const interval = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(interval);
+  }, [remaining > 0]);
+
+  if (remaining <= 0) return null;
+
+  return (
+    <View
+      backgroundColor="$primary"
+      borderRadius="$md"
+      paddingVertical="$2"
+      paddingHorizontal="$3"
+      alignItems="center"
+    >
+      <Text style={{ color: '#fff' }} weight="bold" size="sm">
+        Comeca em {formatCountdown(remaining)}
+      </Text>
+    </View>
+  );
+}
+
 export function EventInfo({ event }: EventInfoProps) {
   const pointsPerCheckin = Math.floor(
     event.pointsTotal / event.checkinsCount
   );
+  const showCountdown =
+    event.status === 'SCHEDULED' &&
+    new Date(event.startDate).getTime() > Date.now();
 
   return (
     <Card variant="flat">
       <YStack gap="$3" padding="$1">
+        {/* Countdown */}
+        {showCountdown && <EventCountdown startDate={event.startDate} />}
+
         {/* Date & Time */}
         <XStack gap="$3" alignItems="flex-start">
           <Text style={{ fontSize: 20 }}>📅</Text>

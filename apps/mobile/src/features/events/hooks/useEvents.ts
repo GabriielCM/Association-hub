@@ -28,7 +28,8 @@ export function useEvent(eventId: string) {
   return useQuery<EventDetail>({
     queryKey: eventsKeys.detail(eventId),
     queryFn: () => getEvent(eventId),
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000, // Poll for status changes (SCHEDULED→ONGOING)
     enabled: !!eventId,
   });
 }

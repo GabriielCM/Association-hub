@@ -161,7 +161,7 @@ export function useDisplayWebSocket(
           prev
             ? {
                 ...prev,
-                stats: { totalCheckIns: payload.total },
+                stats: { totalCheckIns: payload.unique_users },
               }
             : prev
         );
