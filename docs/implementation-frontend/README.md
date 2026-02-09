@@ -15,7 +15,9 @@ Este plano cobre a implementação completa do frontend do A-hub:
 - **Backend:** 100% implementado (19 módulos NestJS, 100+ endpoints)
 - **Frontend Fase 0:** ✅ Completa (Auth, Design System, API Client, WebSocket)
 - **Frontend Fase 1:** ✅ Completa (Pontos + Assinaturas + Rankings + WebSocket real-time)
-- **Frontend Fases 2-8:** Pendente
+- **Frontend Fase 2:** ✅ Completa (Perfil + Carteirinha + Minha Carteira)
+- **Frontend Fase 3:** ✅ Completa (Eventos + Check-in + Display)
+- **Frontend Fases 4-8:** Pendente
 - **Shared:** packages/shared/ tem types, validation schemas e utils prontos
 
 ## Stack Tecnológica
