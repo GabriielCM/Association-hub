@@ -30,6 +30,7 @@ export type SocketEvent =
   | 'message.deleted'
   | 'message.reaction'
   | 'typing.update'
+  | 'recording.update'
   | 'presence.update'
   | 'conversation.update';
 
@@ -160,6 +161,10 @@ export async function initSocket(userId?: string, userName?: string): Promise<So
 
   socket.on('typing.update', (data) => {
     notifyListeners('typing.update', data);
+  });
+
+  socket.on('recording.update', (data) => {
+    notifyListeners('recording.update', data);
   });
 
   socket.on('presence.update', (data) => {

@@ -67,7 +67,7 @@ export class MessagesController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif|webp|mp3|m4a|ogg)$/ }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif|webp|mp3|m4a|mp4|mpeg|ogg)$/ }),
         ],
       }),
     )

@@ -17,7 +17,8 @@ Este plano cobre a implementação completa do frontend do A-hub:
 - **Frontend Fase 1:** ✅ Completa (Pontos + Assinaturas + Rankings + WebSocket real-time)
 - **Frontend Fase 2:** ✅ Completa (Perfil + Carteirinha + Minha Carteira)
 - **Frontend Fase 3:** ✅ Completa (Eventos + Check-in + Display)
-- **Frontend Fases 4-8:** Pendente
+- **Frontend Fase 4:** ✅ Completa (Notificacoes + Mensagens + WebSocket)
+- **Frontend Fases 5-8:** Pendente
 - **Shared:** packages/shared/ tem types, validation schemas e utils prontos
 
 ## Stack Tecnológica
@@ -44,9 +45,9 @@ Este plano cobre a implementação completa do frontend do A-hub:
 |------|------|--------------|---------|--------|
 | [Fase 0](./fase-00-infraestrutura.md) | Infraestrutura (Auth, Design System, API, WebSocket) | Alta | 2-3 semanas | ✅ Completa |
 | [Fase 1](./fase-01-core.md) | Core (Pontos + Assinaturas) | Alta | 2-3 semanas | ✅ Completa |
-| [Fase 2](./fase-02-identidade.md) | Identidade (Perfil + Carteirinha + Carteira) | Média | 2 semanas | Pendente |
-| [Fase 3](./fase-03-eventos.md) | Engajamento (Eventos + Check-in + Display) | Alta | 2-3 semanas | Pendente |
-| [Fase 4](./fase-04-comunicacao.md) | Comunicação (Notificações + Mensagens) | Alta | 2-3 semanas | Pendente |
+| [Fase 2](./fase-02-identidade.md) | Identidade (Perfil + Carteirinha + Carteira) | Média | 2 semanas | ✅ Completa |
+| [Fase 3](./fase-03-eventos.md) | Engajamento (Eventos + Check-in + Display) | Alta | 2-3 semanas | ✅ Completa |
+| [Fase 4](./fase-04-comunicacao.md) | Comunicação (Notificações + Mensagens) | Alta | 2-3 semanas | ✅ Completa |
 | [Fase 5](./fase-05-transacoes.md) | Transações (PDV + Loja) | Alta | 3-4 semanas | Pendente |
 | [Fase 6](./fase-06-locacoes.md) | Locações (Espaços + Reservas) | Média | 2 semanas | Pendente |
 | [Fase 7](./fase-07-unificacao.md) | Unificação (Pedidos + Suporte + Rankings) | Média | 2-3 semanas | Pendente |

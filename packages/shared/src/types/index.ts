@@ -1183,6 +1183,15 @@ export interface WsTypingUpdate {
   isTyping: boolean;
 }
 
+export interface WsRecordingUpdate {
+  conversationId: string;
+  user: {
+    id: string;
+    name: string;
+  };
+  isRecording: boolean;
+}
+
 export interface WsPresenceUpdate {
   userId: string;
   isOnline: boolean;

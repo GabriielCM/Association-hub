@@ -27,7 +27,7 @@ export function ConversationsScreen() {
     isRefetching,
   } = useConversations();
 
-  const { presenceMap, typingMap } = usePresence();
+  const { presenceMap, typingMap, recordingMap } = usePresence();
 
   const conversations = conversationsData?.data ?? [];
 
@@ -55,9 +55,10 @@ export function ConversationsScreen() {
         {...(user?.id != null ? { currentUserId: user.id } : {})}
         presenceMap={presenceMap}
         {...(typingMap.has(item.id) ? { typingUsers: typingMap.get(item.id) } : {})}
+        {...(recordingMap.has(item.id) ? { recordingUsers: recordingMap.get(item.id) } : {})}
       />
     ),
-    [user?.id, presenceMap, typingMap]
+    [user?.id, presenceMap, typingMap, recordingMap]
   );
 
   return (

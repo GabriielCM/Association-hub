@@ -7,6 +7,7 @@ import type {
   WsMessageDelivered,
   WsMessageRead,
   WsTypingUpdate,
+  WsRecordingUpdate,
   WsPresenceUpdate,
   MessagesListResponse,
   Message,
@@ -29,6 +30,7 @@ export function useMessageWebSocket(conversationId: string) {
   const queryClient = useQueryClient();
   const { emit, isConnected } = useWebSocket();
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
+  const [recordingUsers, setRecordingUsers] = useState<TypingUser[]>([]);
   const [presenceMap, setPresenceMap] = useState<Map<string, PresenceInfo>>(
     new Map()
   );
@@ -234,6 +236,29 @@ export function useMessageWebSocket(conversationId: string) {
     [conversationId]
   );
 
+  const handleRecordingUpdate = useCallback(
+    (data: unknown) => {
+      const event = data as WsRecordingUpdate & { userId?: string };
+
+      if (event.conversationId !== conversationId) return;
+
+      const userId = event.user?.id ?? event.userId ?? '';
+      const userName = event.user?.name ?? '';
+
+      if (!userId) return;
+
+      setRecordingUsers((prev) => {
+        if (event.isRecording) {
+          const exists = prev.some((u) => u.id === userId);
+          if (exists) return prev;
+          return [...prev, { id: userId, name: userName }];
+        }
+        return prev.filter((u) => u.id !== userId);
+      });
+    },
+    [conversationId]
+  );
+
   const handlePresenceUpdate = useCallback((data: unknown) => {
     const event = data as WsPresenceUpdate;
 
@@ -254,7 +279,8 @@ export function useMessageWebSocket(conversationId: string) {
   useSocketEvent('message.deleted', handleMessageDeleted);
   useSocketEvent('message.reaction', handleMessageReaction);
   useSocketEvent('typing.update', handleTypingUpdate);
+  useSocketEvent('recording.update', handleRecordingUpdate);
   useSocketEvent('presence.update', handlePresenceUpdate);
 
-  return { typingUsers, presenceMap };
+  return { typingUsers, recordingUsers, presenceMap };
 }

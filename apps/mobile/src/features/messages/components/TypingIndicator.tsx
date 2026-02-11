@@ -5,6 +5,7 @@ import { Text } from '@ahub/ui';
 
 interface TypingIndicatorProps {
   typingUsers: { id: string; name: string }[];
+  recordingUsers?: { id: string; name: string }[];
 }
 
 function DotAnimation() {
@@ -73,33 +74,85 @@ function DotAnimation() {
   );
 }
 
-export function TypingIndicator({ typingUsers }: TypingIndicatorProps) {
-  if (typingUsers.length === 0) return null;
+function MicPulse() {
+  const pulse = useRef(new Animated.Value(1)).current;
 
-  const names = typingUsers.map((u) => u.name.split(' ')[0]);
-  let label: string;
-
-  if (names.length === 1) {
-    label = `${names[0]} está digitando`;
-  } else if (names.length === 2) {
-    label = `${names[0]} e ${names[1]} estão digitando`;
-  } else {
-    label = `${names[0]} e mais ${names.length - 1} estão digitando`;
-  }
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 0.4,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [pulse]);
 
   return (
-    <XStack
-      alignItems="center"
-      gap="$1"
-      paddingHorizontal="$3"
-      paddingVertical="$1"
-    >
-      <DotAnimation />
-      <Text color="secondary" size="xs" style={{ fontStyle: 'italic' }}>
-        {label}
-      </Text>
-    </XStack>
+    <Animated.Text style={{ opacity: pulse, fontSize: 12 }}>
+      🎤
+    </Animated.Text>
   );
+}
+
+export function TypingIndicator({ typingUsers, recordingUsers = [] }: TypingIndicatorProps) {
+  const hasRecording = recordingUsers.length > 0;
+  const hasTyping = typingUsers.length > 0;
+
+  if (!hasRecording && !hasTyping) return null;
+
+  return (
+    <>
+      {hasRecording && (
+        <XStack
+          alignItems="center"
+          gap="$1"
+          paddingHorizontal="$3"
+          paddingVertical="$1"
+        >
+          <MicPulse />
+          <Text color="primary" size="xs" style={{ fontStyle: 'italic' }}>
+            {formatRecordingLabel(recordingUsers)}
+          </Text>
+        </XStack>
+      )}
+      {hasTyping && (
+        <XStack
+          alignItems="center"
+          gap="$1"
+          paddingHorizontal="$3"
+          paddingVertical="$1"
+        >
+          <DotAnimation />
+          <Text color="secondary" size="xs" style={{ fontStyle: 'italic' }}>
+            {formatTypingLabel(typingUsers)}
+          </Text>
+        </XStack>
+      )}
+    </>
+  );
+}
+
+function formatTypingLabel(users: { id: string; name: string }[]): string {
+  const names = users.map((u) => u.name.split(' ')[0]);
+  if (names.length === 1) return `${names[0]} está digitando`;
+  if (names.length === 2) return `${names[0]} e ${names[1]} estão digitando`;
+  return `${names[0]} e mais ${names.length - 1} estão digitando`;
+}
+
+function formatRecordingLabel(users: { id: string; name: string }[]): string {
+  const names = users.map((u) => u.name.split(' ')[0]);
+  if (names.length === 1) return `${names[0]} está gravando áudio`;
+  if (names.length === 2) return `${names[0]} e ${names[1]} estão gravando áudio`;
+  return `${names[0]} e mais ${names.length - 1} gravando áudio`;
 }
 
 const styles = StyleSheet.create({

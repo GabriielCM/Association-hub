@@ -38,6 +38,7 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   private socketUsers: Map<string, string> = new Map();
   private userNames: Map<string, string> = new Map();
   private typingUsers: Map<string, Map<string, NodeJS.Timeout>> = new Map(); // conversationId -> userId -> timeout
+  private recordingUsers: Map<string, Map<string, NodeJS.Timeout>> = new Map(); // conversationId -> userId -> timeout
   private disconnectTimers: Map<string, NodeJS.Timeout> = new Map();
 
   private static readonly DISCONNECT_GRACE_PERIOD = 15_000; // 15 seconds
@@ -176,6 +177,48 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     this.stopTyping(payload.conversationId, userId);
   }
 
+  @SubscribeMessage(MESSAGE_EVENTS.RECORDING_START)
+  handleRecordingStart(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: TypingPayload
+  ) {
+    const userId = this.socketUsers.get(client.id);
+    if (!userId) return;
+
+    const { conversationId } = payload;
+
+    if (!this.recordingUsers.has(conversationId)) {
+      this.recordingUsers.set(conversationId, new Map());
+    }
+
+    const conversationRecording = this.recordingUsers.get(conversationId)!;
+
+    if (conversationRecording.has(userId)) {
+      clearTimeout(conversationRecording.get(userId)!);
+    }
+
+    // Auto-stop after 30s (recordings can be longer than typing)
+    const timeout = setTimeout(() => {
+      this.stopRecordingUser(conversationId, userId);
+    }, 30000);
+
+    conversationRecording.set(userId, timeout);
+
+    const userName = this.userNames.get(userId) ?? '';
+    this.broadcastRecordingUpdate(conversationId, userId, userName, true, this.getUserSocketIds(userId));
+  }
+
+  @SubscribeMessage(MESSAGE_EVENTS.RECORDING_STOP)
+  handleRecordingStop(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: TypingPayload
+  ) {
+    const userId = this.socketUsers.get(client.id);
+    if (!userId) return;
+
+    this.stopRecordingUser(payload.conversationId, userId);
+  }
+
   @SubscribeMessage(MESSAGE_EVENTS.MARK_READ)
   handleMarkRead(
     @ConnectedSocket() client: Socket,
@@ -283,6 +326,30 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   /**
+   * Broadcast recording indicator (excluding the sender's sockets)
+   */
+  broadcastRecordingUpdate(
+    conversationId: string,
+    userId: string,
+    userName: string,
+    isRecording: boolean,
+    excludeSocketIds?: Set<string>,
+  ) {
+    const room = `conversation:${conversationId}`;
+    const payload = {
+      conversationId,
+      user: { id: userId, name: userName },
+      isRecording,
+    };
+
+    if (excludeSocketIds && excludeSocketIds.size > 0) {
+      this.server.to(room).except([...excludeSocketIds]).emit(MESSAGE_EVENTS.RECORDING_UPDATE, payload);
+    } else {
+      this.server.to(room).emit(MESSAGE_EVENTS.RECORDING_UPDATE, payload);
+    }
+  }
+
+  /**
    * Broadcast user presence (online/offline)
    */
   broadcastPresenceUpdate(userId: string, isOnline: boolean) {
@@ -368,6 +435,16 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
       conversationTyping.delete(userId);
       const userName = this.userNames.get(userId) ?? '';
       this.broadcastTypingUpdate(conversationId, userId, userName, false, this.getUserSocketIds(userId));
+    }
+  }
+
+  private stopRecordingUser(conversationId: string, userId: string) {
+    const conversationRecording = this.recordingUsers.get(conversationId);
+    if (conversationRecording?.has(userId)) {
+      clearTimeout(conversationRecording.get(userId)!);
+      conversationRecording.delete(userId);
+      const userName = this.userNames.get(userId) ?? '';
+      this.broadcastRecordingUpdate(conversationId, userId, userName, false, this.getUserSocketIds(userId));
     }
   }
 

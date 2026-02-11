@@ -70,6 +70,7 @@ interface ConversationItemProps {
   currentUserId?: string;
   presenceMap?: Map<string, PresenceInfo>;
   typingUsers?: TypingUser[];
+  recordingUsers?: TypingUser[];
 }
 
 export function ConversationItem({
@@ -77,6 +78,7 @@ export function ConversationItem({
   currentUserId,
   presenceMap,
   typingUsers,
+  recordingUsers,
 }: ConversationItemProps) {
   const handlePress = useCallback(() => {
     router.push({
@@ -109,6 +111,16 @@ export function ConversationItem({
     ? (presenceMap?.get(otherParticipant.id)?.isOnline ?? otherParticipant.isOnline ?? false)
     : false;
 
+  // Recording preview (priority over typing)
+  const activeRecordingUsers = recordingUsers?.filter((u) => u.id !== currentUserId) ?? [];
+  const isRecording = activeRecordingUsers.length > 0;
+  const firstRecording = activeRecordingUsers[0];
+  const recordingLabel = isRecording && firstRecording
+    ? activeRecordingUsers.length === 1
+      ? `🎤 ${firstRecording.name.split(' ')[0]} está gravando áudio...`
+      : `🎤 ${firstRecording.name.split(' ')[0]} e mais ${activeRecordingUsers.length - 1} gravando áudio...`
+    : null;
+
   // Typing preview
   const activeTypingUsers = typingUsers?.filter((u) => u.id !== currentUserId) ?? [];
   const isTyping = activeTypingUsers.length > 0;
@@ -118,6 +130,9 @@ export function ConversationItem({
       ? `${firstTyping.name.split(' ')[0]} está digitando...`
       : `${firstTyping.name.split(' ')[0]} e mais ${activeTypingUsers.length - 1} digitando...`
     : null;
+
+  const hasActivity = isRecording || isTyping;
+  const activityLabel = recordingLabel ?? typingLabel;
 
   return (
     <XStack
@@ -180,13 +195,13 @@ export function ConversationItem({
 
           <XStack alignItems="center" justifyContent="space-between">
             <Text
-              color={isTyping ? 'primary' : 'secondary'}
+              color={hasActivity ? 'primary' : 'secondary'}
               size="xs"
               numberOfLines={1}
               flex={1}
-              style={isTyping ? { fontStyle: 'italic' } : undefined}
+              style={hasActivity ? { fontStyle: 'italic' } : undefined}
             >
-              {typingLabel ?? getPreview(conversation)}
+              {activityLabel ?? getPreview(conversation)}
             </Text>
 
             {conversation.unreadCount > 0 && (

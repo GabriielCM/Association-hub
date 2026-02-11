@@ -65,7 +65,8 @@ export function useSendMessage(conversationId: string) {
 
       return { previous };
     },
-    onError: (_, __, context) => {
+    onError: (error, __, context) => {
+      console.error('[Messages] Send failed:', error);
       if (context?.previous) {
         queryClient.setQueryData(
           messageKeys.messages(conversationId),

@@ -91,12 +91,15 @@ export const MESSAGE_EVENTS = {
   MESSAGE_DELETED: 'message.deleted',
   MESSAGE_REACTION: 'message.reaction',
   TYPING_UPDATE: 'typing.update',
+  RECORDING_UPDATE: 'recording.update',
   PRESENCE_UPDATE: 'presence.update',
   CONVERSATION_UPDATE: 'conversation.update',
 
   // Client -> Server
   TYPING_START: 'typing.start',
   TYPING_STOP: 'typing.stop',
+  RECORDING_START: 'recording.start',
+  RECORDING_STOP: 'recording.stop',
   MARK_READ: 'mark.read',
 } as const;
 

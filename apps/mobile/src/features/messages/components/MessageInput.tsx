@@ -22,6 +22,7 @@ interface MessageInputProps {
     replyTo?: string;
   }) => void;
   onTextChange?: (text: string) => void;
+  onRecordingChange?: (isRecording: boolean) => void;
   replyTo?: Message | null;
   onCancelReply?: () => void;
   disabled?: boolean;
@@ -36,6 +37,7 @@ function formatRecordingDuration(seconds: number): string {
 export function MessageInput({
   onSend,
   onTextChange,
+  onRecordingChange,
   replyTo,
   onCancelReply,
   disabled = false,
@@ -122,7 +124,13 @@ export function MessageInput({
     }
   }, [onSend, replyTo, onCancelReply]);
 
+  const handleStartRecording = useCallback(async () => {
+    await startRecording();
+    onRecordingChange?.(true);
+  }, [startRecording, onRecordingChange]);
+
   const handleStopRecording = useCallback(async () => {
+    onRecordingChange?.(false);
     const result = await stopRecording();
     if (result) {
       onSend({
@@ -134,7 +142,12 @@ export function MessageInput({
       });
       onCancelReply?.();
     }
-  }, [stopRecording, onSend, replyTo, onCancelReply]);
+  }, [stopRecording, onSend, replyTo, onCancelReply, onRecordingChange]);
+
+  const handleCancelRecording = useCallback(async () => {
+    onRecordingChange?.(false);
+    await cancelRecording();
+  }, [cancelRecording, onRecordingChange]);
 
   const hasText = text.trim().length > 0;
 
@@ -188,7 +201,7 @@ export function MessageInput({
           /* Recording mode */
           <>
             {/* Cancel button */}
-            <Pressable onPress={cancelRecording} style={styles.iconBtn}>
+            <Pressable onPress={handleCancelRecording} style={styles.iconBtn}>
               <View
                 width={36}
                 height={36}
@@ -275,7 +288,7 @@ export function MessageInput({
               </Pressable>
             ) : (
               <Pressable
-                onPress={startRecording}
+                onPress={handleStartRecording}
                 style={styles.sendBtn}
                 disabled={disabled}
               >

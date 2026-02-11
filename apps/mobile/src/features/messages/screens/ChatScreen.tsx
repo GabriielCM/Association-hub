@@ -19,6 +19,7 @@ import { useSendMessage, useAddReaction } from '../hooks/useSendMessage';
 import { useMarkConversationAsRead } from '../hooks/useConversations';
 import { useMessageWebSocket } from '../hooks/useMessageWebSocket';
 import { useTyping } from '../hooks/useTyping';
+import { useWebSocket } from '@/providers/WebSocketProvider';
 import { MessageBubble } from '../components/MessageBubble';
 import { MessageInput } from '../components/MessageInput';
 import { TypingIndicator } from '../components/TypingIndicator';
@@ -44,8 +45,13 @@ export function ChatScreen() {
   const addReaction = useAddReaction();
   const markAsRead = useMarkConversationAsRead();
 
-  const { typingUsers, presenceMap } = useMessageWebSocket(conversationId ?? '');
+  const { typingUsers, recordingUsers, presenceMap } = useMessageWebSocket(conversationId ?? '');
   const { handleTextChange, stopTyping } = useTyping(conversationId ?? '');
+  const { emit } = useWebSocket();
+
+  const handleRecordingChange = useCallback((isRecording: boolean) => {
+    emit(isRecording ? 'recording.start' : 'recording.stop', { conversationId });
+  }, [emit, conversationId]);
 
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [reactionTarget, setReactionTarget] = useState<string | null>(null);
@@ -86,7 +92,15 @@ export function ChatScreen() {
     ? conversation?.group?.name ?? conversation?.participants.length + ' participantes'
     : otherParticipant?.name ?? 'Chat';
 
+  const hasActivityIndicator = recordingUsers.length > 0 || typingUsers.length > 0;
+
   const headerSubtitle = (() => {
+    if (recordingUsers.length > 0) {
+      const names = recordingUsers.map((u) => u.name?.split(' ')[0]).filter(Boolean);
+      if (names.length === 1) return `${names[0]} está gravando áudio...`;
+      if (names.length === 2) return `${names[0]} e ${names[1]} estão gravando áudio...`;
+      return `${names[0]} e mais ${names.length - 1} gravando áudio...`;
+    }
     if (typingUsers.length > 0) {
       const names = typingUsers.map((u) => u.name?.split(' ')[0]).filter(Boolean);
       if (names.length === 1) return `${names[0]} está digitando...`;
@@ -249,7 +263,7 @@ export function ChatScreen() {
                 {headerSubtitle && (
                   <Text
                     color={
-                      typingUsers.length > 0 ? 'primary' : isGroup ? 'secondary' : 'success'
+                      hasActivityIndicator ? 'primary' : isGroup ? 'secondary' : 'success'
                     }
                     size="xs"
                   >
@@ -277,7 +291,7 @@ export function ChatScreen() {
               }}
               onEndReachedThreshold={0.3}
               ListHeaderComponent={
-                <TypingIndicator typingUsers={typingUsers} />
+                <TypingIndicator typingUsers={typingUsers} recordingUsers={recordingUsers} />
               }
               contentContainerStyle={styles.messagesList}
             />
@@ -352,6 +366,7 @@ export function ChatScreen() {
           <MessageInput
             onSend={handleSend}
             onTextChange={handleTextChange}
+            onRecordingChange={handleRecordingChange}
             replyTo={replyTo}
             onCancelReply={() => setReplyTo(null)}
           />
