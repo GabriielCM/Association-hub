@@ -25,6 +25,7 @@ import { NotificationsService } from './notifications.service';
 import { NotificationQueryDto } from './dto/notification-query.dto';
 import { UpdateNotificationSettingsDto } from './dto/update-settings.dto';
 import { UpdateDoNotDisturbDto } from './dto/update-dnd.dto';
+import { RegisterDeviceTokenDto } from './dto/register-device-token.dto';
 import { NotificationCategory } from '@prisma/client';
 
 @ApiTags('Notificações')
@@ -126,6 +127,34 @@ export class NotificationsController {
   async clearRead(@CurrentUser() user: JwtPayload) {
     const count = await this.notificationsService.clearRead(user.sub);
     return { deleted: count };
+  }
+
+  // ============================================
+  // DEVICE TOKENS (Push Notifications)
+  // ============================================
+
+  @Post('device-token')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Registrar device token para push notifications' })
+  @ApiResponse({ status: 200, description: 'Token registrado' })
+  async registerDeviceToken(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: RegisterDeviceTokenDto
+  ) {
+    await this.notificationsService.registerDeviceToken(user.sub, dto.token, dto.platform);
+    return { success: true };
+  }
+
+  @Delete('device-token/:token')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remover device token' })
+  @ApiParam({ name: 'token', description: 'Push token a remover' })
+  @ApiResponse({ status: 204, description: 'Token removido' })
+  async removeDeviceToken(
+    @CurrentUser() user: JwtPayload,
+    @Param('token') token: string
+  ) {
+    await this.notificationsService.removeDeviceToken(user.sub, token);
   }
 
   // ============================================

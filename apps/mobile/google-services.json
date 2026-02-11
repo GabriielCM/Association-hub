@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "490225068769",
+    "project_id": "a-hub-243f2",
+    "storage_bucket": "a-hub-243f2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:490225068769:android:621c264e303dfeece0e5a0",
+        "android_client_info": {
+          "package_name": "com.ahub.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCpaFm0rS1Jq2BhECfKXc8l-2MuSfi4NU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

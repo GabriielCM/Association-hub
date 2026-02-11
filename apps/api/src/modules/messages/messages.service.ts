@@ -121,7 +121,7 @@ export class MessagesService {
   async findAllConversations(
     userId: string,
     query: ConversationQueryDto
-  ): Promise<{ conversations: ConversationWithDetails[]; total: number; hasMore: boolean }> {
+  ): Promise<{ data: any[]; pagination: { total: number; limit: number; offset: number } }> {
     const { includeArchived, search, page = 1, limit = 20 } = query;
     const skip = (page - 1) * limit;
 
@@ -184,7 +184,7 @@ export class MessagesService {
           id: conv.id,
           type: conv.type,
           participants: conv.participants.map((p) => ({
-            userId: p.userId,
+            id: p.userId,
             name: p.user.name,
             avatarUrl: p.user.avatarUrl || undefined,
             role: p.role,
@@ -202,15 +202,16 @@ export class MessagesService {
               }
             : undefined,
           unreadCount,
+          isMuted: participant?.isMuted ?? false,
+          isArchived: participant?.isArchived ?? false,
           createdAt: conv.createdAt,
           updatedAt: conv.updatedAt,
           group: conv.group
             ? {
                 id: conv.group.id,
                 name: conv.group.name,
-                description: conv.group.description || undefined,
                 imageUrl: conv.group.imageUrl || undefined,
-                createdById: conv.group.createdById,
+                participantsCount: conv.participants.length,
               }
             : undefined,
         };
@@ -218,9 +219,12 @@ export class MessagesService {
     );
 
     return {
-      conversations,
-      total,
-      hasMore: skip + conversations.length < total,
+      data: conversations,
+      pagination: {
+        total,
+        limit,
+        offset: skip,
+      },
     };
   }
 
@@ -293,7 +297,7 @@ export class MessagesService {
     userId: string,
     conversationId: string,
     query: MessageQueryDto
-  ): Promise<{ messages: MessageWithSender[]; hasMore: boolean }> {
+  ): Promise<{ data: MessageWithSender[]; pagination: { hasMore: boolean; oldestId?: string } }> {
     await this.findConversation(userId, conversationId);
 
     const { page = 1, limit = 50, before } = query;
@@ -334,9 +338,13 @@ export class MessagesService {
     const hasMore = messagesRaw.length > limit;
     const messages = messagesRaw.slice(0, limit);
 
+    const mapped = messages.map((m) => this.mapMessageWithSender(m, userId));
     return {
-      messages: messages.map((m) => this.mapMessageWithSender(m, userId)),
-      hasMore,
+      data: mapped,
+      pagination: {
+        hasMore,
+        oldestId: mapped.length > 0 ? mapped[mapped.length - 1].id : undefined,
+      },
     };
   }
 
@@ -344,10 +352,10 @@ export class MessagesService {
     userId: string,
     conversationId: string,
     dto: SendMessageDto
-  ): Promise<Message> {
+  ): Promise<MessageWithSender> {
     await this.findConversation(userId, conversationId);
 
-    const { content, contentType = MessageContentType.TEXT, mediaUrl, replyToId } = dto;
+    const { content = '', contentType = MessageContentType.TEXT, mediaUrl, mediaDuration, replyToId } = dto;
 
     // Validate reply
     if (replyToId) {
@@ -367,6 +375,7 @@ export class MessagesService {
         content,
         contentType,
         mediaUrl,
+        mediaDuration: mediaDuration ? Math.round(mediaDuration) : undefined,
         replyToId,
         status: MessageStatus.SENT,
       },
@@ -390,7 +399,7 @@ export class MessagesService {
       data: { updatedAt: new Date() },
     });
 
-    return message;
+    return this.mapMessageWithSender(message, userId);
   }
 
   async deleteMessage(userId: string, messageId: string): Promise<Message> {
@@ -460,7 +469,7 @@ export class MessagesService {
   // GROUPS
   // ============================================
 
-  async getGroup(userId: string, conversationId: string): Promise<ConversationGroup> {
+  async getGroup(userId: string, conversationId: string) {
     const conversation = await this.findConversation(userId, conversationId);
 
     if (conversation.type !== ConversationType.GROUP) {
@@ -475,7 +484,16 @@ export class MessagesService {
       throw new NotFoundException('Grupo não encontrado');
     }
 
-    return group;
+    const participants = await this.prisma.conversationParticipant.findMany({
+      where: { conversationId, leftAt: null },
+      include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+    });
+
+    const mediaCount = await this.prisma.message.count({
+      where: { conversationId, mediaUrl: { not: null } },
+    });
+
+    return { group, participants, mediaCount };
   }
 
   async updateGroup(
@@ -608,12 +626,15 @@ export class MessagesService {
     return {
       id: message.id,
       conversationId: message.conversationId,
-      senderId: message.senderId,
-      senderName: message.sender.name,
-      senderAvatarUrl: message.sender.avatarUrl || undefined,
+      sender: {
+        id: message.senderId,
+        name: message.sender.name,
+        avatarUrl: message.sender.avatarUrl || undefined,
+      },
       content: message.content,
       contentType: message.contentType,
       mediaUrl: message.mediaUrl || undefined,
+      mediaDuration: message.mediaDuration || undefined,
       replyTo: message.replyTo
         ? {
             id: message.replyTo.id,
@@ -637,5 +658,47 @@ export class MessagesService {
       select: { userId: true },
     });
     return participants.map((p) => p.userId);
+  }
+
+  /**
+   * Get all user IDs that share a conversation with the given user.
+   */
+  async getContactUserIds(userId: string): Promise<string[]> {
+    const conversations = await this.prisma.conversation.findMany({
+      where: {
+        participants: {
+          some: { userId, leftAt: null },
+        },
+      },
+      select: {
+        participants: {
+          where: { leftAt: null },
+          select: { userId: true },
+        },
+      },
+    });
+
+    const contactIds = new Set<string>();
+    for (const conv of conversations) {
+      for (const p of conv.participants) {
+        if (p.userId !== userId) {
+          contactIds.add(p.userId);
+        }
+      }
+    }
+    return Array.from(contactIds);
+  }
+
+  /**
+   * Get all conversation IDs that a user participates in.
+   */
+  async getUserConversationIds(userId: string): Promise<string[]> {
+    const conversations = await this.prisma.conversation.findMany({
+      where: {
+        participants: { some: { userId, leftAt: null } },
+      },
+      select: { id: true },
+    });
+    return conversations.map((c) => c.id);
   }
 }

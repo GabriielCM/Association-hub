@@ -26,6 +26,8 @@ vi.mock('@prisma/client', () => ({
 
 import { ConversationsController } from '../conversations.controller';
 import { MessagesService } from '../messages.service';
+import { MessagesGateway } from '../messages.gateway';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 // Local type definitions
 const ConversationType = {
@@ -111,13 +113,27 @@ const mockMessagesService = {
   sendMessage: vi.fn(),
 };
 
+// Mock MessagesGateway
+const mockGateway = {
+  broadcastNewMessage: vi.fn(),
+  isUserOnline: vi.fn(),
+};
+
+// Mock NotificationsService
+const mockNotificationsService = {
+  sendPushToUsers: vi.fn(),
+  sendPushToUser: vi.fn(),
+};
+
 describe('ConversationsController', () => {
   let controller: ConversationsController;
 
   beforeEach(() => {
     vi.clearAllMocks();
     controller = new ConversationsController(
-      mockMessagesService as unknown as MessagesService
+      mockMessagesService as unknown as MessagesService,
+      mockGateway as unknown as MessagesGateway,
+      mockNotificationsService as unknown as NotificationsService,
     );
   });
 
@@ -135,7 +151,7 @@ describe('ConversationsController', () => {
         limit: 20,
       });
 
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual({ success: true, data: mockResponse });
       expect(mockMessagesService.findAllConversations).toHaveBeenCalledWith(
         mockUserId,
         { page: 1, limit: 20 }
@@ -192,7 +208,7 @@ describe('ConversationsController', () => {
 
       const result = await controller.create(mockJwtPayload, dto);
 
-      expect(result).toEqual(mockConversation);
+      expect(result).toEqual({ success: true, data: mockConversation });
       expect(mockMessagesService.createConversation).toHaveBeenCalledWith(
         mockUserId,
         dto
@@ -215,7 +231,7 @@ describe('ConversationsController', () => {
 
       const result = await controller.create(mockJwtPayload, dto);
 
-      expect((result as any).group.name).toBe('Test Group');
+      expect((result as any).data.group.name).toBe('Test Group');
       expect(mockMessagesService.createConversation).toHaveBeenCalledWith(
         mockUserId,
         dto
@@ -229,7 +245,7 @@ describe('ConversationsController', () => {
 
       const result = await controller.findOne(mockJwtPayload, mockConversationId);
 
-      expect(result).toEqual(mockConversation);
+      expect(result).toEqual({ success: true, data: mockConversation });
       expect(mockMessagesService.findConversation).toHaveBeenCalledWith(
         mockUserId,
         mockConversationId
@@ -250,7 +266,7 @@ describe('ConversationsController', () => {
         dto
       );
 
-      expect(result.isMuted).toBe(true);
+      expect(result.data.isMuted).toBe(true);
       expect(mockMessagesService.updateConversationSettings).toHaveBeenCalledWith(
         mockUserId,
         mockConversationId,
@@ -271,7 +287,7 @@ describe('ConversationsController', () => {
         dto
       );
 
-      expect(result.isArchived).toBe(true);
+      expect(result.data.isArchived).toBe(true);
     });
   });
 
@@ -325,7 +341,7 @@ describe('ConversationsController', () => {
         { page: 1, limit: 50 }
       );
 
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual({ success: true, data: mockResponse });
       expect(mockMessagesService.findMessages).toHaveBeenCalledWith(
         mockUserId,
         mockConversationId,
@@ -368,7 +384,7 @@ describe('ConversationsController', () => {
         dto
       );
 
-      expect(result).toEqual(mockMessage);
+      expect(result).toEqual({ success: true, data: mockMessage });
       expect(mockMessagesService.sendMessage).toHaveBeenCalledWith(
         mockUserId,
         mockConversationId,
@@ -396,7 +412,7 @@ describe('ConversationsController', () => {
         dto
       );
 
-      expect(result.mediaUrl).toBe('https://example.com/image.jpg');
+      expect(result.data.mediaUrl).toBe('https://example.com/image.jpg');
     });
 
     it('deve enviar mensagem como resposta', async () => {
@@ -417,7 +433,7 @@ describe('ConversationsController', () => {
         dto
       );
 
-      expect(result.replyToId).toBe('msg-original');
+      expect((result as any).data.replyToId).toBe('msg-original');
     });
   });
 });

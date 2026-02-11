@@ -239,9 +239,9 @@ describe('MessagesService', () => {
         limit: 20,
       });
 
-      expect(result.conversations).toHaveLength(1);
-      expect(result.total).toBe(1);
-      expect(result.hasMore).toBe(false);
+      expect(result.data).toHaveLength(1);
+      expect(result.pagination.total).toBe(1);
+      expect(result.pagination).toHaveProperty('offset');
     });
   });
 

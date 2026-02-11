@@ -6,6 +6,9 @@ import {
 } from 'react';
 import { DeviceEventEmitter } from 'react-native';
 import { useAuthStore } from '@/stores/auth.store';
+import { registerForPushNotifications, setupNotificationListeners } from '@/services/notifications/push';
+import { InAppNotificationBanner } from '@/features/messages/components/InAppNotificationBanner';
+import { router } from 'expo-router';
 import type { User } from '@ahub/shared/types';
 
 interface AuthContextValue {
@@ -40,6 +43,27 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return () => subscription.remove();
   }, [logout]);
 
+  // Register push notification token when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    registerForPushNotifications().catch((err) =>
+      console.warn('[Push] Registration failed:', err)
+    );
+
+    const cleanup = setupNotificationListeners((data) => {
+      // Navigate to conversation when notification is tapped
+      if (data?.type === 'message' && data?.conversationId) {
+        router.push({
+          pathname: '/messages/[conversationId]',
+          params: { conversationId: data.conversationId as string },
+        } as never);
+      }
+    });
+
+    return cleanup;
+  }, [isAuthenticated]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -50,6 +74,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }}
     >
       {children}
+      {isAuthenticated && <InAppNotificationBanner />}
     </AuthContext.Provider>
   );
 }

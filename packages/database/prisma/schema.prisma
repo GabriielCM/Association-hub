@@ -973,7 +973,8 @@ model Message {
 
   content     String           @db.Text
   contentType MessageContentType @default(TEXT) @map("content_type")
-  mediaUrl    String?          @map("media_url")
+  mediaUrl      String?          @map("media_url")
+  mediaDuration Int?             @map("media_duration")
 
   // Reply reference
   replyToId String?  @map("reply_to_id")

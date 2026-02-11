@@ -11,6 +11,8 @@ import { usePointsHistory } from '@/features/points/hooks/usePointsHistory';
 import { TransactionItem } from '@/features/points/components/TransactionItem';
 import { CelebrationOverlay } from '@/features/points/components/CelebrationOverlay';
 import { usePointsSocket } from '@/features/points/hooks/usePointsSocket';
+import { NotificationBadge } from '@/features/notifications/components/NotificationBadge';
+import { useNotificationWebSocket } from '@/features/notifications/hooks/useNotificationWebSocket';
 
 export default function HomeScreen() {
   const { user } = useAuthContext();
@@ -19,6 +21,7 @@ export default function HomeScreen() {
   const { data: historyData } = usePointsHistory({ limit: 3 });
 
   usePointsSocket();
+  useNotificationWebSocket();
 
   const recentTransactions = historyData?.pages?.[0]?.data ?? [];
   const displayBalance = balance?.balance ?? 0;
@@ -35,13 +38,16 @@ export default function HomeScreen() {
               </Text>
               <Heading level={4}>{user?.name || 'Membro'}</Heading>
             </YStack>
-            <Avatar
-              src={user?.avatarUrl}
-              name={user?.name}
-              size="lg"
-              status="online"
-              showStatus
-            />
+            <XStack alignItems="center" gap="$3">
+              <NotificationBadge />
+              <Avatar
+                src={user?.avatarUrl}
+                name={user?.name}
+                size="lg"
+                status="online"
+                showStatus
+              />
+            </XStack>
           </XStack>
 
           {/* Points Card */}

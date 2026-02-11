@@ -1,9 +1,11 @@
 import { io, Socket } from 'socket.io-client';
+import { AppState, AppStateStatus } from 'react-native';
 import { WS_URL, WS_RECONNECT_INTERVAL } from '@/config/constants';
 import { getAccessToken } from '@/services/storage/secure-store';
 
 let socket: Socket | null = null;
 let reconnectAttempts = 0;
+let appStateSubscription: ReturnType<typeof AppState.addEventListener> | null = null;
 const MAX_RECONNECT_ATTEMPTS = 10;
 
 export type SocketEvent =
@@ -14,7 +16,22 @@ export type SocketEvent =
   | 'message'
   | 'points_update'
   | 'event_update'
-  | 'checkin_confirmed';
+  | 'checkin_confirmed'
+  // Notification events
+  | 'notification.new'
+  | 'notification.read'
+  | 'notification.deleted'
+  | 'unread_count.update'
+  | 'settings.changed'
+  // Message events
+  | 'message.new'
+  | 'message.delivered'
+  | 'message.read'
+  | 'message.deleted'
+  | 'message.reaction'
+  | 'typing.update'
+  | 'presence.update'
+  | 'conversation.update';
 
 type EventCallback = (data: unknown) => void;
 const eventListeners: Map<SocketEvent, Set<EventCallback>> = new Map();
@@ -22,7 +39,7 @@ const eventListeners: Map<SocketEvent, Set<EventCallback>> = new Map();
 /**
  * Initialize WebSocket connection
  */
-export async function initSocket(userId?: string): Promise<Socket | null> {
+export async function initSocket(userId?: string, userName?: string): Promise<Socket | null> {
   if (socket?.connected) {
     return socket;
   }
@@ -33,8 +50,8 @@ export async function initSocket(userId?: string): Promise<Socket | null> {
     return null;
   }
 
-  socket = io(WS_URL, {
-    auth: { token, userId },
+  socket = io(`${WS_URL}/ws/messages`, {
+    auth: { token, userId, userName },
     transports: ['websocket'],
     reconnection: true,
     reconnectionAttempts: MAX_RECONNECT_ATTEMPTS,
@@ -66,6 +83,18 @@ export async function initSocket(userId?: string): Promise<Socket | null> {
     notifyListeners('error', { error: error.message });
   });
 
+  // Disconnect WebSocket when app goes to background so push notifications work
+  if (appStateSubscription) {
+    appStateSubscription.remove();
+  }
+  appStateSubscription = AppState.addEventListener('change', (state: AppStateStatus) => {
+    if (state === 'background' || state === 'inactive') {
+      socket?.disconnect();
+    } else if (state === 'active' && socket && !socket.connected) {
+      socket.connect();
+    }
+  });
+
   // Business events
   socket.on('notification', (data) => {
     notifyListeners('notification', data);
@@ -87,6 +116,60 @@ export async function initSocket(userId?: string): Promise<Socket | null> {
     notifyListeners('checkin_confirmed', data);
   });
 
+  // Notification events
+  socket.on('notification.new', (data) => {
+    notifyListeners('notification.new', data);
+  });
+
+  socket.on('notification.read', (data) => {
+    notifyListeners('notification.read', data);
+  });
+
+  socket.on('notification.deleted', (data) => {
+    notifyListeners('notification.deleted', data);
+  });
+
+  socket.on('unread_count.update', (data) => {
+    notifyListeners('unread_count.update', data);
+  });
+
+  socket.on('settings.changed', (data) => {
+    notifyListeners('settings.changed', data);
+  });
+
+  // Message events
+  socket.on('message.new', (data) => {
+    notifyListeners('message.new', data);
+  });
+
+  socket.on('message.delivered', (data) => {
+    notifyListeners('message.delivered', data);
+  });
+
+  socket.on('message.read', (data) => {
+    notifyListeners('message.read', data);
+  });
+
+  socket.on('message.deleted', (data) => {
+    notifyListeners('message.deleted', data);
+  });
+
+  socket.on('message.reaction', (data) => {
+    notifyListeners('message.reaction', data);
+  });
+
+  socket.on('typing.update', (data) => {
+    notifyListeners('typing.update', data);
+  });
+
+  socket.on('presence.update', (data) => {
+    notifyListeners('presence.update', data);
+  });
+
+  socket.on('conversation.update', (data) => {
+    notifyListeners('conversation.update', data);
+  });
+
   return socket;
 }
 
@@ -94,6 +177,10 @@ export async function initSocket(userId?: string): Promise<Socket | null> {
  * Disconnect WebSocket
  */
 export function disconnectSocket(): void {
+  if (appStateSubscription) {
+    appStateSubscription.remove();
+    appStateSubscription = null;
+  }
   if (socket) {
     socket.disconnect();
     socket = null;

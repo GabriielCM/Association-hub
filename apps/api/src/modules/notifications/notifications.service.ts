@@ -6,6 +6,7 @@ import {
   Notification,
   NotificationSettings,
   DoNotDisturbSettings,
+  DevicePlatform,
 } from '@prisma/client';
 import {
   NotificationPayload,
@@ -428,6 +429,127 @@ export class NotificationsService {
     } else {
       return currentTime >= startTime || currentTime <= endTime;
     }
+  }
+
+  // ============================================
+  // DEVICE TOKENS (Push Notifications)
+  // ============================================
+
+  async registerDeviceToken(
+    userId: string,
+    token: string,
+    platform: DevicePlatform,
+  ): Promise<void> {
+    // Upsert: if token exists, update the userId and reactivate
+    await this.prisma.deviceToken.upsert({
+      where: { token },
+      update: { userId, platform, isActive: true },
+      create: { userId, token, platform },
+    });
+
+    this.logger.debug(`Device token registered for user ${userId}: ${token.substring(0, 20)}...`);
+  }
+
+  async removeDeviceToken(userId: string, token: string): Promise<void> {
+    await this.prisma.deviceToken.updateMany({
+      where: { token, userId },
+      data: { isActive: false },
+    });
+  }
+
+  /**
+   * Send push notification to a user via Expo Push API.
+   * Only sends to active device tokens where push is enabled for the MESSAGES category.
+   */
+  async sendPushToUser(
+    userId: string,
+    title: string,
+    body: string,
+    data?: Record<string, unknown>,
+  ): Promise<void> {
+    // Check DND
+    const isDnd = await this.isDndActive(userId);
+    if (isDnd) {
+      this.logger.debug(`Push skipped for user ${userId}: DND active`);
+      return;
+    }
+
+    // Check push settings for SOCIAL category (covers messages)
+    const settings = await this.getOrCreateSettings(userId, NotificationCategory.SOCIAL);
+    if (!settings.pushEnabled) {
+      this.logger.debug(`Push disabled for user ${userId} category SOCIAL`);
+      return;
+    }
+
+    // Get active device tokens
+    const tokens = await this.prisma.deviceToken.findMany({
+      where: { userId, isActive: true },
+    });
+
+    if (tokens.length === 0) {
+      this.logger.debug(`No active tokens for user ${userId}`);
+      return;
+    }
+
+    // Send via Expo Push API
+    const messages = tokens.map((t) => ({
+      to: t.token,
+      title,
+      body,
+      data,
+      sound: 'default' as const,
+      priority: 'high' as const,
+      channelId: 'messages',
+    }));
+
+    try {
+      const response = await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(messages),
+      });
+
+      if (!response.ok) {
+        this.logger.error(`Expo Push API error: ${response.status} ${response.statusText}`);
+        return;
+      }
+
+      const result = await response.json();
+      this.logger.debug(`Push sent to user ${userId}: ${tokens.length} device(s)`);
+
+      // Deactivate invalid tokens based on response
+      if (result.data) {
+        for (let i = 0; i < result.data.length; i++) {
+          const ticket = result.data[i];
+          if (ticket.status === 'error' && ticket.details?.error === 'DeviceNotRegistered') {
+            await this.prisma.deviceToken.updateMany({
+              where: { token: tokens[i].token },
+              data: { isActive: false },
+            });
+            this.logger.debug(`Deactivated invalid token: ${tokens[i].token.substring(0, 20)}...`);
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Failed to send push to user ${userId}:`, error);
+    }
+  }
+
+  /**
+   * Send push notification to multiple users.
+   */
+  async sendPushToUsers(
+    userIds: string[],
+    title: string,
+    body: string,
+    data?: Record<string, unknown>,
+  ): Promise<void> {
+    await Promise.allSettled(
+      userIds.map((userId) => this.sendPushToUser(userId, title, body, data)),
+    );
   }
 
   // ============================================

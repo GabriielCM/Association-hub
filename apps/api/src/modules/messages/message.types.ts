@@ -47,12 +47,15 @@ export interface MessagePreview {
 export interface MessageWithSender {
   id: string;
   conversationId: string;
-  senderId: string;
-  senderName: string;
-  senderAvatarUrl?: string;
+  sender: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+  };
   content: string;
   contentType: MessageContentType;
   mediaUrl?: string;
+  mediaDuration?: number;
   replyTo?: MessagePreview;
   status: MessageStatus;
   reactions: ReactionSummary[];

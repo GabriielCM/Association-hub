@@ -38,7 +38,9 @@ describe('MessagesGateway', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
-    gateway = new MessagesGateway();
+    gateway = new MessagesGateway({
+      getUserConversationIds: vi.fn().mockResolvedValue([]),
+    } as any);
     mockServer = createMockServer();
     (gateway as any).server = mockServer;
   });
@@ -181,23 +183,22 @@ describe('MessagesGateway', () => {
       const message = {
         id: 'msg-1',
         conversationId: 'conv-1',
-        senderId: 'user-1',
+        sender: { id: 'user-1', name: 'User 1', avatarUrl: undefined },
         content: 'Hello',
         contentType: 'TEXT',
-        mediaUrl: null,
-        replyToId: null,
         status: 'SENT',
+        reactions: [],
         createdAt: new Date(),
       };
 
-      gateway.broadcastNewMessage('conv-1', message as any, 'User 1');
+      gateway.broadcastNewMessage('conv-1', message as any);
 
       expect(mockServer.to).toHaveBeenCalledWith('conversation:conv-1');
       expect(mockServer.emit).toHaveBeenCalledWith(
         MESSAGE_EVENTS.MESSAGE_NEW,
         expect.objectContaining({
-          id: 'msg-1',
-          senderName: 'User 1',
+          conversationId: 'conv-1',
+          message: expect.objectContaining({ id: 'msg-1' }),
         })
       );
     });

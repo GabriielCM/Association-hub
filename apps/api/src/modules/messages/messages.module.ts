@@ -5,9 +5,10 @@ import { GroupsController } from './groups.controller';
 import { MessagesService } from './messages.service';
 import { MessagesGateway } from './messages.gateway';
 import { PrismaModule } from '../../common/prisma/prisma.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, NotificationsModule],
   controllers: [ConversationsController, MessagesController, GroupsController],
   providers: [MessagesService, MessagesGateway],
   exports: [MessagesService, MessagesGateway],

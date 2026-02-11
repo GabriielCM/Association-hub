@@ -2,6 +2,7 @@ import { Alert } from 'react-native';
 import { XStack } from 'tamagui';
 import { router } from 'expo-router';
 import { Button } from '@ahub/ui';
+import { useCreateConversation } from '@/features/messages/hooks/useConversations';
 
 interface ProfileActionsProps {
   isMe: boolean;
@@ -9,6 +10,8 @@ interface ProfileActionsProps {
 }
 
 export function ProfileActions({ isMe, userId }: ProfileActionsProps) {
+  const createConversation = useCreateConversation();
+
   if (isMe) {
     return (
       <XStack gap="$2" paddingHorizontal="$4">
@@ -38,9 +41,22 @@ export function ProfileActions({ isMe, userId }: ProfileActionsProps) {
         variant="primary"
         size="md"
         flex={1}
+        disabled={createConversation.isPending}
         onPress={() => {
-          // TODO: Navigate to messages (Phase 4)
-          Alert.alert('Em breve', 'Mensagens serão implementadas na Fase 4.');
+          createConversation.mutate(
+            { type: 'DIRECT', participantIds: [userId] },
+            {
+              onSuccess: (conversation) => {
+                router.push({
+                  pathname: '/messages/[conversationId]',
+                  params: { conversationId: conversation.id },
+                } as never);
+              },
+              onError: () => {
+                Alert.alert('Erro', 'Não foi possível iniciar a conversa.');
+              },
+            }
+          );
         }}
       >
         Mensagem

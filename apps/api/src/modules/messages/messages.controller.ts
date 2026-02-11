@@ -4,17 +4,30 @@ import {
   Delete,
   Param,
   Body,
+  Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import type { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { writeFile } from 'fs/promises';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtPayload } from '../../common/types';
@@ -27,6 +40,54 @@ import { AddReactionDto } from './dto/add-reaction.dto';
 @Controller('messages')
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
+
+  @Post('media/upload')
+  @ApiOperation({ summary: 'Upload de mídia para mensagem' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Arquivo de mídia (max 10MB)',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Mídia enviada com sucesso' })
+  @ApiResponse({ status: 400, description: 'Arquivo inválido' })
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadMedia(
+    @CurrentUser() user: JwtPayload,
+    @Req() req: Request,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif|webp|mp3|m4a|ogg)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const uploadsDir = join(process.cwd(), 'uploads', 'messages', user.sub);
+    if (!existsSync(uploadsDir)) {
+      mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const fileName = `${Date.now()}-${file.originalname}`;
+    const filePath = join(uploadsDir, fileName);
+    await writeFile(filePath, file.buffer);
+
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const url = `${protocol}://${host}/uploads/messages/${user.sub}/${fileName}`;
+
+    return { success: true, data: { url } };
+  }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -38,7 +38,32 @@ export class GroupsController {
     @CurrentUser() user: JwtPayload,
     @Param('conversationId') conversationId: string
   ) {
-    return this.messagesService.getGroup(user.sub, conversationId);
+    const { group, participants, mediaCount } = await this.messagesService.getGroup(
+      user.sub,
+      conversationId
+    );
+
+    const mappedParticipants = participants.map((p) => ({
+      id: p.user.id,
+      name: p.user.name,
+      avatarUrl: p.user.avatarUrl ?? undefined,
+      role: p.role,
+    }));
+
+    const data = {
+      id: group.id,
+      name: group.name,
+      description: group.description ?? undefined,
+      imageUrl: group.imageUrl ?? undefined,
+      createdBy: group.createdById,
+      admins: mappedParticipants.filter((p) => p.role === 'ADMIN'),
+      participants: mappedParticipants,
+      participantsCount: mappedParticipants.length,
+      mediaCount,
+      createdAt: group.createdAt.toISOString(),
+    };
+
+    return { success: true, data };
   }
 
   @Put()
@@ -50,7 +75,8 @@ export class GroupsController {
     @Param('conversationId') conversationId: string,
     @Body() dto: UpdateGroupDto
   ) {
-    return this.messagesService.updateGroup(user.sub, conversationId, dto);
+    const data = await this.messagesService.updateGroup(user.sub, conversationId, dto);
+    return { success: true, data };
   }
 
   @Post('participants')

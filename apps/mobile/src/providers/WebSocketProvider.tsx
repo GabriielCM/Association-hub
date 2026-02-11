@@ -35,7 +35,7 @@ export function WebSocketProvider({ children }: PropsWithChildren) {
   // Initialize socket when authenticated
   useEffect(() => {
     if (isAuthenticated && user?.id) {
-      initSocket(user.id).then(() => {
+      initSocket(user.id, user.name).then(() => {
         setConnected(isConnected());
       });
 
@@ -56,9 +56,9 @@ export function WebSocketProvider({ children }: PropsWithChildren) {
 
   const reconnect = useCallback(async () => {
     disconnectSocket();
-    await initSocket(user?.id);
+    await initSocket(user?.id, user?.name);
     setConnected(isConnected());
-  }, [user?.id]);
+  }, [user?.id, user?.name]);
 
   return (
     <WebSocketContext.Provider

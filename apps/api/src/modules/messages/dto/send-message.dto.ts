@@ -3,20 +3,21 @@ import {
   IsEnum,
   IsString,
   IsOptional,
+  IsNumber,
   MaxLength,
-  IsUrl,
 } from 'class-validator';
 import { MessageContentType } from '@prisma/client';
 
 export class SendMessageDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Conteúdo da mensagem',
     maxLength: 4000,
     example: 'Olá, tudo bem?',
   })
+  @IsOptional()
   @IsString()
   @MaxLength(4000)
-  content: string;
+  content?: string;
 
   @ApiPropertyOptional({
     description: 'Tipo do conteúdo',
@@ -31,8 +32,15 @@ export class SendMessageDto {
     description: 'URL da mídia (para imagem ou áudio)',
   })
   @IsOptional()
-  @IsUrl()
+  @IsString()
   mediaUrl?: string;
+
+  @ApiPropertyOptional({
+    description: 'Duração do áudio em segundos',
+  })
+  @IsOptional()
+  @IsNumber()
+  mediaDuration?: number;
 
   @ApiPropertyOptional({
     description: 'ID da mensagem sendo respondida',

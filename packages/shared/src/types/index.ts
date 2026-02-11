@@ -854,7 +854,7 @@ export interface DisplayData {
   associationLogo: string | null;
 }
 
-// Notification types
+// Local UI notification (toasts)
 export interface AppNotification {
   id: string;
   title: string;
@@ -863,6 +863,330 @@ export interface AppNotification {
   read: boolean;
   createdAt: string;
   data?: Record<string, unknown>;
+}
+
+// ===========================================
+// NOTIFICATION TYPES (Backend)
+// ===========================================
+
+export type NotificationCategory =
+  | 'SOCIAL'
+  | 'EVENTS'
+  | 'POINTS'
+  | 'RESERVATIONS'
+  | 'SYSTEM';
+
+export type NotificationType =
+  | 'NEW_LIKE'
+  | 'NEW_COMMENT'
+  | 'COMMENT_REPLY'
+  | 'MENTION'
+  | 'NEW_FOLLOWER'
+  | 'STORY_VIEW'
+  | 'POLL_ENDED'
+  | 'NEW_EVENT'
+  | 'EVENT_REMINDER_1DAY'
+  | 'EVENT_REMINDER_1HOUR'
+  | 'EVENT_STARTED'
+  | 'CHECKIN_REMINDER'
+  | 'BADGE_EARNED'
+  | 'EVENT_CANCELLED'
+  | 'EVENT_UPDATED'
+  | 'CHECKIN_PROGRESS'
+  | 'POINTS_RECEIVED'
+  | 'POINTS_SPENT'
+  | 'RANKING_UP'
+  | 'TRANSFER_RECEIVED'
+  | 'STRAVA_SYNC'
+  | 'RESERVATION_APPROVED'
+  | 'RESERVATION_REJECTED'
+  | 'RESERVATION_REMINDER'
+  | 'WAITLIST_AVAILABLE'
+  | 'NEW_MESSAGE'
+  | 'NEW_BENEFIT'
+  | 'CARD_BLOCKED'
+  | 'CARD_UNBLOCKED'
+  | 'ADMIN_ANNOUNCEMENT';
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  category: NotificationCategory;
+  title: string;
+  body: string;
+  data?: Record<string, unknown>;
+  imageUrl?: string;
+  actionUrl?: string;
+  groupKey?: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface NotificationGroupItem {
+  groupKey: string;
+  category: NotificationCategory;
+  title: string;
+  body: string;
+  count: number;
+  notifications: Notification[];
+  latestAt: string;
+  isRead: boolean;
+}
+
+export interface NotificationCategorySettings {
+  category: NotificationCategory;
+  label: string;
+  description: string;
+  pushEnabled: boolean;
+  inAppEnabled: boolean;
+}
+
+export interface DoNotDisturbSettings {
+  enabled: boolean;
+  startTime: string;
+  endTime: string;
+  daysOfWeek: number[];
+  isActiveNow?: boolean;
+}
+
+export interface UnreadCount {
+  total: number;
+  byCategory: Record<NotificationCategory, number>;
+}
+
+export interface NotificationsListResponse {
+  data: Notification[];
+  meta: {
+    currentPage: number;
+    perPage: number;
+    total: number;
+    totalPages: number;
+    unreadCount: number;
+  };
+}
+
+export interface NotificationSettingsResponse {
+  categories: NotificationCategorySettings[];
+}
+
+export interface NotificationsQueryParams {
+  category?: NotificationCategory;
+  isRead?: boolean;
+  grouped?: boolean;
+  page?: number;
+  perPage?: number;
+}
+
+// ===========================================
+// MESSAGING TYPES (Backend)
+// ===========================================
+
+export type ConversationType = 'DIRECT' | 'GROUP';
+export type MessageContentType = 'TEXT' | 'IMAGE' | 'AUDIO';
+export type MessageStatus = 'SENDING' | 'SENT' | 'DELIVERED' | 'READ';
+export type ConversationRole = 'MEMBER' | 'ADMIN';
+
+export interface ConversationParticipant {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+  role: ConversationRole;
+  isOnline: boolean;
+  lastSeenAt?: string;
+}
+
+export interface ConversationLastMessage {
+  id: string;
+  content: string;
+  contentType: MessageContentType;
+  senderId: string;
+  senderName: string;
+  createdAt: string;
+}
+
+export interface ConversationGroupInfo {
+  id: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  createdBy: string;
+  admins: ConversationParticipant[];
+  participants: ConversationParticipant[];
+  participantsCount: number;
+  mediaCount: number;
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: string;
+  type: ConversationType;
+  participants: ConversationParticipant[];
+  lastMessage?: ConversationLastMessage;
+  unreadCount: number;
+  isMuted: boolean;
+  isArchived?: boolean;
+  group?: {
+    id: string;
+    name: string;
+    imageUrl?: string;
+    participantsCount: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+
+export interface ConversationDetail {
+  id: string;
+  type: ConversationType;
+  participants: ConversationParticipant[];
+  settings: {
+    isMuted: boolean;
+    mutedUntil?: string;
+    isArchived: boolean;
+    notifications: {
+      push: boolean;
+      sound: boolean;
+    };
+  };
+  mediaCount: number;
+  createdAt: string;
+  group?: {
+    id: string;
+    name: string;
+    imageUrl?: string;
+    participantsCount: number;
+  };
+}
+
+export interface MessageReaction {
+  emoji: string;
+  count: number;
+  users: { userId: string; name: string }[];
+  hasReacted: boolean;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  sender: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+  };
+  content: string;
+  contentType: MessageContentType;
+  mediaUrl?: string;
+  mediaDuration?: number;
+  replyTo?: {
+    id: string;
+    content: string;
+    contentType: MessageContentType;
+    senderName: string;
+  };
+  reactions: MessageReaction[];
+  status: MessageStatus;
+  createdAt: string;
+  deletedAt?: string;
+}
+
+export interface ConversationsListResponse {
+  data: Conversation[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+  };
+}
+
+export interface MessagesListResponse {
+  data: Message[];
+  pagination: {
+    hasMore: boolean;
+    oldestId?: string;
+  };
+}
+
+export interface ConversationsQueryParams {
+  limit?: number;
+  offset?: number;
+  archived?: boolean;
+}
+
+export interface MessagesQueryParams {
+  limit?: number;
+  before?: string;
+  after?: string;
+}
+
+export interface CreateConversationRequest {
+  type: 'DIRECT' | 'GROUP';
+  participantIds: string[];
+  groupName?: string;
+  groupDescription?: string;
+  groupImageUrl?: string;
+}
+
+export interface SendMessageRequest {
+  content?: string;
+  contentType: MessageContentType;
+  mediaUrl?: string;
+  mediaDuration?: number;
+  replyTo?: string;
+}
+
+export interface UpdateConversationSettingsRequest {
+  isMuted?: boolean;
+  mutedUntil?: string;
+  isArchived?: boolean;
+  notifications?: {
+    push: boolean;
+    sound: boolean;
+  };
+}
+
+export interface UpdateGroupRequest {
+  name?: string;
+  description?: string;
+  imageUrl?: string;
+}
+
+// WebSocket event payloads
+export interface WsNotificationNew {
+  notification: Notification;
+  unreadCount: UnreadCount;
+}
+
+export interface WsMessageNew {
+  conversationId: string;
+  message: Message;
+}
+
+export interface WsMessageDelivered {
+  messageId: string;
+  deliveredTo: string;
+  deliveredAt: string;
+}
+
+export interface WsMessageRead {
+  conversationId: string;
+  readBy: string;
+  readAt: string;
+}
+
+export interface WsTypingUpdate {
+  conversationId: string;
+  user: {
+    id: string;
+    name: string;
+  };
+  isTyping: boolean;
+}
+
+export interface WsPresenceUpdate {
+  userId: string;
+  isOnline: boolean;
+  lastSeenAt?: string;
 }
 
 // API Response types

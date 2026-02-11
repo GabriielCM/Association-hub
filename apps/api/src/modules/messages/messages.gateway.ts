@@ -9,8 +9,8 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
-import { Message } from '@prisma/client';
 import { MESSAGE_EVENTS, PresenceUpdate, MessageWithSender } from './message.types';
+import { MessagesService } from './messages.service';
 
 interface TypingPayload {
   conversationId: string;
@@ -32,18 +32,49 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   server: Server;
 
   private readonly logger = new Logger(MessagesGateway.name);
+
+  constructor(private readonly messagesService: MessagesService) {}
   private userSockets: Map<string, Set<string>> = new Map();
   private socketUsers: Map<string, string> = new Map();
+  private userNames: Map<string, string> = new Map();
   private typingUsers: Map<string, Map<string, NodeJS.Timeout>> = new Map(); // conversationId -> userId -> timeout
+  private disconnectTimers: Map<string, NodeJS.Timeout> = new Map();
+
+  private static readonly DISCONNECT_GRACE_PERIOD = 15_000; // 15 seconds
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
 
     const userId = this.extractUserId(client);
     if (userId) {
+      // Cancel pending disconnect timer (user reconnected within grace period)
+      const pendingTimer = this.disconnectTimers.get(userId);
+      if (pendingTimer) {
+        clearTimeout(pendingTimer);
+        this.disconnectTimers.delete(userId);
+        this.logger.debug(`Cancelled disconnect timer for user ${userId} (reconnected)`);
+      }
+
       this.registerUser(client.id, userId);
       client.join(`user:${userId}`);
+
+      // Store userName from auth
+      const userName = client.handshake.auth?.userName;
+      if (userName) {
+        this.userNames.set(userId, userName);
+      }
+
       this.logger.log(`User ${userId} registered with socket ${client.id}`);
+
+      // Auto-join all conversation rooms so user receives typing/message events globally
+      this.messagesService.getUserConversationIds(userId).then((conversationIds) => {
+        for (const convId of conversationIds) {
+          client.join(`conversation:${convId}`);
+        }
+        this.logger.debug(`User ${userId} auto-joined ${conversationIds.length} conversation rooms`);
+      }).catch((err: Error) => {
+        this.logger.error(`Failed to auto-join rooms for user ${userId}: ${err.message}`);
+      });
 
       // Broadcast presence update
       this.broadcastPresenceUpdate(userId, true);
@@ -59,7 +90,17 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
 
       // Check if user still has active connections
       if (!this.isUserOnline(userId)) {
-        this.broadcastPresenceUpdate(userId, false);
+        // Grace period: wait before broadcasting offline
+        const existing = this.disconnectTimers.get(userId);
+        if (existing) clearTimeout(existing);
+
+        this.disconnectTimers.set(userId, setTimeout(() => {
+          this.disconnectTimers.delete(userId);
+          if (!this.isUserOnline(userId)) {
+            this.broadcastPresenceUpdate(userId, false);
+            this.userNames.delete(userId);
+          }
+        }, MessagesGateway.DISCONNECT_GRACE_PERIOD));
       }
     }
   }
@@ -119,8 +160,9 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     conversationTyping.set(userId, timeout);
 
-    // Broadcast typing update
-    this.broadcastTypingUpdate(conversationId, userId, true);
+    // Broadcast typing update (excluding the sender)
+    const userName = this.userNames.get(userId) ?? '';
+    this.broadcastTypingUpdate(conversationId, userId, userName, true, this.getUserSocketIds(userId));
   }
 
   @SubscribeMessage(MESSAGE_EVENTS.TYPING_STOP)
@@ -153,19 +195,11 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   /**
    * Broadcast new message to conversation participants
    */
-  broadcastNewMessage(conversationId: string, message: Message, senderName: string) {
+  broadcastNewMessage(conversationId: string, message: MessageWithSender) {
     const room = `conversation:${conversationId}`;
     this.server.to(room).emit(MESSAGE_EVENTS.MESSAGE_NEW, {
-      id: message.id,
-      conversationId: message.conversationId,
-      senderId: message.senderId,
-      senderName,
-      content: message.content,
-      contentType: message.contentType,
-      mediaUrl: message.mediaUrl,
-      replyToId: message.replyToId,
-      status: message.status,
-      createdAt: message.createdAt,
+      conversationId,
+      message,
     });
     this.logger.debug(`New message broadcast to ${room}`);
   }
@@ -225,22 +259,33 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   /**
-   * Broadcast typing indicator
+   * Broadcast typing indicator (excluding the sender's sockets)
    */
-  broadcastTypingUpdate(conversationId: string, userId: string, isTyping: boolean) {
+  broadcastTypingUpdate(
+    conversationId: string,
+    userId: string,
+    userName: string,
+    isTyping: boolean,
+    excludeSocketIds?: Set<string>,
+  ) {
     const room = `conversation:${conversationId}`;
-    this.server.to(room).emit(MESSAGE_EVENTS.TYPING_UPDATE, {
+    const payload = {
       conversationId,
-      userId,
+      user: { id: userId, name: userName },
       isTyping,
-    });
+    };
+
+    if (excludeSocketIds && excludeSocketIds.size > 0) {
+      this.server.to(room).except([...excludeSocketIds]).emit(MESSAGE_EVENTS.TYPING_UPDATE, payload);
+    } else {
+      this.server.to(room).emit(MESSAGE_EVENTS.TYPING_UPDATE, payload);
+    }
   }
 
   /**
    * Broadcast user presence (online/offline)
    */
   broadcastPresenceUpdate(userId: string, isOnline: boolean) {
-    // Broadcast to all users (or you could limit to user's contacts)
     this.server.emit(MESSAGE_EVENTS.PRESENCE_UPDATE, {
       userId,
       isOnline,
@@ -321,8 +366,13 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (conversationTyping?.has(userId)) {
       clearTimeout(conversationTyping.get(userId)!);
       conversationTyping.delete(userId);
-      this.broadcastTypingUpdate(conversationId, userId, false);
+      const userName = this.userNames.get(userId) ?? '';
+      this.broadcastTypingUpdate(conversationId, userId, userName, false, this.getUserSocketIds(userId));
     }
+  }
+
+  private getUserSocketIds(userId: string): Set<string> | undefined {
+    return this.userSockets.get(userId);
   }
 
   isUserOnline(userId: string): boolean {

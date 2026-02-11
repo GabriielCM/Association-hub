@@ -10,6 +10,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="[userId]" />
       <Stack.Screen name="edit" />
       <Stack.Screen name="badges" />
+      <Stack.Screen name="settings" />
     </Stack>
   );
 }

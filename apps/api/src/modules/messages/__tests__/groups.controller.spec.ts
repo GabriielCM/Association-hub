@@ -64,7 +64,7 @@ describe('GroupsController', () => {
 
       const result = await controller.getGroup(mockJwtPayload, mockConversationId);
 
-      expect(result).toEqual(mockGroup);
+      expect(result).toEqual({ success: true, data: mockGroup });
       expect(mockMessagesService.getGroup).toHaveBeenCalledWith(
         mockUserId,
         mockConversationId
@@ -81,9 +81,9 @@ describe('GroupsController', () => {
 
       const result = await controller.getGroup(mockJwtPayload, mockConversationId);
 
-      expect(result.name).toBe('Test Group');
-      expect(result.imageUrl).toBe('https://example.com/group.jpg');
-      expect(result.description).toBe('Updated description');
+      expect((result as any).data.name).toBe('Test Group');
+      expect((result as any).data.imageUrl).toBe('https://example.com/group.jpg');
+      expect((result as any).data.description).toBe('Updated description');
     });
   });
 
@@ -99,7 +99,7 @@ describe('GroupsController', () => {
         dto
       );
 
-      expect(result.name).toBe('New Group Name');
+      expect((result as any).data.name).toBe('New Group Name');
       expect(mockMessagesService.updateGroup).toHaveBeenCalledWith(
         mockUserId,
         mockConversationId,
@@ -118,7 +118,7 @@ describe('GroupsController', () => {
         dto
       );
 
-      expect(result.description).toBe('New description');
+      expect((result as any).data.description).toBe('New description');
     });
 
     it('deve atualizar imagem do grupo', async () => {
@@ -132,7 +132,7 @@ describe('GroupsController', () => {
         dto
       );
 
-      expect(result.imageUrl).toBe('https://example.com/new.jpg');
+      expect((result as any).data.imageUrl).toBe('https://example.com/new.jpg');
     });
 
     it('deve atualizar múltiplos campos', async () => {
@@ -155,9 +155,9 @@ describe('GroupsController', () => {
         dto
       );
 
-      expect(result.name).toBe('New Name');
-      expect(result.description).toBe('New Desc');
-      expect(result.imageUrl).toBe('https://example.com/img.jpg');
+      expect((result as any).data.name).toBe('New Name');
+      expect((result as any).data.description).toBe('New Desc');
+      expect((result as any).data.imageUrl).toBe('https://example.com/img.jpg');
     });
   });
 

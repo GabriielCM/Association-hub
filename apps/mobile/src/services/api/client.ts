@@ -155,6 +155,17 @@ export async function put<T>(url: string, data?: object): Promise<T> {
   return response.data.data as T;
 }
 
+export async function postFormData<T>(url: string, formData: FormData): Promise<T> {
+  const response = await api.post<ApiResponse<T>>(url, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    transformRequest: (data) => data,
+  });
+  if (!response.data.success) {
+    throw new Error(response.data.error?.message || 'Upload failed');
+  }
+  return response.data.data as T;
+}
+
 export async function del<T>(url: string): Promise<T> {
   const response = await api.delete<ApiResponse<T>>(url);
   if (!response.data.success) {
