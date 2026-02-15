@@ -353,6 +353,45 @@ export class CartService {
   }
 
   /**
+   * Expire stock reservations that have passed their reserved time
+   * Called by scheduler to clean up abandoned carts
+   */
+  async expireReservations(): Promise<number> {
+    const now = new Date();
+
+    // Find all carts with expired reservations
+    const expiredCarts = await this.prisma.cart.findMany({
+      where: {
+        reservedUntil: {
+          not: null,
+          lt: now,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (expiredCarts.length === 0) {
+      return 0;
+    }
+
+    const cartIds = expiredCarts.map((cart) => cart.id);
+
+    // Clear reservation on items
+    await this.prisma.cartItem.updateMany({
+      where: { cartId: { in: cartIds } },
+      data: { reservedStock: false },
+    });
+
+    // Clear reservation timestamp on carts
+    await this.prisma.cart.updateMany({
+      where: { id: { in: cartIds } },
+      data: { reservedUntil: null },
+    });
+
+    return expiredCarts.length;
+  }
+
+  /**
    * Recalculate cart totals
    */
   private async recalculateTotals(cartId: string) {
