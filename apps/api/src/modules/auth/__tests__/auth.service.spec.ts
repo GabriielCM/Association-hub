@@ -20,6 +20,8 @@ const mockEmail = 'test@example.com';
 const mockPassword = 'password123';
 const mockPasswordHash = 'hashed-password';
 const mockAssociationId = 'assoc-123';
+const mockPlainRefreshToken = 'plain-refresh-token-value';
+const mockHashedRefreshToken = 'hashed-refresh-token-value';
 
 const mockUser = {
   id: mockUserId,
@@ -44,7 +46,7 @@ const mockAssociation = {
 
 const mockRefreshToken = {
   id: 'token-123',
-  token: 'refresh-token-value',
+  token: mockHashedRefreshToken, // Stored hashed in DB
   userId: mockUserId,
   expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
   user: mockUser,
@@ -78,6 +80,7 @@ const mockPrismaService = {
   },
   refreshToken: {
     findUnique: vi.fn(),
+    findMany: vi.fn(),
     create: vi.fn(),
     delete: vi.fn(),
     deleteMany: vi.fn(),
@@ -93,6 +96,7 @@ const mockUsersService = {
 // Mock JwtService
 const mockJwtService = {
   sign: vi.fn().mockReturnValue('mock-jwt-token'),
+  verify: vi.fn(),
 };
 
 // Mock ConfigService
@@ -126,6 +130,7 @@ describe('AuthService', () => {
       mockPrismaService.user.update.mockResolvedValue(mockUser);
       mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
       vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      vi.mocked(bcrypt.hash).mockResolvedValue(mockHashedRefreshToken as never);
 
       const result = await service.login({
         email: mockEmail,
@@ -175,6 +180,7 @@ describe('AuthService', () => {
       mockPrismaService.user.update.mockResolvedValue(mockUser);
       mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
       vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      vi.mocked(bcrypt.hash).mockResolvedValue(mockHashedRefreshToken as never);
 
       await service.login({ email: mockEmail, password: mockPassword });
 
@@ -189,6 +195,7 @@ describe('AuthService', () => {
       mockPrismaService.user.update.mockResolvedValue(mockUser);
       mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
       vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      vi.mocked(bcrypt.hash).mockResolvedValue(mockHashedRefreshToken as never);
 
       await service.login({
         email: 'TEST@EXAMPLE.COM',
@@ -197,6 +204,27 @@ describe('AuthService', () => {
 
       expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email: 'test@example.com' },
+      });
+    });
+
+    it('deve fazer hash do refresh token antes de armazenar', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockPrismaService.user.update.mockResolvedValue(mockUser);
+      mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      vi.mocked(bcrypt.hash).mockResolvedValue(mockHashedRefreshToken as never);
+
+      await service.login({ email: mockEmail, password: mockPassword });
+
+      // Verify bcrypt.hash was called for the refresh token
+      expect(bcrypt.hash).toHaveBeenCalledWith(expect.any(String), 10);
+      // Verify the hashed token is stored, not the plain token
+      expect(mockPrismaService.refreshToken.create).toHaveBeenCalledWith({
+        data: {
+          token: mockHashedRefreshToken,
+          userId: mockUserId,
+          expiresAt: expect.any(Date),
+        },
       });
     });
   });
@@ -213,7 +241,10 @@ describe('AuthService', () => {
       const newUser = { ...mockUser, email: registerDto.email, name: registerDto.name };
       mockPrismaService.user.findUnique.mockResolvedValue(null);
       mockPrismaService.association.findFirst.mockResolvedValue(mockAssociation);
-      vi.mocked(bcrypt.hash).mockResolvedValue(mockPasswordHash as never);
+      // Mock hash for both password and refresh token
+      vi.mocked(bcrypt.hash)
+        .mockResolvedValueOnce(mockPasswordHash as never)
+        .mockResolvedValueOnce(mockHashedRefreshToken as never);
       mockPrismaService.user.create.mockResolvedValue(newUser);
       mockPrismaService.userPoints.create.mockResolvedValue({ userId: newUser.id });
       mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
@@ -238,7 +269,9 @@ describe('AuthService', () => {
       const newUser = { ...mockUser, id: 'new-user-id' };
       mockPrismaService.user.findUnique.mockResolvedValue(null);
       mockPrismaService.association.findFirst.mockResolvedValue(mockAssociation);
-      vi.mocked(bcrypt.hash).mockResolvedValue(mockPasswordHash as never);
+      vi.mocked(bcrypt.hash)
+        .mockResolvedValueOnce(mockPasswordHash as never)
+        .mockResolvedValueOnce(mockHashedRefreshToken as never);
       mockPrismaService.user.create.mockResolvedValue(newUser);
       mockPrismaService.userPoints.create.mockResolvedValue({ userId: newUser.id });
       mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
@@ -256,7 +289,9 @@ describe('AuthService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
       mockPrismaService.association.findFirst.mockResolvedValue(null);
       mockPrismaService.association.create.mockResolvedValue(newAssociation);
-      vi.mocked(bcrypt.hash).mockResolvedValue(mockPasswordHash as never);
+      vi.mocked(bcrypt.hash)
+        .mockResolvedValueOnce(mockPasswordHash as never)
+        .mockResolvedValueOnce(mockHashedRefreshToken as never);
       mockPrismaService.user.create.mockResolvedValue(newUser);
       mockPrismaService.userPoints.create.mockResolvedValue({ userId: newUser.id });
       mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
@@ -275,7 +310,9 @@ describe('AuthService', () => {
       const newUser = { ...mockUser };
       mockPrismaService.user.findUnique.mockResolvedValue(null);
       mockPrismaService.association.findFirst.mockResolvedValue(mockAssociation);
-      vi.mocked(bcrypt.hash).mockResolvedValue(mockPasswordHash as never);
+      vi.mocked(bcrypt.hash)
+        .mockResolvedValueOnce(mockPasswordHash as never)
+        .mockResolvedValueOnce(mockHashedRefreshToken as never);
       mockPrismaService.user.create.mockResolvedValue(newUser);
       mockPrismaService.userPoints.create.mockResolvedValue({ userId: newUser.id });
       mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
@@ -289,7 +326,9 @@ describe('AuthService', () => {
       const newUser = { ...mockUser };
       mockPrismaService.user.findUnique.mockResolvedValue(null);
       mockPrismaService.association.findFirst.mockResolvedValue(mockAssociation);
-      vi.mocked(bcrypt.hash).mockResolvedValue(mockPasswordHash as never);
+      vi.mocked(bcrypt.hash)
+        .mockResolvedValueOnce(mockPasswordHash as never)
+        .mockResolvedValueOnce(mockHashedRefreshToken as never);
       mockPrismaService.user.create.mockResolvedValue(newUser);
       mockPrismaService.userPoints.create.mockResolvedValue({ userId: newUser.id });
       mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
@@ -306,7 +345,9 @@ describe('AuthService', () => {
       const newUser = { ...mockUser };
       mockPrismaService.user.findUnique.mockResolvedValue(null);
       mockPrismaService.association.findFirst.mockResolvedValue(mockAssociation);
-      vi.mocked(bcrypt.hash).mockResolvedValue(mockPasswordHash as never);
+      vi.mocked(bcrypt.hash)
+        .mockResolvedValueOnce(mockPasswordHash as never)
+        .mockResolvedValueOnce(mockHashedRefreshToken as never);
       mockPrismaService.user.create.mockResolvedValue(newUser);
       mockPrismaService.userPoints.create.mockResolvedValue({ userId: newUser.id });
       mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
@@ -324,19 +365,25 @@ describe('AuthService', () => {
 
   describe('refreshToken', () => {
     it('deve renovar tokens com refreshToken válido', async () => {
-      mockPrismaService.refreshToken.findUnique.mockResolvedValue(mockRefreshToken);
+      mockJwtService.verify.mockReturnValue(mockJwtPayload);
+      mockPrismaService.refreshToken.findMany.mockResolvedValue([mockRefreshToken]);
       mockPrismaService.refreshToken.delete.mockResolvedValue(mockRefreshToken);
       mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      vi.mocked(bcrypt.hash).mockResolvedValue(mockHashedRefreshToken as never);
 
-      const result = await service.refreshToken({ refreshToken: mockRefreshToken.token });
+      const result = await service.refreshToken({ refreshToken: mockPlainRefreshToken });
 
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
       expect(result).toHaveProperty('expiresIn');
+      // Verify bcrypt.compare was used to verify the token
+      expect(bcrypt.compare).toHaveBeenCalledWith(mockPlainRefreshToken, mockHashedRefreshToken);
     });
 
     it('deve lançar UnauthorizedException para token inexistente', async () => {
-      mockPrismaService.refreshToken.findUnique.mockResolvedValue(null);
+      mockJwtService.verify.mockReturnValue(mockJwtPayload);
+      mockPrismaService.refreshToken.findMany.mockResolvedValue([]);
 
       await expect(
         service.refreshToken({ refreshToken: 'invalid-token' })
@@ -344,24 +391,53 @@ describe('AuthService', () => {
     });
 
     it('deve lançar UnauthorizedException para token expirado', async () => {
-      mockPrismaService.refreshToken.findUnique.mockResolvedValue(mockExpiredRefreshToken);
+      mockJwtService.verify.mockReturnValue(mockJwtPayload);
+      mockPrismaService.refreshToken.findMany.mockResolvedValue([mockExpiredRefreshToken]);
       mockPrismaService.refreshToken.delete.mockResolvedValue(mockExpiredRefreshToken);
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
 
       await expect(
-        service.refreshToken({ refreshToken: mockExpiredRefreshToken.token })
+        service.refreshToken({ refreshToken: mockPlainRefreshToken })
       ).rejects.toThrow(UnauthorizedException);
     });
 
     it('deve deletar token antigo após renovação', async () => {
-      mockPrismaService.refreshToken.findUnique.mockResolvedValue(mockRefreshToken);
+      mockJwtService.verify.mockReturnValue(mockJwtPayload);
+      mockPrismaService.refreshToken.findMany.mockResolvedValue([mockRefreshToken]);
       mockPrismaService.refreshToken.delete.mockResolvedValue(mockRefreshToken);
       mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      vi.mocked(bcrypt.hash).mockResolvedValue(mockHashedRefreshToken as never);
 
-      await service.refreshToken({ refreshToken: mockRefreshToken.token });
+      await service.refreshToken({ refreshToken: mockPlainRefreshToken });
 
       expect(mockPrismaService.refreshToken.delete).toHaveBeenCalledWith({
         where: { id: mockRefreshToken.id },
       });
+    });
+
+    it('deve verificar token usando bcrypt.compare', async () => {
+      mockJwtService.verify.mockReturnValue(mockJwtPayload);
+      mockPrismaService.refreshToken.findMany.mockResolvedValue([mockRefreshToken]);
+      mockPrismaService.refreshToken.delete.mockResolvedValue(mockRefreshToken);
+      mockPrismaService.refreshToken.create.mockResolvedValue(mockRefreshToken);
+      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      vi.mocked(bcrypt.hash).mockResolvedValue(mockHashedRefreshToken as never);
+
+      await service.refreshToken({ refreshToken: mockPlainRefreshToken });
+
+      // Verify that bcrypt.compare was called to verify the hashed token
+      expect(bcrypt.compare).toHaveBeenCalledWith(mockPlainRefreshToken, mockHashedRefreshToken);
+    });
+
+    it('deve lançar UnauthorizedException quando o hash não corresponde', async () => {
+      mockJwtService.verify.mockReturnValue(mockJwtPayload);
+      mockPrismaService.refreshToken.findMany.mockResolvedValue([mockRefreshToken]);
+      vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
+
+      await expect(
+        service.refreshToken({ refreshToken: 'wrong-token' })
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 

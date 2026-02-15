@@ -1,0 +1,25 @@
+{
+  "active": true,
+  "spec": "005-hash-refresh-tokens-before-database-storage",
+  "state": "building",
+  "subtasks": {
+    "completed": 3,
+    "total": 4,
+    "in_progress": 1,
+    "failed": 0
+  },
+  "phase": {
+    "current": "Integration Verification",
+    "id": null,
+    "total": 1
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+    "number": 5,
+    "started_at": "2026-02-15T10:42:47.371498"
+  },
+  "last_update": "2026-02-15T10:57:33.173518"
+}
