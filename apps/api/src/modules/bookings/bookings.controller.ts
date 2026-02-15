@@ -30,7 +30,7 @@ import {
 
 @ApiTags('reservas')
 @ApiBearerAuth()
-@Controller('api/v1/reservas')
+@Controller('reservas')
 @UseGuards(JwtAuthGuard)
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
@@ -49,7 +49,8 @@ export class BookingsController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateBookingDto,
   ) {
-    return this.bookingsService.createBooking(user.sub, dto);
+    const data = await this.bookingsService.createBooking(user.sub, dto);
+    return { success: true, data };
   }
 
   @Get('minhas')
@@ -59,7 +60,8 @@ export class BookingsController {
     @CurrentUser() user: JwtPayload,
     @Query() query: MyBookingsQueryDto,
   ) {
-    return this.bookingsService.getMyBookings(user.sub, query);
+    const data = await this.bookingsService.getMyBookings(user.sub, query);
+    return { success: true, data };
   }
 
   @Get(':id')
@@ -72,7 +74,8 @@ export class BookingsController {
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
   ) {
-    return this.bookingsService.getBooking(id, user.sub);
+    const data = await this.bookingsService.getBooking(id, user.sub);
+    return { success: true, data };
   }
 
   @Post(':id/cancelar')
@@ -87,7 +90,8 @@ export class BookingsController {
     @Param('id') id: string,
     @Body() dto: CancelBookingDto,
   ) {
-    return this.bookingsService.cancelBooking(id, user.sub, dto);
+    const data = await this.bookingsService.cancelBooking(id, user.sub, dto);
+    return { success: true, data };
   }
 
   // ===========================================
@@ -103,14 +107,16 @@ export class BookingsController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: JoinWaitlistDto,
   ) {
-    return this.bookingsService.joinWaitlist(user.sub, dto);
+    const data = await this.bookingsService.joinWaitlist(user.sub, dto);
+    return { success: true, data };
   }
 
   @Get('fila/posicao')
   @ApiOperation({ summary: 'Ver posição na fila de espera' })
   @ApiResponse({ status: 200, description: 'Posições na fila retornadas' })
   async getWaitlistPosition(@CurrentUser() user: JwtPayload) {
-    return this.bookingsService.getWaitlistPosition(user.sub);
+    const data = await this.bookingsService.getWaitlistPosition(user.sub);
+    return { success: true, data };
   }
 
   @Delete('fila/:id')
@@ -123,7 +129,8 @@ export class BookingsController {
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
   ) {
-    return this.bookingsService.leaveWaitlist(id, user.sub);
+    const data = await this.bookingsService.leaveWaitlist(id, user.sub);
+    return { success: true, data };
   }
 
   @Post('fila/:id/confirmar')
@@ -138,6 +145,7 @@ export class BookingsController {
     @Param('id') id: string,
     @Body() dto: ConfirmWaitlistDto,
   ) {
-    return this.bookingsService.confirmWaitlistSlot(id, user.sub, dto.accept);
+    const data = await this.bookingsService.confirmWaitlistSlot(id, user.sub, dto.accept);
+    return { success: true, data };
   }
 }

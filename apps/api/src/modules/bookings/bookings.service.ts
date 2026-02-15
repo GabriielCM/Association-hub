@@ -970,6 +970,7 @@ export class BookingsService {
       discountApplied: booking.discountApplied ? Number(booking.discountApplied) : null,
       finalFee: booking.finalFee ? Number(booking.finalFee) : null,
       status: booking.status,
+      canCancel: ['PENDING', 'APPROVED'].includes(booking.status),
       approvedAt: booking.approvedAt,
       rejectedAt: booking.rejectedAt,
       rejectionReason: booking.rejectionReason,

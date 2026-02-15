@@ -102,6 +102,18 @@ export default function HomeScreen() {
                 onPress={() => router.push('/wallet')}
               />
               <QuickActionCard
+                icon="🏠"
+                title="Espaços"
+                subtitle="Reservar"
+                onPress={() => router.push('/spaces' as any)}
+              />
+              <QuickActionCard
+                icon="📋"
+                title="Reservas"
+                subtitle="Minhas"
+                onPress={() => router.push('/bookings' as any)}
+              />
+              <QuickActionCard
                 icon="⭐"
                 title="Assinaturas"
                 subtitle="Planos"

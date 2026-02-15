@@ -106,7 +106,7 @@ export class SpacesService {
     const startDate = new Date(query.startDate);
     const endDate = new Date(query.endDate);
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
 
     // Get blocks for the period
     const blocks = await this.prisma.spaceBlock.findMany({
@@ -161,6 +161,11 @@ export class SpacesService {
           result.available = false;
           result.reason = 'outside_advance';
         }
+        // Check if weekday is blocked
+        else if (space.blockedWeekdays?.includes(currentDate.getUTCDay())) {
+          result.available = false;
+          result.reason = 'blocked_weekday';
+        }
         // Check if blocked
         else if (blockedDates.has(dateStr)) {
           result.available = false;
@@ -200,7 +205,7 @@ export class SpacesService {
       }
 
       availability.push(result);
-      currentDate.setDate(currentDate.getDate() + 1);
+      currentDate.setUTCDate(currentDate.getUTCDate() + 1);
     }
 
     return { spaceId, availability };
@@ -333,6 +338,7 @@ export class SpacesService {
         maxAdvanceDays: dto.maxAdvanceDays,
         bookingIntervalMonths: dto.bookingIntervalMonths,
         blockedSpaceIds: dto.blockedSpaceIds,
+        blockedWeekdays: dto.blockedWeekdays,
       },
     });
 
@@ -551,6 +557,64 @@ export class SpacesService {
   }
 
   // ===========================================
+  // IMAGE MANAGEMENT
+  // ===========================================
+
+  /**
+   * Add image to space
+   */
+  async addImage(spaceId: string, associationId: string, imageUrl: string) {
+    const space = await this.prisma.space.findUnique({
+      where: { id: spaceId, deletedAt: null },
+    });
+
+    if (!space || space.associationId !== associationId) {
+      throw new NotFoundException('Espaço não encontrado');
+    }
+
+    const images = [...(space.images || []), imageUrl];
+
+    const updated = await this.prisma.space.update({
+      where: { id: spaceId },
+      data: {
+        images,
+        mainImageUrl: images[0],
+      },
+    });
+
+    this.logger.log(`Image added to space ${spaceId}: ${imageUrl}`);
+
+    return this.formatSpace(updated);
+  }
+
+  /**
+   * Remove image from space
+   */
+  async removeImage(spaceId: string, associationId: string, imageUrl: string) {
+    const space = await this.prisma.space.findUnique({
+      where: { id: spaceId, deletedAt: null },
+    });
+
+    if (!space || space.associationId !== associationId) {
+      throw new NotFoundException('Espaço não encontrado');
+    }
+
+    const images = (space.images || []).filter((img: string) => img !== imageUrl);
+
+    const updated = await this.prisma.space.update({
+      where: { id: spaceId },
+      data: {
+        images,
+        mainImageUrl: images[0] || null,
+      },
+    });
+
+    this.logger.log(`Image removed from space ${spaceId}: ${imageUrl}`);
+
+    return this.formatSpace(updated);
+  }
+
+  // ===========================================
   // HELPER METHODS
   // ===========================================
 
@@ -591,6 +655,7 @@ export class SpacesService {
       minAdvanceDays: space.minAdvanceDays,
       maxAdvanceDays: space.maxAdvanceDays,
       bookingIntervalMonths: space.bookingIntervalMonths,
+      blockedWeekdays: space.blockedWeekdays ?? [],
       blockedSpaceIds: space.blockedSpaceIds,
       status: space.status,
       createdAt: space.createdAt,

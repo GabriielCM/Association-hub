@@ -27,7 +27,7 @@ import {
 
 @ApiTags('admin/reservas')
 @ApiBearerAuth()
-@Controller('api/v1/reservas')
+@Controller('reservas')
 @UseGuards(JwtAuthGuard)
 export class AdminBookingsController {
   constructor(private readonly bookingsService: BookingsService) {}

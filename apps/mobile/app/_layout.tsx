@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { QueryProvider, ThemeProvider, AuthProvider } from '@/providers';
 import { WebSocketProvider } from '@/providers/WebSocketProvider';
+import { SafeStripeProvider } from '@/providers/StripeProvider';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useThemeContext } from '@/providers/ThemeProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -49,6 +50,8 @@ function RootLayoutContent() {
         <Stack.Screen name="card" options={{ headerShown: false }} />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen name="wallet" options={{ headerShown: false }} />
+        <Stack.Screen name="store" options={{ headerShown: false }} />
+        <Stack.Screen name="orders" options={{ headerShown: false }} />
       </Stack>
     </>
   );
@@ -71,7 +74,9 @@ export default function RootLayout() {
             <ErrorBoundary>
               <AuthProvider>
                 <WebSocketProvider>
-                  <RootLayoutContent />
+                  <SafeStripeProvider>
+                    <RootLayoutContent />
+                  </SafeStripeProvider>
                 </WebSocketProvider>
               </AuthProvider>
             </ErrorBoundary>

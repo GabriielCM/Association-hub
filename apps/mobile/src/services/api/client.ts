@@ -166,6 +166,14 @@ export async function postFormData<T>(url: string, formData: FormData): Promise<
   return response.data.data as T;
 }
 
+export async function patch<T>(url: string, data?: object): Promise<T> {
+  const response = await api.patch<ApiResponse<T>>(url, data);
+  if (!response.data.success) {
+    throw new Error(response.data.error?.message || 'Request failed');
+  }
+  return response.data.data as T;
+}
+
 export async function del<T>(url: string): Promise<T> {
   const response = await api.delete<ApiResponse<T>>(url);
   if (!response.data.success) {

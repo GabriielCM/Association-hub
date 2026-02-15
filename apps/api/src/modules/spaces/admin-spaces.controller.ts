@@ -9,14 +9,24 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiConsumes,
 } from '@nestjs/swagger';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { writeFile } from 'fs/promises';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators';
 import type { JwtPayload } from '../../common/types';
@@ -33,7 +43,7 @@ import {
 
 @ApiTags('admin/spaces')
 @ApiBearerAuth()
-@Controller('api/v1/espacos')
+@Controller('espacos')
 @UseGuards(JwtAuthGuard)
 export class AdminSpacesController {
   constructor(private readonly spacesService: SpacesService) {}
@@ -89,6 +99,60 @@ export class AdminSpacesController {
   ) {
     // TODO: Add role guard for ADMIN/MANAGER
     return this.spacesService.updateStatus(id, user.associationId, dto);
+  }
+
+  // ===========================================
+  // IMAGE MANAGEMENT
+  // ===========================================
+
+  @Post(':id/images')
+  @ApiOperation({ summary: 'Upload de imagem do espaço (ADM)' })
+  @ApiParam({ name: 'id', description: 'ID do espaço' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 200, description: 'Imagem adicionada com sucesso' })
+  @ApiResponse({ status: 404, description: 'Espaço não encontrado' })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const uploadsDir = join(process.cwd(), 'uploads', 'spaces', id);
+    if (!existsSync(uploadsDir)) {
+      mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const ext = file.originalname.split('.').pop();
+    const fileName = `img-${Date.now()}.${ext}`;
+    const filePath = join(uploadsDir, fileName);
+    await writeFile(filePath, file.buffer);
+
+    const imageUrl = `/uploads/spaces/${id}/${fileName}`;
+
+    const result = await this.spacesService.addImage(id, user.associationId, imageUrl);
+    return { success: true, data: result };
+  }
+
+  @Delete(':id/images')
+  @ApiOperation({ summary: 'Remover imagem do espaço (ADM)' })
+  @ApiParam({ name: 'id', description: 'ID do espaço' })
+  @ApiResponse({ status: 200, description: 'Imagem removida com sucesso' })
+  @ApiResponse({ status: 404, description: 'Espaço não encontrado' })
+  async removeImage(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() body: { imageUrl: string },
+  ) {
+    const result = await this.spacesService.removeImage(id, user.associationId, body.imageUrl);
+    return { success: true, data: result };
   }
 
   // ===========================================

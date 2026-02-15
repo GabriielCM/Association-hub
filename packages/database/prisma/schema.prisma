@@ -1561,6 +1561,9 @@ model Space {
   // Interval between bookings for same user (in months, 0 = no restriction)
   bookingIntervalMonths Int @default(0) @map("booking_interval_months")
 
+  // Blocked weekdays (0=Sun, 1=Mon, ..., 6=Sat)
+  blockedWeekdays Int[] @default([]) @map("blocked_weekdays")
+
   // Related spaces that get blocked when this space is booked
   blockedSpaceIds String[] @default([]) @map("blocked_space_ids")
 

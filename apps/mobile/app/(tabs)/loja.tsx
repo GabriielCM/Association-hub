@@ -1,114 +1,198 @@
-import { ScrollView } from 'react-native';
-import { YStack, XStack, View } from 'tamagui';
+import { useState, useCallback } from 'react';
+import { FlatList, StyleSheet, RefreshControl } from 'react-native';
+import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { Text, Heading, Card, Badge } from '@ahub/ui';
+import { router } from 'expo-router';
+import { Text, Heading, Card, Spinner } from '@ahub/ui';
 import { formatPoints } from '@ahub/shared/utils';
+import { useCachedBalance } from '@/stores/wallet.store';
+import { useCategories } from '@/features/store/hooks/useCategories';
+import {
+  useFeaturedProducts,
+  usePromotionalProducts,
+} from '@/features/store/hooks/useProducts';
+import { CategoryCarousel } from '@/features/store/components/CategoryCarousel';
+import { ProductCard } from '@/features/store/components/ProductCard';
+import type { StoreProductListItem } from '@ahub/shared/types';
 
 export default function LojaScreen() {
+  const balance = useCachedBalance();
+  const { data: categories, refetch: refetchCategories } = useCategories();
+  const {
+    data: featured,
+    isLoading: loadingFeatured,
+    refetch: refetchFeatured,
+  } = useFeaturedProducts();
+  const {
+    data: promotional,
+    refetch: refetchPromo,
+  } = usePromotionalProducts();
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([refetchCategories(), refetchFeatured(), refetchPromo()]);
+    setRefreshing(false);
+  }, [refetchCategories, refetchFeatured, refetchPromo]);
+
+  const handleCategorySelect = (slug: string) => {
+    router.push(`/store/category/${slug}` as any);
+  };
+
+  // Build sections for the FlatList
+  const sections: Array<{ type: string; data?: StoreProductListItem[] }> = [];
+  sections.push({ type: 'header' });
+  sections.push({ type: 'categories' });
+
+  if (promotional && promotional.length > 0) {
+    sections.push({ type: 'promo-title' });
+    sections.push({ type: 'promo-grid', data: promotional });
+  }
+
+  sections.push({ type: 'featured-title' });
+  if (loadingFeatured) {
+    sections.push({ type: 'loading' });
+  } else if (featured && featured.length > 0) {
+    sections.push({ type: 'featured-grid', data: featured });
+  } else {
+    sections.push({ type: 'empty' });
+  }
+
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <ScrollView>
-        <YStack padding="$4" gap="$4">
-          {/* Header with balance */}
-          <XStack justifyContent="space-between" alignItems="center">
-            <Heading level={3}>Loja</Heading>
-            <Card variant="flat" size="sm">
-              <XStack gap="$1" alignItems="center">
-                <Text color="secondary" size="sm">
-                  Saldo:
-                </Text>
-                <Text weight="bold" color="accent">
-                  {formatPoints(0)}
-                </Text>
-              </XStack>
-            </Card>
-          </XStack>
+      <FlatList
+        data={sections}
+        keyExtractor={(_, index) => `section-${index}`}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        renderItem={({ item: section }) => {
+          switch (section.type) {
+            case 'header':
+              return (
+                <XStack
+                  paddingHorizontal="$4"
+                  paddingTop="$4"
+                  paddingBottom="$2"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Heading level={3}>Loja</Heading>
+                  <Card variant="flat" size="sm">
+                    <XStack gap="$1" alignItems="center">
+                      <Text color="secondary" size="sm">
+                        Saldo:
+                      </Text>
+                      <Text weight="bold" color="accent">
+                        {formatPoints(balance ?? 0)} pts
+                      </Text>
+                    </XStack>
+                  </Card>
+                </XStack>
+              );
 
-          {/* Categories */}
-          <XStack gap="$2">
-            <Badge variant="primary">Todos</Badge>
-            <Badge variant="ghost">Vestuário</Badge>
-            <Badge variant="ghost">Acessórios</Badge>
-            <Badge variant="ghost">Serviços</Badge>
-          </XStack>
+            case 'categories':
+              return (
+                <YStack paddingVertical="$2">
+                  {categories && categories.length > 0 ? (
+                    <CategoryCarousel
+                      categories={categories}
+                      onSelect={handleCategorySelect}
+                    />
+                  ) : null}
+                </YStack>
+              );
 
-          {/* Products Grid */}
-          <XStack flexWrap="wrap" gap="$3">
-            <ProductCard
-              name="Camiseta A-hub"
-              price={5000}
-              image="👕"
-            />
-            <ProductCard
-              name="Boné A-hub"
-              price={3000}
-              image="🧢"
-            />
-            <ProductCard
-              name="Caneca"
-              price={2000}
-              image="☕"
-            />
-            <ProductCard
-              name="Adesivos"
-              price={500}
-              image="🏷️"
-            />
-          </XStack>
+            case 'promo-title':
+              return (
+                <YStack paddingHorizontal="$4" paddingTop="$3">
+                  <XStack justifyContent="space-between" alignItems="center">
+                    <Heading level={5}>Promoções</Heading>
+                    <Text size="sm" color="accent">
+                      🔥
+                    </Text>
+                  </XStack>
+                </YStack>
+              );
 
-          {/* Empty state */}
-          <Card variant="flat">
-            <YStack
-              gap="$3"
-              alignItems="center"
-              justifyContent="center"
-              paddingVertical="$6"
-            >
-              <Text size="2xl">🛍️</Text>
-              <Text weight="semibold">Em breve</Text>
-              <Text color="secondary" size="sm" align="center">
-                A loja estará disponível em breve com produtos exclusivos
-              </Text>
-            </YStack>
-          </Card>
-        </YStack>
-      </ScrollView>
+            case 'promo-grid':
+              return (
+                <XStack
+                  flexWrap="wrap"
+                  gap="$3"
+                  paddingHorizontal="$4"
+                  paddingTop="$2"
+                >
+                  {section.data?.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </XStack>
+              );
+
+            case 'featured-title':
+              return (
+                <YStack paddingHorizontal="$4" paddingTop="$3">
+                  <Heading level={5}>Destaques</Heading>
+                </YStack>
+              );
+
+            case 'featured-grid':
+              return (
+                <XStack
+                  flexWrap="wrap"
+                  gap="$3"
+                  paddingHorizontal="$4"
+                  paddingTop="$2"
+                  paddingBottom="$4"
+                >
+                  {section.data?.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </XStack>
+              );
+
+            case 'loading':
+              return (
+                <YStack
+                  paddingVertical="$6"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Spinner />
+                </YStack>
+              );
+
+            case 'empty':
+              return (
+                <Card variant="flat" style={styles.emptyCard}>
+                  <YStack
+                    gap="$3"
+                    alignItems="center"
+                    justifyContent="center"
+                    paddingVertical="$6"
+                  >
+                    <Text size="2xl">🛍️</Text>
+                    <Text weight="semibold">Nenhum produto em destaque</Text>
+                    <Text color="secondary" size="sm" align="center">
+                      Explore as categorias para encontrar produtos
+                    </Text>
+                  </YStack>
+                </Card>
+              );
+
+            default:
+              return null;
+          }
+        }}
+      />
     </SafeAreaView>
   );
 }
 
-function ProductCard({
-  name,
-  price,
-  image,
-}: {
-  name: string;
-  price: number;
-  image: string;
-}) {
-  return (
-    <Card variant="elevated" pressable width="47%">
-      <YStack gap="$2">
-        {/* Product Image */}
-        <View
-          backgroundColor="$backgroundHover"
-          borderRadius="$md"
-          height={100}
-          alignItems="center"
-          justifyContent="center"
-        >
-          <Text size="2xl">{image}</Text>
-        </View>
-
-        {/* Product Info */}
-        <Text weight="semibold" numberOfLines={1}>
-          {name}
-        </Text>
-        <Text color="accent" weight="bold">
-          {formatPoints(price)} pts
-        </Text>
-      </YStack>
-    </Card>
-  );
-}
+const styles = StyleSheet.create({
+  emptyCard: {
+    marginHorizontal: 16,
+    marginTop: 8,
+  },
+});

@@ -24,6 +24,12 @@ export function resolveUploadUrl(path: string | null | undefined): string | null
   return `${UPLOADS_BASE_URL}${path}`;
 }
 
+// Stripe
+export const STRIPE_PUBLISHABLE_KEY =
+  Constants.expoConfig?.extra?.stripePublishableKey ||
+  process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
+  '';
+
 // Timeouts
 export const API_TIMEOUT = 10000; // 10 seconds
 export const WS_RECONNECT_INTERVAL = 5000; // 5 seconds

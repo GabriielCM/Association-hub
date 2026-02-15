@@ -646,6 +646,406 @@ export interface PdvPaymentResult {
   orderCode: string;
 }
 
+export interface PdvPixPaymentResult {
+  checkoutCode: string;
+  paymentMethod: 'money';
+  totalMoney: number;
+  cashbackPreview: number;
+  pix: {
+    qrCode: string;
+    qrCodeBase64: string;
+    copyPaste: string;
+    expiresAt: string;
+    secondsRemaining: number;
+  };
+  stripePaymentIntentId: string;
+}
+
+export interface PdvPixStatus {
+  status: CheckoutStatus;
+  paidAt?: string;
+  cashbackEarned?: number;
+  newBalance?: number;
+}
+
+// ===========================================
+// STORE TYPES
+// ===========================================
+
+export type ProductType = 'PHYSICAL' | 'VOUCHER' | 'SERVICE';
+export type PaymentOptions = 'POINTS_ONLY' | 'MONEY_ONLY' | 'BOTH';
+
+export interface StoreCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  imageUrl?: string;
+  displayOrder: number;
+  isActive: boolean;
+  productsCount?: number;
+}
+
+export interface ProductVariant {
+  id: string;
+  sku: string;
+  name: string;
+  attributes: Record<string, string>;
+  pricePoints?: number;
+  priceMoney?: number;
+  stockCount: number;
+  imageUrl?: string;
+  isActive: boolean;
+}
+
+export interface ProductImage {
+  id: string;
+  url: string;
+  altText?: string;
+  displayOrder: number;
+}
+
+export interface ProductSpecification {
+  id: string;
+  key: string;
+  value: string;
+  displayOrder: number;
+}
+
+export interface ProductReview {
+  id: string;
+  rating: number;
+  comment?: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+  };
+}
+
+export interface StoreProduct {
+  id: string;
+  categoryId: string;
+  category?: StoreCategory;
+  name: string;
+  slug: string;
+  shortDescription?: string;
+  longDescription?: string;
+  type: ProductType;
+  pricePoints?: number;
+  priceMoney?: number;
+  paymentOptions: PaymentOptions;
+  allowMixedPayment: boolean;
+  stockType: 'limited' | 'unlimited';
+  stockCount?: number;
+  limitPerUser?: number;
+  userPurchaseCount?: number;
+  cashbackPercent?: number;
+  voucherValidityDays?: number;
+  isFeatured: boolean;
+  isPromotional: boolean;
+  promotionalPricePoints?: number;
+  promotionalPriceMoney?: number;
+  promotionalEndsAt?: string;
+  pickupLocation?: string;
+  averageRating?: number;
+  reviewCount: number;
+  soldCount: number;
+  isActive: boolean;
+  isFavorited?: boolean;
+  isAvailable?: boolean;
+  userIsEligible?: boolean;
+  variants: ProductVariant[];
+  images: ProductImage[];
+  specifications: ProductSpecification[];
+  eligiblePlans: string[];
+}
+
+export interface StoreProductListItem {
+  id: string;
+  name: string;
+  slug: string;
+  shortDescription?: string;
+  type: ProductType;
+  pricePoints?: number;
+  priceMoney?: number;
+  paymentOptions: PaymentOptions;
+  isFeatured: boolean;
+  isPromotional: boolean;
+  promotionalPricePoints?: number;
+  promotionalPriceMoney?: number;
+  averageRating?: number;
+  reviewCount: number;
+  thumbnailUrl?: string;
+  isAvailable: boolean;
+  isFavorited?: boolean;
+}
+
+export interface StoreProductsFilter {
+  categoryId?: string;
+  type?: ProductType;
+  search?: string;
+  featured?: boolean;
+  promotional?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+export interface StoreProductsResponse {
+  data: StoreProductListItem[];
+  meta: {
+    currentPage: number;
+    perPage: number;
+    totalPages: number;
+    totalCount: number;
+  };
+}
+
+export interface FavoriteItem {
+  id: string;
+  product: {
+    id: string;
+    name: string;
+    slug: string;
+    shortDescription?: string;
+    pricePoints?: number;
+    priceMoney?: number;
+    imageUrl?: string;
+    type: string;
+    isAvailable: boolean;
+  };
+  createdAt: string;
+}
+
+// ===========================================
+// CART TYPES
+// ===========================================
+
+export interface CartItemData {
+  id: string;
+  product: {
+    id: string;
+    name: string;
+    slug: string;
+    imageUrl?: string;
+    type: string;
+  };
+  variant?: {
+    id: string;
+    name: string;
+    imageUrl?: string;
+  };
+  quantity: number;
+  unitPricePoints: number;
+  unitPriceMoney: number;
+  totalPoints: number;
+  totalMoney: number;
+}
+
+export interface Cart {
+  id: string;
+  items: CartItemData[];
+  subtotalPoints: number;
+  subtotalMoney: number;
+  itemCount: number;
+  reservedUntil?: string;
+}
+
+export interface CheckoutValidation {
+  isValid: boolean;
+  errors?: string[];
+  items: CartItemData[];
+  subtotalPoints: number;
+  subtotalMoney: number;
+  subscriptionDiscount?: number;
+  discountPoints?: number;
+  discountMoney?: number;
+  totalPoints: number;
+  totalMoney: number;
+  availablePaymentMethods: string[];
+  userBalance: number;
+  canPayWithPoints: boolean;
+}
+
+export interface CheckoutResult {
+  orderId: string;
+  orderCode: string;
+  status: string;
+  paymentStatus?: string;
+  pointsUsed?: number;
+  moneyPaid?: number;
+  cashbackEarned?: number;
+  pixQrCode?: string;
+  pixCopyPaste?: string;
+  expiresAt?: string;
+}
+
+export interface StripeIntentResult {
+  paymentIntentId: string;
+  clientSecret: string;
+  amount: number;
+}
+
+// Process checkout response (discriminated union by payment method)
+export interface PointsCheckoutResponse {
+  success: true;
+  orderId: string;
+  orderCode: string;
+  pointsUsed: number;
+  newBalance: number;
+}
+
+export interface CardCheckoutResponse {
+  success: true;
+  requiresPayment: true;
+  paymentIntentId: string;
+  clientSecret: string;
+  amount: number;
+  cartId: string;
+}
+
+export interface MixedCheckoutResponse {
+  success: true;
+  requiresPayment: true;
+  paymentIntentId: string;
+  clientSecret: string;
+  amount: number;
+  pointsUsed: number;
+  pointsTransactionId: string;
+  cartId: string;
+}
+
+export type ProcessCheckoutResponse =
+  | PointsCheckoutResponse
+  | CardCheckoutResponse
+  | MixedCheckoutResponse;
+
+// ===========================================
+// ORDER TYPES
+// ===========================================
+
+export type OrderSource = 'STORE' | 'PDV';
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'READY' | 'COMPLETED' | 'CANCELLED';
+export type OrderPaymentMethod = 'POINTS' | 'MONEY' | 'MIXED';
+export type OrderItemType = 'PHYSICAL' | 'VOUCHER' | 'SERVICE';
+
+export interface OrderItem {
+  id: string;
+  productId: string;
+  variantId?: string;
+  productName: string;
+  variantName?: string;
+  productImage?: string;
+  quantity: number;
+  unitPricePoints: number;
+  unitPriceMoney: number;
+  totalPoints: number;
+  totalMoney: number;
+  type: OrderItemType;
+  voucher?: {
+    code: string;
+    status: 'available' | 'used' | 'expired';
+    expiresAt?: string;
+  };
+}
+
+export interface OrderStatusHistoryEntry {
+  status: OrderStatus;
+  label: string;
+  description?: string;
+  createdAt: string;
+}
+
+export interface Order {
+  id: string;
+  code: string;
+  source: OrderSource;
+  sourceName: string;
+  status: OrderStatus;
+  statusLabel: string;
+  items: OrderItem[];
+  itemsCount: number;
+  itemsPreview?: Array<{ name: string; image?: string }>;
+  subtotalPoints: number;
+  subtotalMoney: number;
+  paymentMethod: OrderPaymentMethod;
+  pointsUsed?: number;
+  moneyPaid?: number;
+  cashbackEarned?: number;
+  pickupLocation?: string;
+  pickupCode?: string;
+  timeline: OrderStatusHistoryEntry[];
+  receipt?: {
+    number: string;
+    available: boolean;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrdersFilter {
+  source?: OrderSource;
+  status?: OrderStatus;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface OrdersListResponse {
+  data: Order[];
+  meta: {
+    currentPage: number;
+    perPage: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface OrderReceipt {
+  receiptNumber: string;
+  order: {
+    code: string;
+    createdAt: string;
+  };
+  user: {
+    name: string;
+    email: string;
+    memberSince: string;
+  };
+  items: Array<{
+    name: string;
+    quantity: number;
+    unitPrice: string;
+    total: string;
+  }>;
+  subtotal: string;
+  payment: {
+    pointsUsed: number;
+    moneyPaid: number;
+    cashback: number;
+  };
+  pickupLocation?: string;
+}
+
+export interface Voucher {
+  id: string;
+  orderItemId: string;
+  productName: string;
+  productDescription?: string;
+  code: string;
+  qrCode: string;
+  status: 'available' | 'used' | 'expired';
+  statusLabel: string;
+  instructions?: string;
+  terms?: string;
+  expiresAt?: string;
+  expiresInDays?: number;
+  usedAt?: string;
+}
+
 // ===========================================
 // EVENT TYPES
 // ===========================================
@@ -1221,4 +1621,211 @@ export interface PaginationParams {
   limit?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+}
+
+// ===========================================
+// SPACES & BOOKINGS TYPES
+// ===========================================
+
+export type SpaceStatus = 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE';
+export type BookingPeriodType = 'DAY' | 'SHIFT' | 'HOUR';
+export type BookingStatus =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'CANCELLED'
+  | 'EXPIRED'
+  | 'COMPLETED';
+
+export interface SpaceShift {
+  name: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface SpaceBlock {
+  id: string;
+  date: string;
+  reason?: string;
+  createdAt?: string;
+}
+
+export interface SpaceListItem {
+  id: string;
+  name: string;
+  description: string;
+  mainImageUrl?: string;
+  images?: string[];
+  capacity: number;
+  fee?: number;
+  periodType: BookingPeriodType;
+  status: SpaceStatus;
+  createdAt?: string;
+}
+
+export interface SpaceDetail extends SpaceListItem {
+  images: string[];
+  shifts?: SpaceShift[];
+  openingTime?: string;
+  closingTime?: string;
+  minDuration?: number;
+  minAdvanceDays: number;
+  maxAdvanceDays: number;
+  bookingIntervalMonths?: number;
+  blockedWeekdays: number[];
+  blockedSpaces?: Array<{ id: string; name: string }>;
+  blocks?: SpaceBlock[];
+  updatedAt?: string;
+}
+
+export type AvailabilityStatus =
+  | 'disponivel'
+  | 'pendente'
+  | 'ocupado'
+  | 'bloqueado'
+  | 'manutencao';
+
+export interface SpaceAvailabilityDay {
+  date: string;
+  status: AvailabilityStatus;
+  reason?: string;
+}
+
+export interface SpaceAvailabilityShiftDay {
+  date: string;
+  shifts: Record<string, AvailabilityStatus>;
+}
+
+export interface SpaceAvailabilityHourSlot {
+  start: string;
+  end: string;
+  status: AvailabilityStatus;
+}
+
+export interface SpaceAvailabilityHourDay {
+  date: string;
+  slots: SpaceAvailabilityHourSlot[];
+}
+
+export interface SpaceAvailabilityResponse {
+  spaceId: string;
+  periodType: BookingPeriodType;
+  shifts?: SpaceShift[];
+  openingTime?: string;
+  closingTime?: string;
+  minDuration?: number;
+  availability:
+    | SpaceAvailabilityDay[]
+    | SpaceAvailabilityShiftDay[]
+    | SpaceAvailabilityHourDay[];
+}
+
+export interface BookingListItem {
+  id: string;
+  space: {
+    id: string;
+    name: string;
+    mainImageUrl?: string;
+  };
+  date: string;
+  periodType: BookingPeriodType;
+  shiftName?: string;
+  startTime?: string;
+  endTime?: string;
+  fee?: number;
+  discountApplied?: number;
+  finalFee?: number;
+  status: BookingStatus;
+  canCancel: boolean;
+  createdAt: string;
+}
+
+export interface BookingDetail extends BookingListItem {
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
+  cancelledBy?: string;
+  cancelledAt?: string;
+  cancellationReason?: string;
+  updatedAt?: string;
+}
+
+export interface MyBookingsFilter {
+  status?: BookingStatus;
+  tab?: 'pending' | 'approved' | 'history';
+  page?: number;
+  limit?: number;
+}
+
+export interface MyBookingsResponse {
+  data: BookingListItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface CreateBookingInput {
+  spaceId: string;
+  date: string;
+  periodType: BookingPeriodType;
+  shiftName?: string;
+  startTime?: string;
+  endTime?: string;
+}
+
+export interface CreateBookingResult {
+  id: string;
+  spaceId: string;
+  date: string;
+  status: BookingStatus;
+  message: string;
+  createdAt: string;
+}
+
+export interface WaitlistEntry {
+  id: string;
+  space: {
+    id: string;
+    name: string;
+  };
+  date: string;
+  position: number;
+  totalInQueue: number;
+  notified: boolean;
+  expiresAt?: string;
+  createdAt: string;
+}
+
+export interface WaitlistPositionResponse {
+  entries: WaitlistEntry[];
+}
+
+export interface JoinWaitlistInput {
+  spaceId: string;
+  date: string;
+  periodType: BookingPeriodType;
+  shiftName?: string;
+  startTime?: string;
+  endTime?: string;
+}
+
+export interface SpacesListFilter {
+  status?: SpaceStatus;
+  period?: BookingPeriodType;
+  page?: number;
+  limit?: number;
+}
+
+export interface SpacesListResponse {
+  data: SpaceListItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }

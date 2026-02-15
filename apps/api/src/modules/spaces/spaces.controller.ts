@@ -24,7 +24,7 @@ import {
 
 @ApiTags('spaces')
 @ApiBearerAuth()
-@Controller('api/v1/espacos')
+@Controller('espacos')
 @UseGuards(JwtAuthGuard)
 export class SpacesController {
   constructor(private readonly spacesService: SpacesService) {}
@@ -33,7 +33,8 @@ export class SpacesController {
   @ApiOperation({ summary: 'Listar espaços ativos' })
   @ApiResponse({ status: 200, description: 'Lista de espaços retornada com sucesso' })
   async listSpaces(@CurrentUser() user: JwtPayload, @Query() query: SpaceQueryDto) {
-    return this.spacesService.listSpaces(user.associationId, query);
+    const data = await this.spacesService.listSpaces(user.associationId, query);
+    return { success: true, data };
   }
 
   @Get(':id')
@@ -42,7 +43,8 @@ export class SpacesController {
   @ApiResponse({ status: 200, description: 'Espaço retornado com sucesso', type: SpaceResponseDto })
   @ApiResponse({ status: 404, description: 'Espaço não encontrado' })
   async getSpace(@Param('id') id: string) {
-    return this.spacesService.getSpace(id);
+    const data = await this.spacesService.getSpace(id);
+    return { success: true, data };
   }
 
   @Get(':id/disponibilidade')
@@ -54,6 +56,7 @@ export class SpacesController {
     @Param('id') id: string,
     @Query() query: SpaceAvailabilityQueryDto,
   ) {
-    return this.spacesService.getAvailability(id, query);
+    const data = await this.spacesService.getAvailability(id, query);
+    return { success: true, data };
   }
 }

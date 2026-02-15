@@ -67,6 +67,13 @@
           "icon": "./assets/notification-icon.png",
           "color": "#8B5CF6"
         }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.ahub.app",
+          "enableGooglePay": true
+        }
       ]
     ],
     "experiments": {

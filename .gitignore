@@ -97,3 +97,6 @@ pip-delete-this-directory.txt
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+
+# Auto Claude data directory
+.auto-claude/

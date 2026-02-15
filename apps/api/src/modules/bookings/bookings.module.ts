@@ -13,7 +13,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     forwardRef(() => SpacesModule),
     NotificationsModule,
   ],
-  controllers: [BookingsController, AdminBookingsController],
+  controllers: [AdminBookingsController, BookingsController],
   providers: [BookingsService, BookingsScheduler],
   exports: [BookingsService],
 })

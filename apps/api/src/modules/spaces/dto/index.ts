@@ -120,6 +120,14 @@ export class CreateSpaceDto {
   @Max(12)
   bookingIntervalMonths?: number;
 
+  @ApiPropertyOptional({ example: [0, 6], description: 'Blocked weekdays: 0=Sun, 1=Mon, ..., 6=Sat' })
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  @Min(0, { each: true })
+  @Max(6, { each: true })
+  blockedWeekdays?: number[];
+
   @ApiPropertyOptional({ example: ['space-id-1', 'space-id-2'] })
   @IsOptional()
   @IsArray()
@@ -275,7 +283,7 @@ export class SpaceAvailabilityResponseDto {
   available: boolean;
 
   @ApiPropertyOptional()
-  reason?: 'blocked' | 'booked' | 'maintenance' | 'past' | 'outside_advance';
+  reason?: 'blocked' | 'blocked_weekday' | 'booked' | 'maintenance' | 'past' | 'outside_advance';
 
   @ApiPropertyOptional()
   shift?: string;
