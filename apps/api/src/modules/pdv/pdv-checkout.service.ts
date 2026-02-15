@@ -10,7 +10,7 @@ import { PointsService } from '../points/points.service';
 import { StripeService } from '../stripe/stripe.service';
 import { OrdersService } from '../orders/orders.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { PdvCheckoutStatus, PdvPaymentMethod, NotificationType, NotificationCategory } from '@prisma/client';
+import { PdvCheckoutStatus, PdvPaymentMethod, NotificationType, NotificationCategory, SubscriptionStatus } from '@prisma/client';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PaymentSource } from '../stripe/dto/create-payment-intent.dto';
@@ -38,6 +38,39 @@ export class PdvCheckoutService {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return code;
+  }
+
+  /**
+   * Get subscription discount for PDV purchases
+   */
+  private async getSubscriptionDiscount(userId: string): Promise<{ discountPercent: number; planName: string | null }> {
+    const subscription = await this.prisma.userSubscription.findUnique({
+      where: { userId },
+      include: {
+        plan: {
+          select: {
+            name: true,
+            pdvDiscount: true,
+            mutators: true,
+          },
+        },
+      },
+    });
+
+    if (!subscription || subscription.status !== SubscriptionStatus.ACTIVE) {
+      return { discountPercent: 0, planName: null };
+    }
+
+    // Check pdvDiscount field first, then fall back to mutators
+    let discountPercent = subscription.plan.pdvDiscount || 0;
+
+    // Check mutators JSON for discount_pdv if pdvDiscount is 0
+    if (discountPercent === 0 && subscription.plan.mutators) {
+      const mutators = subscription.plan.mutators as Record<string, number>;
+      discountPercent = mutators.discount_pdv || 0;
+    }
+
+    return { discountPercent, planName: subscription.plan.name };
   }
 
   /**
@@ -211,19 +244,36 @@ export class PdvCheckoutService {
       throw new BadRequestException('Este checkout expirou');
     }
 
-    // Get user balance
-    const balance = await this.pointsService.getBalance(userId);
+    // Get user balance and subscription discount
+    const [balance, subscriptionInfo] = await Promise.all([
+      this.pointsService.getBalance(userId),
+      this.getSubscriptionDiscount(userId),
+    ]);
+
+    // Calculate discounted totals
+    const subtotalPoints = checkout.totalPoints;
+    const subtotalMoney = Number(checkout.totalMoney);
+    const discountPoints = Math.floor(subtotalPoints * (subscriptionInfo.discountPercent / 100));
+    const discountMoney = subtotalMoney * (subscriptionInfo.discountPercent / 100);
+    const totalPoints = subtotalPoints - discountPoints;
+    const totalMoney = subtotalMoney - discountMoney;
 
     return {
       code: checkout.code,
       items: checkout.items,
-      totalPoints: checkout.totalPoints,
-      totalMoney: Number(checkout.totalMoney),
+      subtotalPoints,
+      subtotalMoney,
+      subscriptionDiscount: subscriptionInfo.discountPercent,
+      subscriptionPlanName: subscriptionInfo.planName,
+      discountPoints,
+      discountMoney,
+      totalPoints,
+      totalMoney,
       expiresAt: checkout.expiresAt,
       pdv: checkout.pdv,
       user: {
         balance: balance.balance,
-        canPayWithPoints: balance.balance >= checkout.totalPoints,
+        canPayWithPoints: balance.balance >= totalPoints,
       },
     };
   }
@@ -256,23 +306,35 @@ export class PdvCheckoutService {
       throw new BadRequestException('Checkout expirou');
     }
 
-    // Check user balance
+    // Get subscription discount
+    const subscriptionInfo = await this.getSubscriptionDiscount(userId);
+    const discountPoints = Math.floor(checkout.totalPoints * (subscriptionInfo.discountPercent / 100));
+    const totalPointsWithDiscount = checkout.totalPoints - discountPoints;
+
+    // Check user balance with discounted amount
     const balance = await this.pointsService.getBalance(userId);
-    if (balance.balance < checkout.totalPoints) {
+    if (balance.balance < totalPointsWithDiscount) {
       throw new BadRequestException('Saldo insuficiente');
     }
 
     // Process payment in transaction
     const result = await this.prisma.$transaction(async (tx) => {
-      // Debit points
+      // Debit points (discounted amount)
+      const description = subscriptionInfo.discountPercent > 0
+        ? `Compra no ${checkout.pdv.name} (${subscriptionInfo.discountPercent}% desconto ${subscriptionInfo.planName})`
+        : `Compra no ${checkout.pdv.name}`;
+
       const pointsTransaction = await this.pointsService.debitPoints(
         userId,
-        checkout.totalPoints,
+        totalPointsWithDiscount,
         'PDV_PURCHASE',
-        `Compra no ${checkout.pdv.name}`,
+        description,
         {
           pdvId: checkout.pdvId,
           checkoutCode: checkout.code,
+          originalPoints: checkout.totalPoints,
+          discountPercent: subscriptionInfo.discountPercent,
+          discountPoints,
         },
         checkout.id,
       );
@@ -306,12 +368,12 @@ export class PdvCheckoutService {
           userId,
           items: checkout.items ?? [],
           paymentMethod: PdvPaymentMethod.POINTS,
-          totalPoints: checkout.totalPoints,
+          totalPoints: totalPointsWithDiscount,
           pointsTransactionId: pointsTransaction.id,
         },
       });
 
-      return { pointsTransaction, sale };
+      return { pointsTransaction, sale, totalPointsWithDiscount, discountPoints };
     });
 
     // Create order
@@ -329,7 +391,7 @@ export class PdvCheckoutService {
         type: 'PHYSICAL',
       })),
       paymentMethod: 'POINTS',
-      pointsUsed: checkout.totalPoints,
+      pointsUsed: result.totalPointsWithDiscount,
       pointsTransactionId: result.pointsTransaction.id,
       pickupLocation: checkout.pdv.location,
     });
@@ -343,7 +405,7 @@ export class PdvCheckoutService {
     // Get new balance
     const newBalance = await this.pointsService.getBalance(userId);
 
-    this.logger.log(`PDV checkout ${code} paid with points by user ${userId}`);
+    this.logger.log(`PDV checkout ${code} paid with points by user ${userId}. Discount: ${result.discountPoints} pts`);
 
     return {
       success: true,
@@ -351,6 +413,9 @@ export class PdvCheckoutService {
       newBalance: newBalance.balance,
       orderId: order.id,
       orderCode: order.code,
+      originalPoints: checkout.totalPoints,
+      discountPoints: result.discountPoints,
+      pointsCharged: result.totalPointsWithDiscount,
     };
   }
 
@@ -382,18 +447,31 @@ export class PdvCheckoutService {
       throw new BadRequestException('Checkout expirou');
     }
 
-    // Create PIX payment
-    const amountCents = Math.round(Number(checkout.totalMoney) * 100);
+    // Get subscription discount
+    const subscriptionInfo = await this.getSubscriptionDiscount(userId);
+    const originalMoney = Number(checkout.totalMoney);
+    const discountMoney = originalMoney * (subscriptionInfo.discountPercent / 100);
+    const totalMoneyWithDiscount = originalMoney - discountMoney;
+
+    // Create PIX payment with discounted amount
+    const amountCents = Math.round(totalMoneyWithDiscount * 100);
+
+    const description = subscriptionInfo.discountPercent > 0
+      ? `Compra PDV - ${checkout.pdv.name} (${subscriptionInfo.discountPercent}% desconto ${subscriptionInfo.planName})`
+      : `Compra PDV - ${checkout.pdv.name}`;
 
     const pixResult = await this.stripeService.createPixPayment({
       amount: amountCents,
       source: PaymentSource.PDV,
       sourceId: checkout.id,
       userId,
-      description: `Compra PDV - ${checkout.pdv.name}`,
+      description,
       metadata: {
         checkoutCode: checkout.code,
         pdvName: checkout.pdv.name,
+        originalAmount: String(originalMoney),
+        discountPercent: String(subscriptionInfo.discountPercent),
+        discountAmount: String(discountMoney),
       },
     });
 
@@ -410,7 +488,7 @@ export class PdvCheckoutService {
       },
     });
 
-    this.logger.log(`PIX payment initiated for checkout ${code}`);
+    this.logger.log(`PIX payment initiated for checkout ${code}. Discount: R$${discountMoney.toFixed(2)}`);
 
     return {
       paymentIntentId: pixResult.paymentIntentId,
@@ -418,6 +496,9 @@ export class PdvCheckoutService {
       pixQrCode: pixResult.pixQrCode,
       pixCopyPaste: pixResult.pixCopyPaste,
       expiresAt: pixResult.expiresAt,
+      originalAmount: originalMoney,
+      discountAmount: discountMoney,
+      finalAmount: totalMoneyWithDiscount,
     };
   }
 

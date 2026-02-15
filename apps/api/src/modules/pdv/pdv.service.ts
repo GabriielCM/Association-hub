@@ -5,18 +5,32 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { PdvStatus } from '@prisma/client';
+import {
+  PdvStatus,
+  NotificationType,
+  NotificationCategory,
+  UserRole,
+  UserStatus,
+  PdvProduct,
+} from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreatePdvDto, UpdatePdvDto } from './dto/create-pdv.dto';
 import { CreatePdvProductDto, UpdatePdvProductDto, UpdateStockDto } from './dto/create-pdv-product.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { Decimal } from '@prisma/client/runtime/library';
 
+// Stock low alert threshold
+const STOCK_LOW_THRESHOLD = 5;
+
 @Injectable()
 export class PdvService {
   private readonly logger = new Logger(PdvService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   /**
    * Generate API credentials for PDV
@@ -267,7 +281,71 @@ export class PdvService {
       `Stock updated for product ${dto.productId}: ${product.stock} -> ${newStock} (${dto.reason || 'manual'})`,
     );
 
+    // Check stock low alert (async, non-blocking)
+    this.checkAndSendStockAlert(updated).catch((err) =>
+      this.logger.error('Error sending stock alert:', err),
+    );
+
     return updated;
+  }
+
+  /**
+   * Check if stock is low and send notification to admins
+   */
+  private async checkAndSendStockAlert(product: PdvProduct): Promise<void> {
+    // Only alert if stock is below threshold
+    if (product.stock >= STOCK_LOW_THRESHOLD) {
+      return;
+    }
+
+    // Get the PDV to find association
+    const pdv = await this.prisma.pdv.findUnique({
+      where: { id: product.pdvId },
+      select: { associationId: true, name: true },
+    });
+
+    if (!pdv) {
+      return;
+    }
+
+    // Find admin users for this association
+    const admins = await this.prisma.user.findMany({
+      where: {
+        associationId: pdv.associationId,
+        role: UserRole.ADMIN,
+        status: UserStatus.ACTIVE,
+      },
+      select: { id: true },
+    });
+
+    if (admins.length === 0) {
+      this.logger.debug(`No admins found for association ${pdv.associationId}`);
+      return;
+    }
+
+    const adminIds = admins.map((a) => a.id);
+
+    // Send notification to all admins
+    const count = await this.notificationsService.createBatch({
+      userIds: adminIds,
+      type: NotificationType.ADMIN_ANNOUNCEMENT,
+      category: NotificationCategory.SYSTEM,
+      title: 'Estoque Baixo no PDV',
+      body: `O produto "${product.name}" está com estoque baixo (${product.stock} unidades) no PDV ${pdv.name}`,
+      data: {
+        productId: product.id,
+        pdvId: product.pdvId,
+        pdvName: pdv.name,
+        productName: product.name,
+        stock: product.stock,
+      },
+      actionUrl: `/admin/pdv/${product.pdvId}/products`,
+      groupKey: `stock-alert-${product.id}`,
+    });
+
+    this.logger.log(
+      `Stock low alert sent to ${count} admin(s) for product ${product.id}: ${product.stock} units`,
+    );
   }
 
   /**

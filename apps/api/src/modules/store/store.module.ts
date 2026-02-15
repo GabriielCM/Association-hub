@@ -18,6 +18,9 @@ import { StoreController } from './controllers/store.controller';
 import { StoreUserController } from './controllers/store-user.controller';
 import { StoreAdminController } from './controllers/store-admin.controller';
 
+// Schedulers
+import { CartScheduler } from './schedulers/cart.scheduler';
+
 @Module({
   imports: [
     PrismaModule,
@@ -34,6 +37,7 @@ import { StoreAdminController } from './controllers/store-admin.controller';
     CheckoutService,
     FavoritesService,
     ReviewsService,
+    CartScheduler,
   ],
   exports: [
     CategoriesService,
