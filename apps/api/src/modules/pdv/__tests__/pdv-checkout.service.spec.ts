@@ -71,6 +71,9 @@ describe('PdvCheckoutService', () => {
       association: {
         findFirst: vi.fn().mockResolvedValue({ cashbackPercent: 5 }),
       },
+      userSubscription: {
+        findUnique: vi.fn().mockResolvedValue(null), // No active subscription by default
+      },
       $transaction: vi.fn((callback) => callback(prisma)),
     };
 
