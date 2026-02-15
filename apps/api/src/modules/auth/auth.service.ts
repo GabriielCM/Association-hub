@@ -143,13 +143,16 @@ export class AuthService {
       expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION', '30d'),
     });
 
-    // Store refresh token
+    // Hash refresh token before storing
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+
+    // Store hashed refresh token
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
 
     await this.prisma.refreshToken.create({
       data: {
-        token: refreshToken,
+        token: hashedRefreshToken,
         userId,
         expiresAt,
       },

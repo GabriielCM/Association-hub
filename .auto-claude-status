@@ -1,0 +1,25 @@
+{
+  "active": true,
+  "spec": "005-hash-refresh-tokens-before-database-storage",
+  "state": "planning",
+  "subtasks": {
+    "completed": 0,
+    "total": 0,
+    "in_progress": 1,
+    "failed": 0
+  },
+  "phase": {
+    "current": "Hash Refresh Tokens Implementation",
+    "id": null,
+    "total": 3
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+    "number": 2,
+    "started_at": "2026-02-15T10:42:47.371498"
+  },
+  "last_update": "2026-02-15T10:47:31.570571"
+}

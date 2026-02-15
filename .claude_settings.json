@@ -1,0 +1,39 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read(./**)",
+      "Write(./**)",
+      "Edit(./**)",
+      "Glob(./**)",
+      "Grep(./**)",
+      "Read(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude\\worktrees\\tasks\\005-hash-refresh-tokens-before-database-storage/**)",
+      "Write(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude\\worktrees\\tasks\\005-hash-refresh-tokens-before-database-storage/**)",
+      "Edit(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude\\worktrees\\tasks\\005-hash-refresh-tokens-before-database-storage/**)",
+      "Glob(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude\\worktrees\\tasks\\005-hash-refresh-tokens-before-database-storage/**)",
+      "Grep(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude\\worktrees\\tasks\\005-hash-refresh-tokens-before-database-storage/**)",
+      "Read(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude\\worktrees\\tasks\\005-hash-refresh-tokens-before-database-storage\\.auto-claude\\specs\\005-hash-refresh-tokens-before-database-storage/**)",
+      "Write(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude\\worktrees\\tasks\\005-hash-refresh-tokens-before-database-storage\\.auto-claude\\specs\\005-hash-refresh-tokens-before-database-storage/**)",
+      "Edit(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude\\worktrees\\tasks\\005-hash-refresh-tokens-before-database-storage\\.auto-claude\\specs\\005-hash-refresh-tokens-before-database-storage/**)",
+      "Read(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude/**)",
+      "Write(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude/**)",
+      "Edit(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude/**)",
+      "Glob(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude/**)",
+      "Grep(C:\\Users\\mdcar\\OneDrive\\\u00c1rea de Trabalho\\A-hub\\.auto-claude/**)",
+      "Bash(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "mcp__context7__resolve-library-id(*)",
+      "mcp__context7__get-library-docs(*)",
+      "mcp__graphiti-memory__search_nodes(*)",
+      "mcp__graphiti-memory__search_facts(*)",
+      "mcp__graphiti-memory__add_episode(*)",
+      "mcp__graphiti-memory__get_episodes(*)",
+      "mcp__graphiti-memory__get_entity_edge(*)"
+    ]
+  }
+}
