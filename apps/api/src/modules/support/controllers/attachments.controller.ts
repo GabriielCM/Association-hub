@@ -11,6 +11,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes, ApiBody
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { sanitizeFilename } from '../../../common/utils';
 import { AttachmentsService } from '../attachments.service';
 
 interface AuthUser {
@@ -61,12 +62,12 @@ export class AttachmentsController {
 
     // In production, this would upload to S3 and return the URL
     // For now, we'll simulate with a placeholder URL
-    const url = `https://cdn.ahub.com/support/uploads/${user.id}/${Date.now()}_${file.originalname}`;
+    const url = `https://cdn.ahub.com/support/uploads/${user.id}/${Date.now()}_${sanitizeFilename(file.originalname)}`;
 
     return this.attachmentsService.registerUpload({
       userId: user.id,
       associationId: user.associationId,
-      filename: file.originalname,
+      filename: sanitizeFilename(file.originalname),
       mimeType: file.mimetype,
       sizeBytes: file.size,
       url,
