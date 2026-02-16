@@ -62,6 +62,19 @@
         }
       ],
       [
+        "expo-av",
+        {
+          "microphonePermission": "Permitir que A-hub grave mensagens de áudio."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permitir que A-hub acesse sua galeria de fotos para enviar imagens.",
+          "cameraPermission": "Permitir que A-hub acesse sua câmera para tirar fotos."
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
