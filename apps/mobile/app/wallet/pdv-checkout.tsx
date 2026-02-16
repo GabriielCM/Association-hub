@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { YStack, XStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Heading, Button, Spinner } from '@ahub/ui';
+import { Text, Button, Spinner, ScreenHeader } from '@ahub/ui';
 import {
   useCheckoutDetails,
   usePdvPayment,
@@ -38,7 +38,7 @@ export default function PdvCheckoutScreen() {
             checkout?.totalPoints ?? 0,
             `Pagamento em ${checkout?.pdv.name ?? 'PDV'}`
           );
-          router.back();
+          router.navigate('/wallet');
         },
         onError: (err) => {
           Alert.alert('Erro', err.message ?? 'Falha no pagamento.');
@@ -47,17 +47,13 @@ export default function PdvCheckoutScreen() {
     );
   }, [code, authenticate, payMutation, checkout, showCelebration]);
 
-  const handlePayPix = useCallback(() => {
-    setShowPixFlow(true);
-  }, []);
-
   const handlePixSuccess = useCallback(
     (cashbackEarned: number) => {
       const message = cashbackEarned > 0
         ? `Pagamento confirmado! Cashback: +${cashbackEarned} pts`
         : `Pagamento em ${checkout?.pdv.name ?? 'PDV'}`;
       showCelebration(cashbackEarned, message);
-      router.back();
+      router.navigate('/wallet');
     },
     [checkout, showCelebration]
   );
@@ -66,29 +62,27 @@ export default function PdvCheckoutScreen() {
     setShowPixFlow(false);
   }, []);
 
-  return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <YStack flex={1} padding="$4" gap="$4">
-        {/* Header */}
-        <XStack alignItems="center" gap="$2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onPress={() => {
-              if (showPixFlow) {
-                setShowPixFlow(false);
-              } else {
-                router.back();
-              }
-            }}
-          >
-            ←
-          </Button>
-          <Heading level={3}>
-            {showPixFlow ? 'Pagamento PIX' : 'Pagamento'}
-          </Heading>
-        </XStack>
+  // Auto-initiate PIX when payment method was pre-selected on display
+  useEffect(() => {
+    if (checkout?.paymentMethod === 'PIX' && !showPixFlow) {
+      setShowPixFlow(true);
+    }
+  }, [checkout?.paymentMethod]);
 
+  return (
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <ScreenHeader
+        title={showPixFlow ? 'Pagamento PIX' : 'Pagamento'}
+        headingLevel={3}
+        onBack={() => {
+          if (showPixFlow) {
+            setShowPixFlow(false);
+          } else {
+            router.back();
+          }
+        }}
+      />
+      <YStack flex={1} padding="$4" gap="$4">
         {/* Content */}
         {isLoading ? (
           <YStack flex={1} justifyContent="center" alignItems="center">
@@ -114,13 +108,13 @@ export default function PdvCheckoutScreen() {
             pdvName={checkout.pdv.name}
             onSuccess={handlePixSuccess}
             onCancel={handlePixCancel}
+            displayHasQr={checkout.paymentMethod === 'PIX'}
           />
         ) : checkout ? (
           <PdvCheckout
             checkout={checkout}
             isPaying={payMutation.isPending}
             onPay={handlePay}
-            onPayPix={handlePayPix}
             onCancel={() => router.back()}
           />
         ) : null}

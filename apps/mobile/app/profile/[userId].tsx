@@ -16,7 +16,7 @@ export default function UserProfileScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} justifyContent="center" alignItems="center">
           <Spinner size="lg" />
         </YStack>
@@ -26,7 +26,7 @@ export default function UserProfileScreen() {
 
   if (error || !profile) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" gap="$4">
           <Text style={{ fontSize: 40 }}>😕</Text>
           <Text color="secondary" align="center">
@@ -41,7 +41,7 @@ export default function UserProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <ScrollView>
         <YStack gap="$4">
           {/* Back button */}

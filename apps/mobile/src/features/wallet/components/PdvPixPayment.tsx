@@ -14,6 +14,7 @@ interface PdvPixPaymentProps {
   pdvName: string;
   onSuccess: (cashbackEarned: number, newBalance: number) => void;
   onCancel: () => void;
+  displayHasQr?: boolean;
 }
 
 export function PdvPixPayment({
@@ -22,6 +23,7 @@ export function PdvPixPayment({
   pdvName,
   onSuccess,
   onCancel,
+  displayHasQr = false,
 }: PdvPixPaymentProps) {
   const [pixData, setPixData] = useState<PdvPixPaymentResult | null>(null);
   const [countdown, setCountdown] = useState(0);
@@ -123,61 +125,75 @@ export function PdvPixPayment({
       </Card>
 
       {/* QR Code Area */}
-      <Card variant="flat">
-        <YStack alignItems="center" gap="$3" padding="$2">
-          {pixData.pix.qrCodeBase64 ? (
-            <YStack
-              width={200}
-              height={200}
-              backgroundColor="white"
-              borderRadius={8}
-              justifyContent="center"
-              alignItems="center"
-              overflow="hidden"
-            >
-              {/* Base64 QR code would be rendered as an Image */}
-              <Text size="xs" color="secondary" align="center">
-                Escaneie o QR Code{'\n'}no app do seu banco
-              </Text>
-            </YStack>
-          ) : (
-            <YStack
-              width={200}
-              height={200}
-              backgroundColor="$gray3"
-              borderRadius={8}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Text size="xs" color="secondary" align="center">
-                Copie o codigo PIX abaixo{'\n'}e cole no app do seu banco
-              </Text>
-            </YStack>
-          )}
-
-          {/* Copy & Paste Button */}
-          <Pressable onPress={handleCopyCode} style={{ width: '100%' }}>
-            <YStack
-              backgroundColor="$gray3"
-              borderRadius={8}
-              padding="$3"
-              alignItems="center"
-            >
-              <Text size="xs" color="secondary" numberOfLines={1}>
-                {pixData.pix.copyPaste?.substring(0, 40)}...
-              </Text>
-              <Text
-                size="sm"
-                weight="semibold"
-                color={copied ? 'success' : 'primary'}
-                marginTop="$1"
+      {displayHasQr ? (
+        <Card variant="flat">
+          <YStack alignItems="center" gap="$3" padding="$4">
+            <Text style={{ fontSize: 48 }}>📺</Text>
+            <Heading level={4} align="center">
+              QR Code PIX no display
+            </Heading>
+            <Text color="secondary" size="sm" align="center">
+              Escaneie o QR Code PIX exibido na tela do PDV{'\n'}com o app do seu banco
+            </Text>
+          </YStack>
+        </Card>
+      ) : (
+        <Card variant="flat">
+          <YStack alignItems="center" gap="$3" padding="$2">
+            {pixData.pix.qrCodeBase64 ? (
+              <YStack
+                width={200}
+                height={200}
+                backgroundColor="white"
+                borderRadius={8}
+                justifyContent="center"
+                alignItems="center"
+                overflow="hidden"
               >
-                {copied ? 'Copiado!' : 'Toque para copiar'}
-              </Text>
-            </YStack>
-          </Pressable>
-        </YStack>
-      </Card>
+                {/* Base64 QR code would be rendered as an Image */}
+                <Text size="xs" color="secondary" align="center">
+                  Escaneie o QR Code{'\n'}no app do seu banco
+                </Text>
+              </YStack>
+            ) : (
+              <YStack
+                width={200}
+                height={200}
+                backgroundColor="$gray3"
+                borderRadius={8}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Text size="xs" color="secondary" align="center">
+                  Copie o codigo PIX abaixo{'\n'}e cole no app do seu banco
+                </Text>
+              </YStack>
+            )}
+
+            {/* Copy & Paste Button */}
+            <Pressable onPress={handleCopyCode} style={{ width: '100%' }}>
+              <YStack
+                backgroundColor="$gray3"
+                borderRadius={8}
+                padding="$3"
+                alignItems="center"
+              >
+                <Text size="xs" color="secondary" numberOfLines={1}>
+                  {pixData.pix.copyPaste?.substring(0, 40)}...
+                </Text>
+                <Text
+                  size="sm"
+                  weight="semibold"
+                  color={copied ? 'success' : 'primary'}
+                  marginTop="$1"
+                >
+                  {copied ? 'Copiado!' : 'Toque para copiar'}
+                </Text>
+              </YStack>
+            </Pressable>
+          </YStack>
+        </Card>
+      )}
 
       {/* Timer */}
       <YStack alignItems="center" gap="$1">

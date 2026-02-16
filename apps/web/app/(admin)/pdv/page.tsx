@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { PdvsTable } from '@/components/admin/pdv/PdvsTable';
 import { PdvDialog } from '@/components/admin/pdv/PdvDialog';
 import { CredentialsDialog } from '@/components/admin/pdv/CredentialsDialog';
+import { PdvCategoriesSection } from '@/components/admin/pdv/PdvCategoriesSection';
 import { useAdminPdvs, useDeletePdv } from '@/lib/hooks/useAdminPdv';
 import type { PdvItem } from '@/lib/api/pdv.api';
 
@@ -63,6 +64,9 @@ export default function PdvPage() {
           Novo PDV
         </Button>
       </div>
+
+      {/* Categories */}
+      <PdvCategoriesSection />
 
       {/* Content */}
       {isLoading ? (

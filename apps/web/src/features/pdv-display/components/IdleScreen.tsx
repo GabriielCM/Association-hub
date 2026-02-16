@@ -7,11 +7,8 @@ interface IdleScreenProps {
 }
 
 /**
- * Full-screen idle/attract screen displayed when the PDV kiosk is inactive.
- *
- * Features a pulsing "Toque para comecar" prompt with a dark gradient
- * background. Any click or touch triggers the `onStart` callback to
- * transition into the catalog browsing flow.
+ * Full-screen idle/attract screen with floating orb animation and a
+ * glowing CTA. Any touch triggers `onStart` to enter the catalog.
  */
 export function IdleScreen({ onStart, pdvName, logoUrl }: IdleScreenProps) {
   return (
@@ -19,32 +16,105 @@ export function IdleScreen({ onStart, pdvName, logoUrl }: IdleScreenProps) {
       type="button"
       onClick={onStart}
       onTouchStart={onStart}
-      className="flex min-h-screen w-full cursor-pointer flex-col items-center justify-center bg-gradient-to-b from-dark-background via-[#1e1e3a] to-dark-background focus:outline-none"
-      aria-label="Toque para comecar"
+      className="relative flex min-h-screen w-full cursor-pointer flex-col items-center justify-center overflow-hidden bg-dark-background focus:outline-none"
+      aria-label="Toque para começar"
     >
-      {/* Logo or PDV name at top */}
-      <div className="absolute top-16 flex flex-col items-center gap-4">
+      {/* Animated background orbs */}
+      <div className="pointer-events-none absolute inset-0">
+        {/* Orb 1 - Large purple */}
+        <div
+          className="absolute animate-float-orb rounded-full"
+          style={{
+            width: 400,
+            height: 400,
+            top: '10%',
+            left: '15%',
+            background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)',
+            filter: 'blur(80px)',
+            animationDuration: '20s',
+          }}
+        />
+        {/* Orb 2 - Blue */}
+        <div
+          className="absolute animate-float-orb rounded-full"
+          style={{
+            width: 350,
+            height: 350,
+            top: '50%',
+            right: '10%',
+            background: 'radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%)',
+            filter: 'blur(80px)',
+            animationDuration: '25s',
+            animationDelay: '-5s',
+          }}
+        />
+        {/* Orb 3 - Indigo */}
+        <div
+          className="absolute animate-float-orb rounded-full"
+          style={{
+            width: 300,
+            height: 300,
+            bottom: '10%',
+            left: '40%',
+            background: 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)',
+            filter: 'blur(80px)',
+            animationDuration: '22s',
+            animationDelay: '-10s',
+          }}
+        />
+        {/* Orb 4 - Cyan accent */}
+        <div
+          className="absolute animate-float-orb rounded-full"
+          style={{
+            width: 250,
+            height: 250,
+            top: '30%',
+            left: '60%',
+            background: 'radial-gradient(circle, rgba(6,182,212,0.2) 0%, transparent 70%)',
+            filter: 'blur(80px)',
+            animationDuration: '18s',
+            animationDelay: '-8s',
+          }}
+        />
+        {/* Orb 5 - Small pink */}
+        <div
+          className="absolute animate-float-orb rounded-full"
+          style={{
+            width: 200,
+            height: 200,
+            bottom: '30%',
+            right: '25%',
+            background: 'radial-gradient(circle, rgba(236,72,153,0.15) 0%, transparent 70%)',
+            filter: 'blur(80px)',
+            animationDuration: '15s',
+            animationDelay: '-3s',
+          }}
+        />
+      </div>
+
+      {/* Logo / PDV name - top */}
+      <div className="absolute top-16 z-10 flex flex-col items-center gap-4">
         {logoUrl ? (
           <img
             src={logoUrl}
             alt={pdvName ?? 'Logo'}
-            className="h-20 w-20 rounded-full object-cover"
+            className="h-20 w-20 rounded-full object-cover shadow-glow-purple-sm"
           />
         ) : null}
         {pdvName ? (
-          <h2 className="text-xl font-semibold tracking-wide text-gray-400">
+          <h2 className="text-xl font-semibold tracking-wide text-white/60">
             {pdvName}
           </h2>
         ) : null}
       </div>
 
-      {/* Centered pulsing prompt */}
-      <div className="flex flex-col items-center gap-8">
-        {/* Decorative ring */}
-        <div className="flex h-40 w-40 items-center justify-center rounded-full border-2 border-primary/30">
-          <div className="flex h-28 w-28 items-center justify-center rounded-full border-2 border-primary/50">
+      {/* Center CTA */}
+      <div className="relative z-10 flex flex-col items-center gap-10">
+        {/* Glowing ring */}
+        <div className="animate-pulse-glow flex h-44 w-44 items-center justify-center rounded-full border border-white/10 bg-white/5 backdrop-blur-xl">
+          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20">
             <svg
-              className="h-12 w-12 text-primary"
+              className="h-14 w-14 text-white/80"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -60,13 +130,15 @@ export function IdleScreen({ onStart, pdvName, logoUrl }: IdleScreenProps) {
           </div>
         </div>
 
-        <p className="animate-pulse text-4xl font-light tracking-widest text-white/90 md:text-5xl">
-          Toque para comecar
-        </p>
-
-        <p className="text-lg text-gray-500">
-          Navegue e faca seu pedido
-        </p>
+        {/* Text */}
+        <div className="flex flex-col items-center gap-3">
+          <p className="bg-gradient-to-r from-white via-white/90 to-white/80 bg-clip-text text-5xl font-light tracking-widest text-transparent">
+            Toque para começar
+          </p>
+          <p className="text-lg text-white/40">
+            Navegue e faça seu pedido
+          </p>
+        </div>
       </div>
     </button>
   );

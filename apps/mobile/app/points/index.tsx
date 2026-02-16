@@ -43,7 +43,7 @@ export default function PointsScreen() {
   const transactions = data?.pages.flatMap((page) => page.data) ?? [];
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <YStack flex={1} padding="$4" gap="$3">
         <XStack alignItems="center" justifyContent="space-between">
           <Heading level={3}>Meus Pontos</Heading>

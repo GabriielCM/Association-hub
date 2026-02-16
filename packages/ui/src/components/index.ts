@@ -31,6 +31,9 @@ export { NativeViewFallback } from './NativeViewFallback';
 export { SafeImage } from './SafeImage';
 export type { SafeImageProps } from './SafeImage';
 
+export { ScreenHeader } from './ScreenHeader';
+export type { ScreenHeaderProps } from './ScreenHeader';
+
 export { Loading, Spinner, Skeleton, LoadingOverlay, FullPageLoading } from './Loading';
 export type {
   SpinnerProps,

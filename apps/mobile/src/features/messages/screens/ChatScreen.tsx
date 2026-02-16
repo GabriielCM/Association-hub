@@ -8,8 +8,8 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { YStack, XStack, View } from 'tamagui';
-import { Text, Avatar } from '@ahub/ui';
+import { YStack, View } from 'tamagui';
+import { Text, Avatar, ScreenHeader } from '@ahub/ui';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/auth.store';
@@ -222,18 +222,7 @@ export function ChatScreen() {
         <YStack flex={1} backgroundColor="$background">
           {/* Header */}
           <Pressable onPress={handleHeaderPress}>
-            <XStack
-              alignItems="center"
-              gap="$2"
-              paddingHorizontal="$3"
-              paddingVertical="$2"
-              borderBottomWidth={1}
-              borderBottomColor="$borderColor"
-            >
-              <Pressable onPress={() => router.back()}>
-                <Text size="lg">←</Text>
-              </Pressable>
-
+            <ScreenHeader onBack={() => router.back()} borderBottom>
               {isGroup ? (
                 <Avatar
                   src={conversation?.group?.imageUrl}
@@ -263,7 +252,7 @@ export function ChatScreen() {
                 {headerSubtitle && (
                   <Text
                     color={
-                      hasActivityIndicator ? 'primary' : isGroup ? 'secondary' : 'success'
+                      hasActivityIndicator ? 'accent' : isGroup ? 'secondary' : 'success'
                     }
                     size="xs"
                   >
@@ -271,7 +260,7 @@ export function ChatScreen() {
                   </Text>
                 )}
               </YStack>
-            </XStack>
+            </ScreenHeader>
           </Pressable>
 
           {/* Messages */}

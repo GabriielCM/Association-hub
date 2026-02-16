@@ -1079,6 +1079,20 @@ model PdvProduct {
   @@map("pdv_products")
 }
 
+model PdvCategory {
+  id            String @id @default(cuid())
+  associationId String @map("association_id")
+
+  name String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([associationId, name])
+  @@index([associationId])
+  @@map("pdv_categories")
+}
+
 model PdvCheckout {
   id    String @id @default(cuid())
   code  String @unique // 6-char alphanumeric

@@ -43,7 +43,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <ScrollView>
         <YStack padding="$4" gap="$4">
           {/* Header */}

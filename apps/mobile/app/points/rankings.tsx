@@ -26,7 +26,7 @@ export default function RankingsScreen() {
   const { data: ranking, isLoading } = useRankings(activeTab, activePeriod);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <YStack flex={1} padding="$4" gap="$3">
         <Heading level={3}>Rankings</Heading>
 

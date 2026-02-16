@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { YStack, XStack, View } from 'tamagui';
-import { Text, Avatar, Button } from '@ahub/ui';
+import { Text, Avatar, Button, ScreenHeader } from '@ahub/ui';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSearchUsers } from '@/features/points/hooks/useRecipientSearch';
@@ -166,22 +166,10 @@ export function CreateGroupScreen() {
 
   if (step === 'details') {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <YStack flex={1} backgroundColor="$background">
           {/* Header */}
-          <XStack
-            alignItems="center"
-            gap="$2"
-            paddingHorizontal="$3"
-            paddingVertical="$2"
-          >
-            <Pressable onPress={handleBack}>
-              <Text size="lg">←</Text>
-            </Pressable>
-            <Text weight="bold" size="xl">
-              Detalhes do grupo
-            </Text>
-          </XStack>
+          <ScreenHeader title="Detalhes do grupo" headingLevel={4} onBack={handleBack} />
 
           <ScrollView contentContainerStyle={styles.detailsContent}>
             {/* Group Image Picker */}
@@ -301,36 +289,28 @@ export function CreateGroupScreen() {
 
   // Step: participants
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <YStack flex={1} backgroundColor="$background">
         {/* Header */}
-        <XStack
-          alignItems="center"
-          justifyContent="space-between"
-          paddingHorizontal="$3"
-          paddingVertical="$2"
-        >
-          <XStack alignItems="center" gap="$2">
-            <Pressable onPress={handleBack}>
-              <Text size="lg">←</Text>
-            </Pressable>
-            <Text weight="bold" size="xl">
-              Criar grupo
-            </Text>
-          </XStack>
-          <Pressable
-            onPress={handleNext}
-            disabled={selected.length < 2}
-          >
-            <Text
-              color={selected.length >= 2 ? 'primary' : 'secondary'}
-              weight="semibold"
-              size="sm"
+        <ScreenHeader
+          title="Criar grupo"
+          headingLevel={4}
+          onBack={handleBack}
+          rightContent={
+            <Pressable
+              onPress={handleNext}
+              disabled={selected.length < 2}
             >
-              Próximo ({selected.length})
-            </Text>
-          </Pressable>
-        </XStack>
+              <Text
+                color={selected.length >= 2 ? 'accent' : 'secondary'}
+                weight="semibold"
+                size="sm"
+              >
+                Próximo ({selected.length})
+              </Text>
+            </Pressable>
+          }
+        />
 
         {/* Selected chips */}
         {selected.length > 0 && (

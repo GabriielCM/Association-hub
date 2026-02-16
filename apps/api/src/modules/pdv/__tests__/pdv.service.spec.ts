@@ -56,7 +56,11 @@ describe('PdvService', () => {
       createBatch: vi.fn(),
     };
 
-    service = new PdvService(prisma, notificationsService);
+    const pdvGateway = {
+      broadcastCatalogUpdated: vi.fn(),
+    };
+
+    service = new PdvService(prisma, notificationsService, pdvGateway as any);
   });
 
   // ===========================================

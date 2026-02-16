@@ -61,7 +61,7 @@ export default function TransferScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <YStack flex={1} padding="$4" gap="$3">
         {wizard.step !== 'receipt' && (

@@ -1,8 +1,8 @@
 import { useCallback, useState, useRef } from 'react';
 import { router } from 'expo-router';
-import { YStack, XStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Heading, Button } from '@ahub/ui';
+import { Text, ScreenHeader } from '@ahub/ui';
 import { QrScanner } from '@/features/wallet/components/QrScanner';
 import { ScanResultModal } from '@/features/wallet/components/ScanResultModal';
 import { useScanQr } from '@/features/wallet/hooks/useScanner';
@@ -113,23 +113,9 @@ export default function ScannerScreen() {
   }, [resetScanner]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       {/* Header */}
-      <XStack
-        alignItems="center"
-        gap="$2"
-        padding="$4"
-        position="absolute"
-        top={50}
-        left={0}
-        right={0}
-        zIndex={10}
-      >
-        <Button variant="ghost" size="sm" onPress={() => router.back()}>
-          ←
-        </Button>
-        <Heading level={4} style={{ color: '#fff' }}>Scanner</Heading>
-      </XStack>
+      <ScreenHeader title="Scanner" variant="overlay" onBack={() => router.back()} />
 
       {/* Scanner */}
       <QrScanner onScan={handleScan} isProcessing={isProcessing || scanned} />

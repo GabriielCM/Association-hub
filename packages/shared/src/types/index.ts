@@ -632,6 +632,7 @@ export interface PdvCheckoutDetails {
     name: string;
     location: string;
   };
+  paymentMethod?: 'POINTS' | 'PIX' | null;
   user: {
     balance: number;
     canPayWithPoints: boolean;

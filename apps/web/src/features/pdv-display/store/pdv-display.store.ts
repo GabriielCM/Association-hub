@@ -62,6 +62,14 @@ export interface PdvDisplayState {
   checkoutExpiresAt: string | null;
   qrCodeData: unknown;
 
+  // Payment method
+  paymentMethod: 'POINTS' | 'PIX';
+
+  // PIX data (received via WebSocket when awaiting PIX)
+  pixQrCode: string | null;
+  pixCopyPaste: string | null;
+  pixExpiresAt: string | null;
+
   // Success
   lastOrderCode: string | null;
 
@@ -75,6 +83,8 @@ export interface PdvDisplayState {
   clearCart: () => void;
   setScreen: (screen: PdvDisplayScreen) => void;
   setCheckout: (code: string, expiresAt: string, qrCodeData: unknown) => void;
+  setPaymentMethod: (method: 'POINTS' | 'PIX') => void;
+  setPixData: (pixQrCode: string | null, pixCopyPaste: string | null, pixExpiresAt: string | null) => void;
   setSuccess: (orderCode: string) => void;
   reset: () => void;
 
@@ -99,6 +109,10 @@ export const usePdvDisplayStore = create<PdvDisplayState>((set, get) => ({
   checkoutCode: null,
   checkoutExpiresAt: null,
   qrCodeData: null,
+  paymentMethod: 'POINTS',
+  pixQrCode: null,
+  pixCopyPaste: null,
+  pixExpiresAt: null,
   lastOrderCode: null,
 
   // Actions
@@ -177,6 +191,14 @@ export const usePdvDisplayStore = create<PdvDisplayState>((set, get) => ({
     });
   },
 
+  setPaymentMethod: (method: 'POINTS' | 'PIX') => {
+    set({ paymentMethod: method });
+  },
+
+  setPixData: (pixQrCode: string | null, pixCopyPaste: string | null, pixExpiresAt: string | null) => {
+    set({ pixQrCode, pixCopyPaste, pixExpiresAt });
+  },
+
   setSuccess: (orderCode: string) => {
     set({
       screen: 'success',
@@ -191,6 +213,10 @@ export const usePdvDisplayStore = create<PdvDisplayState>((set, get) => ({
       checkoutCode: null,
       checkoutExpiresAt: null,
       qrCodeData: null,
+      paymentMethod: 'POINTS',
+      pixQrCode: null,
+      pixCopyPaste: null,
+      pixExpiresAt: null,
       lastOrderCode: null,
     });
   },

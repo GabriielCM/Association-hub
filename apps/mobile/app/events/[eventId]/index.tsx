@@ -2,7 +2,7 @@ import { ScrollView, Linking } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Text, Heading, Button, Card, Spinner } from '@ahub/ui';
+import { Text, Heading, Button, Card, Spinner, ScreenHeader } from '@ahub/ui';
 import { useEvent, useEventComments } from '@/features/events/hooks/useEvents';
 import {
   useConfirmEvent,
@@ -29,7 +29,7 @@ export default function EventDetailScreen() {
 
   if (isLoading || !event) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center">
           <Spinner size="lg" />
         </YStack>
@@ -51,14 +51,9 @@ export default function EventDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <ScrollView>
-        {/* Back button */}
-        <XStack padding="$3" position="absolute" zIndex={10}>
-          <Button variant="ghost" size="sm" onPress={() => router.back()}>
-            ← Voltar
-          </Button>
-        </XStack>
+        <ScreenHeader title="Voltar" onBack={() => router.back()} style={{ position: 'absolute', zIndex: 10 }} />
 
         {/* Header */}
         <EventHeader event={event} />

@@ -34,7 +34,7 @@ export default function VouchersScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       {/* Header */}
       <XStack paddingHorizontal="$4" paddingVertical="$3" alignItems="center" gap="$3">
         <Pressable onPress={() => router.back()} hitSlop={8}>

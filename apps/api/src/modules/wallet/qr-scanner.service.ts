@@ -1,16 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CardService } from '../card/card.service';
 import { PointsService } from '../points/points.service';
+import { PdvCheckoutService } from '../pdv/pdv-checkout.service';
 import { QrCodeType, QrScanResult } from './dto';
 import { createHmac } from 'crypto';
 
 @Injectable()
 export class QrScannerService {
+  private readonly logger = new Logger(QrScannerService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly cardService: CardService,
     private readonly pointsService: PointsService,
+    private readonly pdvCheckoutService: PdvCheckoutService,
   ) {}
 
   /**
@@ -21,20 +25,15 @@ export class QrScannerService {
     qrCodeHash: string = '',
     userId: string,
   ): Promise<QrScanResult> {
-    // Validate hash first
-    if (!this.validateHash(qrCodeData, qrCodeHash)) {
-      return {
-        type: QrCodeType.MEMBER_CARD,
-        valid: false,
-        error: 'QR Code inválido ou adulterado',
-      };
-    }
+    this.logger.log(`[QR SCAN] Received scan request. Data length=${qrCodeData.length}, hash=${qrCodeHash ? 'present' : 'empty'}, userId=${userId}`);
+    this.logger.debug(`[QR SCAN] Raw qrCodeData: ${qrCodeData.substring(0, 200)}`);
 
-    // Parse QR data
+    // 1. Parse QR data first to detect type
     let data: any;
     try {
       data = JSON.parse(qrCodeData);
-    } catch {
+    } catch (e) {
+      this.logger.warn(`[QR SCAN] JSON parse failed: ${(e as Error).message}. Raw data: ${qrCodeData.substring(0, 100)}`);
       return {
         type: QrCodeType.MEMBER_CARD,
         valid: false,
@@ -42,9 +41,27 @@ export class QrScannerService {
       };
     }
 
-    // Detect type and process
+    // 2. Detect type
     const type = this.detectQrType(data);
+    this.logger.log(`[QR SCAN] Parsed data.type="${data.type}" → detected: ${type}`);
 
+    // 3. Validate hash only for types that require it
+    //    PDV checkout QRs are ephemeral (5min TTL) and validated by checkout code
+    if (type !== QrCodeType.PDV_PAYMENT) {
+      if (!this.validateHash(qrCodeData, qrCodeHash)) {
+        this.logger.warn(`[QR SCAN] Hash validation failed for type=${type}`);
+        return {
+          type,
+          valid: false,
+          error: 'QR Code inválido ou adulterado',
+        };
+      }
+    } else {
+      this.logger.log(`[QR SCAN] Skipping hash validation for PDV_PAYMENT`);
+    }
+
+    // 4. Process by type
+    this.logger.log(`[QR SCAN] Processing type=${type}`);
     switch (type) {
       case QrCodeType.MEMBER_CARD:
         return this.processMemberCard(data, userId);
@@ -76,6 +93,7 @@ export class QrScannerService {
       event_checkin: QrCodeType.EVENT_CHECKIN,
       user_transfer: QrCodeType.USER_TRANSFER,
       pdv_payment: QrCodeType.PDV_PAYMENT,
+      pdv_checkout: QrCodeType.PDV_PAYMENT,
     };
 
     return typeMap[data.type] || QrCodeType.MEMBER_CARD;
@@ -215,22 +233,33 @@ export class QrScannerService {
 
   /**
    * Processa QR Code de pagamento PDV
-   * Nota: PDV será implementado na Fase 5, por enquanto retorna placeholder
    */
   private async processPdvPayment(data: any, userId: string): Promise<QrScanResult> {
-    // TODO: Implementar na Fase 5 - PDV
-    // Por enquanto, retorna informação de que PDV não está disponível
+    this.logger.log(`[QR SCAN] processPdvPayment called. code=${data.code}, userId=${userId}`);
+    const code = data.code;
+    if (!code) {
+      return {
+        type: QrCodeType.PDV_PAYMENT,
+        valid: false,
+        error: 'QR Code de checkout inválido',
+      };
+    }
 
-    return {
-      type: QrCodeType.PDV_PAYMENT,
-      valid: false,
-      error: 'Pagamento PDV será implementado na Fase 5',
-      data: {
-        checkoutCode: data.checkout_code,
-        pdvName: data.pdv_name || 'PDV',
-      },
-      action: 'pdv_payment_pending',
-    };
+    try {
+      const details = await this.pdvCheckoutService.getCheckoutDetails(code, userId);
+      return {
+        type: QrCodeType.PDV_PAYMENT,
+        valid: true,
+        data: details,
+        action: 'open_pdv_checkout',
+      };
+    } catch (err: any) {
+      return {
+        type: QrCodeType.PDV_PAYMENT,
+        valid: false,
+        error: err.message || 'Checkout não encontrado ou expirado',
+      };
+    }
   }
 
   /**

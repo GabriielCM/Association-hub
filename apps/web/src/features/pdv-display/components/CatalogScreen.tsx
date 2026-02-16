@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
+import { triggerFlyToCart } from './ui/fly-animation';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -21,17 +22,11 @@ interface Category {
   products: Product[];
 }
 
-interface CartTotal {
-  points: number;
-  money: number;
-}
-
 interface CatalogScreenProps {
   categories: Category[];
   onAddToCart: (product: Product) => void;
-  cartItemCount: number;
-  cartTotal: CartTotal;
-  onViewCart: () => void;
+  pdvName?: string | undefined;
+  isConnected?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -43,52 +38,96 @@ function formatPoints(value: number): string {
 }
 
 function formatMoney(value: number): string {
-  return value.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+/** Sort products: in-stock first, out-of-stock last */
+function sortByStock(products: Product[]): Product[] {
+  return [...products].sort((a, b) => {
+    if (a.inStock === b.inStock) return 0;
+    return a.inStock ? -1 : 1;
   });
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// CatalogScreen
 // ---------------------------------------------------------------------------
 
-/**
- * Product browsing screen with horizontal category tabs, a responsive product
- * grid, and a floating cart summary bar at the bottom.
- *
- * All interactive elements use large touch targets (min 48px) and avoid
- * hover-dependent interactions for kiosk/touch environments.
- */
 export function CatalogScreen({
   categories,
   onAddToCart,
-  cartItemCount,
-  cartTotal,
-  onViewCart,
+  pdvName,
+  isConnected = false,
 }: CatalogScreenProps) {
-  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
-  const tabsRef = useRef<HTMLDivElement>(null);
+  // -1 means "Todos" (show all products from all categories)
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(-1);
 
-  const activeCategory = categories[activeCategoryIndex] ?? categories[0];
-  const products = activeCategory?.products ?? [];
+  const activeCategory = activeCategoryIndex >= 0
+    ? (categories[activeCategoryIndex] ?? null)
+    : null;
+
+  const allProducts = useMemo(
+    () => sortByStock(categories.flatMap((c) => c.products)),
+    [categories],
+  );
+
+  const products = useMemo(
+    () =>
+      activeCategoryIndex === -1
+        ? allProducts
+        : sortByStock(activeCategory?.products ?? []),
+    [activeCategoryIndex, allProducts, activeCategory],
+  );
 
   const handleCategoryChange = useCallback((index: number) => {
     setActiveCategoryIndex(index);
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-dark-background">
-      {/* ----------------------------------------------------------------- */}
-      {/* Category tabs                                                     */}
-      {/* ----------------------------------------------------------------- */}
-      <div className="sticky top-0 z-40 border-b border-dark-border bg-dark-background/95 backdrop-blur-sm">
+    <div className="flex h-screen flex-col bg-dark-background">
+      {/* Header: PDV info + Category tabs */}
+      <div className="sticky top-0 z-40 border-b border-white/5 bg-dark-background/80 backdrop-blur-sm">
+        {/* PDV name + connection status */}
+        {(pdvName || isConnected !== undefined) && (
+          <div className="flex items-center justify-between px-6 pt-3 pb-1">
+            <span className="text-sm font-medium tracking-wide text-gray-500">
+              {pdvName ?? ''}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600">
+                {isConnected ? 'Conectado' : 'Desconectado'}
+              </span>
+              <span
+                className={`inline-block h-2.5 w-2.5 rounded-full ${
+                  isConnected ? 'bg-success-dark' : 'bg-error-dark'
+                }`}
+                aria-label={isConnected ? 'Conectado' : 'Desconectado'}
+              />
+            </div>
+          </div>
+        )}
         <div
-          ref={tabsRef}
-          className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none"
+          className="flex gap-3 overflow-x-auto px-6 py-4"
+          style={{ scrollbarWidth: 'none' }}
           role="tablist"
           aria-label="Categorias de produtos"
         >
+          {/* "Todos" tab */}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeCategoryIndex === -1}
+            aria-controls="panel-todos"
+            onClick={() => handleCategoryChange(-1)}
+            className={`flex-shrink-0 rounded-full px-6 py-3 text-sm font-medium transition-all duration-300 ${
+              activeCategoryIndex === -1
+                ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-lg shadow-purple-500/25'
+                : 'border border-white/10 bg-white/5 text-gray-400 active:bg-white/10'
+            }`}
+            style={{ minHeight: 48 }}
+          >
+            Todos
+          </button>
           {categories.map((cat, index) => {
             const isActive = index === activeCategoryIndex;
             return (
@@ -99,12 +138,12 @@ export function CatalogScreen({
                 aria-selected={isActive}
                 aria-controls={`panel-${cat.name}`}
                 onClick={() => handleCategoryChange(index)}
-                className={`flex-shrink-0 rounded-pill px-6 py-3 text-base font-medium transition-colors ${
+                className={`flex-shrink-0 rounded-full px-6 py-3 text-sm font-medium transition-all duration-300 ${
                   isActive
-                    ? 'bg-primary text-white'
-                    : 'bg-dark-surface text-gray-400 active:bg-dark-muted'
+                    ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-lg shadow-purple-500/25'
+                    : 'border border-white/10 bg-white/5 text-gray-400 active:bg-white/10'
                 }`}
-                style={{ minHeight: 48, minWidth: 48 }}
+                style={{ minHeight: 48 }}
               >
                 {cat.name}
               </button>
@@ -113,13 +152,15 @@ export function CatalogScreen({
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Product grid                                                      */}
-      {/* ----------------------------------------------------------------- */}
+      {/* Product grid with scroll snap */}
       <div
-        id={`panel-${activeCategory?.name}`}
+        id={activeCategoryIndex === -1 ? 'panel-todos' : `panel-${activeCategory?.name}`}
         role="tabpanel"
-        className={`flex-1 px-4 py-4 ${cartItemCount > 0 ? 'pb-28' : 'pb-4'}`}
+        className="flex-1 overflow-y-auto px-6 py-5"
+        style={{
+          scrollSnapType: 'y proximity',
+          scrollbarWidth: 'none',
+        }}
       >
         {products.length === 0 ? (
           <div className="flex flex-1 items-center justify-center py-20">
@@ -128,7 +169,7 @@ export function CatalogScreen({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-3 gap-5">
             {products.map((product) => (
               <ProductCard
                 key={product.id}
@@ -139,56 +180,12 @@ export function CatalogScreen({
           </div>
         )}
       </div>
-
-      {/* ----------------------------------------------------------------- */}
-      {/* Floating cart bar                                                 */}
-      {/* ----------------------------------------------------------------- */}
-      {cartItemCount > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-dark-border bg-dark-surface/95 px-4 py-3 backdrop-blur-sm">
-          <button
-            type="button"
-            onClick={onViewCart}
-            className="flex w-full items-center justify-between rounded-lg bg-primary px-6 py-4 text-white active:bg-primary-dark"
-            style={{ minHeight: 56 }}
-          >
-            <div className="flex items-center gap-3">
-              {/* Cart icon */}
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
-                />
-              </svg>
-
-              {/* Item count badge */}
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-sm font-bold">
-                {cartItemCount}
-              </span>
-            </div>
-
-            <span className="text-lg font-semibold">Ver Carrinho</span>
-
-            <div className="flex flex-col items-end text-sm">
-              <span>{formatPoints(cartTotal.points)}</span>
-              <span className="text-white/70">{formatMoney(cartTotal.money)}</span>
-            </div>
-          </button>
-        </div>
-      )}
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Product card sub-component
+// ProductCard
 // ---------------------------------------------------------------------------
 
 interface ProductCardProps {
@@ -198,20 +195,36 @@ interface ProductCardProps {
 
 function ProductCard({ product, onAdd }: ProductCardProps) {
   const outOfStock = !product.inStock;
+  const imageRef = useRef<HTMLDivElement>(null);
+
+  const handleAdd = useCallback(() => {
+    if (outOfStock) return;
+    onAdd(product);
+
+    // Trigger fly animation to sidebar
+    const sidebar = document.querySelector('[data-cart-sidebar]');
+    if (imageRef.current && sidebar) {
+      triggerFlyToCart(imageRef.current, sidebar as HTMLElement);
+    }
+  }, [product, onAdd, outOfStock]);
 
   return (
     <div
-      className={`relative flex flex-col overflow-hidden rounded-lg bg-dark-surface ${
-        outOfStock ? 'opacity-60' : ''
+      className={`relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-glass transition-transform duration-150 ${
+        outOfStock ? 'opacity-50' : 'active:scale-[0.98]'
       }`}
+      style={{ scrollSnapAlign: 'start' }}
     >
       {/* Product image */}
-      <div className="relative aspect-square w-full bg-dark-muted">
+      <div
+        ref={imageRef}
+        className="relative aspect-square w-full overflow-hidden bg-dark-muted"
+      >
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
             alt={product.name}
-            className="h-full w-full object-cover"
+            className={`h-full w-full object-cover ${outOfStock ? 'grayscale' : ''}`}
             loading="lazy"
           />
         ) : (
@@ -233,10 +246,10 @@ function ProductCard({ product, onAdd }: ProductCardProps) {
           </div>
         )}
 
-        {/* Out of stock badge */}
+        {/* Out of stock overlay */}
         {outOfStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <span className="rounded-pill bg-error-dark px-4 py-1.5 text-sm font-bold text-white">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+            <span className="rounded-full bg-red-500/80 px-4 py-1.5 text-sm font-bold text-white">
               Esgotado
             </span>
           </div>
@@ -244,13 +257,19 @@ function ProductCard({ product, onAdd }: ProductCardProps) {
       </div>
 
       {/* Product info */}
-      <div className="flex flex-1 flex-col gap-2 p-3">
-        <h3 className="line-clamp-2 text-sm font-semibold text-dark-foreground">
+      <div className="flex flex-1 flex-col gap-1.5 p-4">
+        <h3 className="line-clamp-1 text-base font-semibold text-dark-foreground">
           {product.name}
         </h3>
 
-        <div className="mt-auto flex flex-col gap-0.5">
-          <span className="text-base font-bold text-primary-light">
+        {product.description && (
+          <p className="line-clamp-1 text-sm text-gray-400">
+            {product.description}
+          </p>
+        )}
+
+        <div className="mt-auto flex flex-col gap-0.5 pt-1">
+          <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-lg font-bold text-transparent">
             {formatPoints(product.pricePoints)}
           </span>
           <span className="text-xs text-gray-500">
@@ -261,15 +280,29 @@ function ProductCard({ product, onAdd }: ProductCardProps) {
         <button
           type="button"
           disabled={outOfStock}
-          onClick={() => onAdd(product)}
-          className={`mt-1 w-full rounded-md py-3 text-sm font-semibold transition-colors ${
+          onClick={handleAdd}
+          className={`mt-2 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold transition-all ${
             outOfStock
               ? 'cursor-not-allowed bg-dark-muted text-gray-600'
-              : 'bg-primary text-white active:bg-primary-dark'
+              : 'bg-gradient-to-r from-purple-600 to-blue-500 text-white active:scale-[0.97]'
           }`}
           style={{ minHeight: 48 }}
         >
-          {outOfStock ? 'Esgotado' : 'Adicionar'}
+          {outOfStock ? (
+            'Indisponivel'
+          ) : (
+            <>
+              <svg
+                className="h-4 w-4"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+              </svg>
+              Adicionar
+            </>
+          )}
         </button>
       </div>
     </div>

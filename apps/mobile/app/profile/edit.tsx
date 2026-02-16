@@ -4,7 +4,7 @@ import { ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Heading, Button } from '@ahub/ui';
+import { Text, ScreenHeader } from '@ahub/ui';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { AvatarPicker } from '@/features/profile/components/AvatarPicker';
 import { EditProfileForm } from '@/features/profile/components/EditProfileForm';
@@ -51,26 +51,14 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        <ScreenHeader title="Editar Perfil" headingLevel={3} onBack={() => router.back()} />
         <ScrollView keyboardShouldPersistTaps="handled">
           <YStack padding="$4" gap="$6">
-            {/* Header */}
-            <YStack gap="$2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onPress={() => router.back()}
-                alignSelf="flex-start"
-              >
-                ← Voltar
-              </Button>
-              <Heading level={3}>Editar Perfil</Heading>
-            </YStack>
-
             {/* Avatar */}
             <AvatarPicker
               currentAvatarUrl={user?.avatarUrl}

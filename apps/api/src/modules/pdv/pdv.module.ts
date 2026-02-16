@@ -13,6 +13,7 @@ import { PdvDisplayController } from './controllers/pdv-display.controller';
 import { PdvWalletController } from './controllers/pdv-wallet.controller';
 import { PdvAdminController } from './controllers/pdv-admin.controller';
 import { PdvReportsController } from './controllers/pdv-reports.controller';
+import { PdvCategoryController } from './controllers/pdv-category.controller';
 import { PdvReportsService } from './pdv-reports.service';
 
 @Module({
@@ -23,7 +24,7 @@ import { PdvReportsService } from './pdv-reports.service';
     forwardRef(() => OrdersModule),
     NotificationsModule,
   ],
-  controllers: [PdvDisplayController, PdvWalletController, PdvAdminController, PdvReportsController],
+  controllers: [PdvDisplayController, PdvWalletController, PdvAdminController, PdvReportsController, PdvCategoryController],
   providers: [PdvService, PdvCheckoutService, PdvReportsService, PdvApiKeyGuard, PdvGateway, PdvScheduler],
   exports: [PdvService, PdvCheckoutService, PdvGateway],
 })

@@ -14,6 +14,8 @@ import { PdvCheckoutStatus, PdvPaymentMethod, NotificationType, NotificationCate
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PaymentSource } from '../stripe/dto/create-payment-intent.dto';
+import { PdvGateway } from './pdv.gateway';
+import { createHmac } from 'crypto';
 
 @Injectable()
 export class PdvCheckoutService {
@@ -26,7 +28,16 @@ export class PdvCheckoutService {
     private readonly stripeService: StripeService,
     private readonly ordersService: OrdersService,
     private readonly notificationsService: NotificationsService,
+    private readonly pdvGateway: PdvGateway,
   ) {}
+
+  /**
+   * Generate HMAC-SHA256 hash for QR Code data
+   */
+  private generateQrHash(data: string): string {
+    const secret = process.env.QR_CODE_SECRET || 'ahub-qr-secret-key';
+    return createHmac('sha256', secret).update(data).digest('hex');
+  }
 
   /**
    * Generate unique checkout code
@@ -148,10 +159,22 @@ export class PdvCheckoutService {
         totalPoints,
         totalMoney: new Decimal(totalMoney),
         expiresAt,
+        paymentMethod: dto.paymentMethod === 'PIX'
+          ? PdvPaymentMethod.PIX
+          : dto.paymentMethod === 'POINTS'
+            ? PdvPaymentMethod.POINTS
+            : undefined,
       },
     });
 
     this.logger.log(`Checkout created: ${code} for PDV ${pdvId}`);
+
+    const qrPayload = JSON.stringify({
+      type: 'pdv_payment',
+      code: checkout.code,
+      pdvId,
+    });
+    const qrHash = this.generateQrHash(qrPayload);
 
     return {
       code: checkout.code,
@@ -159,11 +182,8 @@ export class PdvCheckoutService {
       totalPoints,
       totalMoney,
       expiresAt,
-      qrCodeData: JSON.stringify({
-        type: 'pdv_checkout',
-        code: checkout.code,
-        pdvId,
-      }),
+      qrCodeData: JSON.stringify({ data: qrPayload, hash: qrHash }),
+      paymentMethod: dto.paymentMethod || null,
     };
   }
 
@@ -271,6 +291,7 @@ export class PdvCheckoutService {
       totalMoney,
       expiresAt: checkout.expiresAt,
       pdv: checkout.pdv,
+      paymentMethod: checkout.paymentMethod,
       user: {
         balance: balance.balance,
         canPayWithPoints: balance.balance >= totalPoints,
@@ -407,6 +428,15 @@ export class PdvCheckoutService {
 
     this.logger.log(`PDV checkout ${code} paid with points by user ${userId}. Discount: ${result.discountPoints} pts`);
 
+    // Notify PDV display via WebSocket
+    this.pdvGateway.broadcastCheckoutPaid(checkout.pdvId, {
+      code: checkout.code,
+      status: PdvCheckoutStatus.PAID,
+      paymentMethod: 'POINTS',
+      paidAt: new Date(),
+      orderCode: order.code,
+    });
+
     return {
       success: true,
       transactionId: result.pointsTransaction.id,
@@ -489,6 +519,17 @@ export class PdvCheckoutService {
     });
 
     this.logger.log(`PIX payment initiated for checkout ${code}. Discount: R$${discountMoney.toFixed(2)}`);
+
+    // Notify PDV display via WebSocket with PIX QR data for big screen
+    this.pdvGateway.broadcastCheckoutAwaitingPix(checkout.pdvId, {
+      code: checkout.code,
+      status: PdvCheckoutStatus.AWAITING_PIX,
+      paymentMethod: 'PIX',
+      pixQrCode: pixResult.pixQrCode,
+      pixCopyPaste: pixResult.pixCopyPaste,
+      pixExpiresAt: pixResult.expiresAt,
+      totalMoney: totalMoneyWithDiscount,
+    });
 
     return {
       paymentIntentId: pixResult.paymentIntentId,
@@ -634,6 +675,15 @@ export class PdvCheckoutService {
     this.logger.log(
       `PDV checkout ${checkout.code} PIX confirmed. Cashback: ${result.cashbackAmount} pts`,
     );
+
+    // Notify PDV display via WebSocket
+    this.pdvGateway.broadcastCheckoutPaid(checkout.pdvId, {
+      code: checkout.code,
+      status: PdvCheckoutStatus.PAID,
+      paymentMethod: 'PIX',
+      paidAt: new Date(),
+      orderCode: order.code,
+    });
   }
 
   /**

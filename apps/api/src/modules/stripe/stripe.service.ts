@@ -77,6 +77,8 @@ export class StripeService {
         amount,
         currency: 'brl',
         payment_method_types: ['pix'],
+        payment_method_data: { type: 'pix' as any },
+        confirm: true,
         description: description || `Pagamento ${source === PaymentSource.PDV ? 'PDV' : 'Loja'}`,
         metadata: {
           source,
@@ -86,18 +88,24 @@ export class StripeService {
         },
       });
 
-      // PIX details come from the next_action after confirming with PIX method
-      // For now, we return the payment intent and client will confirm
-      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+      const pixDetails = this.getPixDetailsFromPaymentIntent(paymentIntent);
+      if (!pixDetails) {
+        this.logger.error('PIX QR code not available after confirmation', {
+          status: paymentIntent.status,
+          nextAction: paymentIntent.next_action?.type,
+        });
+        throw new BadRequestException('Falha ao gerar QR Code PIX');
+      }
 
       return {
         paymentIntentId: paymentIntent.id,
         clientSecret: paymentIntent.client_secret!,
-        pixQrCode: '', // Will be populated after confirmation
-        pixCopyPaste: '', // Will be populated after confirmation
-        expiresAt,
+        pixQrCode: pixDetails.qrCode,
+        pixCopyPaste: pixDetails.copyPaste,
+        expiresAt: pixDetails.expiresAt,
       };
     } catch (error) {
+      if (error instanceof BadRequestException) throw error;
       this.logger.error('Failed to create PIX payment', error);
       throw new BadRequestException('Falha ao criar pagamento PIX');
     }

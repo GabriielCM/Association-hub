@@ -2,7 +2,7 @@ import { ScrollView, Pressable, Linking, StyleSheet, View, Image } from 'react-n
 import { useLocalSearchParams, router } from 'expo-router';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Heading, Button, Avatar, Spinner, Badge } from '@ahub/ui';
+import { Text, Heading, Button, Avatar, Spinner, Badge, ScreenHeader } from '@ahub/ui';
 import { usePartnerDetails } from '@/features/card/hooks/useBenefits';
 
 const DAY_NAMES: Record<string, string> = {
@@ -30,7 +30,7 @@ export default function PartnerDetailScreen() {
 
   if (isLoading || !partner) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} justifyContent="center" alignItems="center">
           <Spinner size="lg" />
         </YStack>
@@ -44,7 +44,7 @@ export default function PartnerDetailScreen() {
   const hasHours = partner.businessHours && Object.keys(partner.businessHours).length > 0;
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <ScrollView>
         {/* Banner / Header */}
         {partner.bannerUrl ? (
@@ -62,16 +62,7 @@ export default function PartnerDetailScreen() {
             </Pressable>
           </View>
         ) : (
-          <YStack paddingHorizontal="$4" paddingTop="$3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onPress={() => router.back()}
-              alignSelf="flex-start"
-            >
-              ← Voltar
-            </Button>
-          </YStack>
+          <ScreenHeader onBack={() => router.back()} />
         )}
 
         <YStack
@@ -299,7 +290,7 @@ const styles = StyleSheet.create({
   backButtonOverlay: {
     position: 'absolute',
     top: 12,
-    left: 12,
+    left: 16,
     width: 36,
     height: 36,
     borderRadius: 18,

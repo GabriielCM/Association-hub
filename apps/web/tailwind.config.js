@@ -82,6 +82,11 @@ module.exports = {
         'neu-dark-sm': '4px 4px 8px #0f0f1a, -4px -4px 8px #252542',
         'neu-dark-lg': '12px 12px 24px #0f0f1a, -12px -12px 24px #252542',
         'neu-dark-inset': 'inset 4px 4px 8px #0f0f1a, inset -4px -4px 8px #252542',
+        // Glassmorphism
+        'glass': '0 8px 32px rgba(139, 92, 246, 0.15)',
+        'glass-lg': '0 12px 48px rgba(139, 92, 246, 0.2)',
+        'glow-purple': '0 0 60px rgba(139, 92, 246, 0.3)',
+        'glow-purple-sm': '0 0 30px rgba(139, 92, 246, 0.2)',
       },
       keyframes: {
         'accordion-down': {
@@ -100,12 +105,44 @@ module.exports = {
           from: { transform: 'rotate(0deg)' },
           to: { transform: 'rotate(360deg)' },
         },
+        'fade-scale-in': {
+          from: { opacity: '0', transform: 'scale(0.95)' },
+          to: { opacity: '1', transform: 'scale(1)' },
+        },
+        'fade-scale-out': {
+          from: { opacity: '1', transform: 'scale(1)' },
+          to: { opacity: '0', transform: 'scale(0.95)' },
+        },
+        'pulse-glow': {
+          '0%, 100%': { boxShadow: '0 0 40px rgba(139, 92, 246, 0.2)' },
+          '50%': { boxShadow: '0 0 80px rgba(139, 92, 246, 0.4)' },
+        },
+        'float-orb': {
+          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+          '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+          '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+        },
+        'bounce-soft': {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.15)' },
+        },
+        'gradient-shift': {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         shimmer: 'shimmer 1.5s infinite',
         spin: 'spin 1s linear infinite',
+        'fade-scale-in': 'fade-scale-in 0.3s ease-out forwards',
+        'fade-scale-out': 'fade-scale-out 0.2s ease-in forwards',
+        'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
+        'float-orb': 'float-orb 20s ease-in-out infinite',
+        'bounce-soft': 'bounce-soft 0.3s ease-in-out',
+        'gradient-shift': 'gradient-shift 8s ease infinite',
       },
     },
   },

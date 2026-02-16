@@ -1,7 +1,7 @@
 import { Alert } from 'react-native';
-import { ScrollView, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Text, Avatar, Card, Button } from '@ahub/ui';
+import { Text, Avatar, Card, Button, ScreenHeader } from '@ahub/ui';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/auth.store';
@@ -79,22 +79,10 @@ export default function ContactDetailScreen() {
   const isOnline = otherParticipant.isOnline ?? false;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <YStack flex={1} backgroundColor="$background">
         {/* Header */}
-        <XStack
-          alignItems="center"
-          gap="$2"
-          paddingHorizontal="$3"
-          paddingVertical="$2"
-        >
-          <Pressable onPress={() => router.back()}>
-            <Text size="lg">←</Text>
-          </Pressable>
-          <Text weight="bold" size="xl">
-            Detalhes do Contato
-          </Text>
-        </XStack>
+        <ScreenHeader title="Detalhes do Contato" headingLevel={4} onBack={() => router.back()} />
 
         <ScrollView contentContainerStyle={styles.content}>
           {/* Avatar & Info */}

@@ -98,7 +98,7 @@ export default function MySubscriptionScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} justifyContent="center" alignItems="center">
           <Spinner />
         </YStack>
@@ -108,7 +108,7 @@ export default function MySubscriptionScreen() {
 
   if (!subscription) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} padding="$4" gap="$4">
           <Heading level={3}>Minha Assinatura</Heading>
           <Card variant="flat">
@@ -128,7 +128,7 @@ export default function MySubscriptionScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <ScrollView>
         <YStack padding="$4" gap="$4">
           <Heading level={3}>Minha Assinatura</Heading>

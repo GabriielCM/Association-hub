@@ -231,6 +231,75 @@ export async function removePdvProduct(
   }
 }
 
+export async function uploadPdvProductImage(
+  pdvId: string,
+  productId: string,
+  file: File,
+): Promise<PdvProductItem> {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(
+      `/admin/pdv/${pdvId}/products/${productId}/image`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+    return response.data.data ?? response.data;
+  } catch (error) {
+    throw extractApiError(error, 'Falha ao enviar imagem do produto');
+  }
+}
+
+// ===========================================
+// PDV CATEGORIES
+// ===========================================
+
+export interface PdvCategoryItem {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+export async function getPdvCategories(): Promise<PdvCategoryItem[]> {
+  try {
+    const response = await api.get('/admin/pdv-categories');
+    return response.data.data ?? response.data;
+  } catch (error) {
+    throw extractApiError(error, 'Falha ao buscar categorias');
+  }
+}
+
+export async function createPdvCategory(
+  name: string
+): Promise<PdvCategoryItem> {
+  try {
+    const response = await api.post('/admin/pdv-categories', { name });
+    return response.data.data ?? response.data;
+  } catch (error) {
+    throw extractApiError(error, 'Falha ao criar categoria');
+  }
+}
+
+export async function updatePdvCategory(
+  id: string,
+  name: string
+): Promise<PdvCategoryItem> {
+  try {
+    const response = await api.put(`/admin/pdv-categories/${id}`, { name });
+    return response.data.data ?? response.data;
+  } catch (error) {
+    throw extractApiError(error, 'Falha ao atualizar categoria');
+  }
+}
+
+export async function deletePdvCategory(id: string): Promise<void> {
+  try {
+    await api.delete(`/admin/pdv-categories/${id}`);
+  } catch (error) {
+    throw extractApiError(error, 'Falha ao excluir categoria');
+  }
+}
+
 // ===========================================
 // PDV STOCK
 // ===========================================

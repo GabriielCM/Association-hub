@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Pressable, Image } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Text, Heading, Spinner, GlassCard } from '@ahub/ui';
+import { Text, Spinner, GlassCard, ScreenHeader } from '@ahub/ui';
 import { resolveUploadUrl } from '@/config/constants';
 import { useBooking } from '@/features/bookings/hooks/useBookings';
 import { BookingStatusBadge } from '@/features/bookings/components/BookingStatusBadge';
@@ -42,7 +42,7 @@ export default function BookingDetailScreen() {
 
   if (isLoading || !booking) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center">
           <Spinner />
         </YStack>
@@ -74,23 +74,14 @@ export default function BookingDetailScreen() {
         : 'Gratuito';
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.container}>
         {/* Header */}
-        <XStack
-          paddingHorizontal="$4"
-          paddingVertical="$3"
-          alignItems="center"
-          gap="$3"
-        >
-          <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Text size="lg">←</Text>
-          </Pressable>
-          <Heading level={4} style={{ flex: 1 }}>
-            Reserva
-          </Heading>
-          <BookingStatusBadge status={booking.status} />
-        </XStack>
+        <ScreenHeader
+          title="Reserva"
+          onBack={() => router.back()}
+          rightContent={<BookingStatusBadge status={booking.status} />}
+        />
 
         <YStack padding="$4" gap="$5">
           {/* Space card */}

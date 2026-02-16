@@ -116,7 +116,24 @@ export async function fetchProducts(
 ): Promise<PdvProductsResponse> {
   try {
     const response = await client.get(`/pdv/${pdvId}/products`);
-    return response.data.data ?? response.data;
+    const raw = response.data.data ?? response.data;
+
+    // API returns categories as Record<string, Product[]>; convert to Category[]
+    let categories: PdvCategory[] = [];
+    if (raw.categories && !Array.isArray(raw.categories)) {
+      categories = Object.entries(raw.categories).map(([name, products]) => ({
+        name,
+        products: products as PdvProduct[],
+      }));
+    } else {
+      categories = raw.categories ?? [];
+    }
+
+    return {
+      pdvName: raw.pdvName,
+      categories,
+      totalProducts: raw.totalProducts,
+    };
   } catch (error) {
     throw extractApiError(error, 'Falha ao buscar produtos do PDV');
   }
@@ -129,10 +146,14 @@ export async function fetchProducts(
 export async function createCheckout(
   client: AxiosInstance,
   pdvId: string,
-  items: PdvCheckoutItem[]
+  items: PdvCheckoutItem[],
+  paymentMethod?: 'POINTS' | 'PIX'
 ): Promise<PdvCheckoutResponse> {
   try {
-    const response = await client.post(`/pdv/${pdvId}/checkout`, { items });
+    const response = await client.post(`/pdv/${pdvId}/checkout`, {
+      items,
+      paymentMethod,
+    });
     return response.data.data ?? response.data;
   } catch (error) {
     throw extractApiError(error, 'Falha ao criar checkout');

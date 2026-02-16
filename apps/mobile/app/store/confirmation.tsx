@@ -20,7 +20,7 @@ export default function ConfirmationScreen() {
   const cashbackNum = cashbackEarned ? Number(cashbackEarned) : 0;
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <YStack flex={1} padding="$6" justifyContent="center" alignItems="center" gap="$6">
         {/* Success icon */}
         <YStack

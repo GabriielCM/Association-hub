@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
-import { FlatList, StyleSheet, Pressable } from 'react-native';
-import { YStack, XStack } from 'tamagui';
+import { FlatList, StyleSheet } from 'react-native';
+import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Text, Heading, Spinner } from '@ahub/ui';
+import { Text, Spinner, ScreenHeader } from '@ahub/ui';
 import { useProducts } from '@/features/store/hooks/useProducts';
 import { useCategoryBySlug } from '@/features/store/hooks/useCategories';
 import { ProductCard } from '@/features/store/components/ProductCard';
@@ -28,20 +28,10 @@ export default function CategoryScreen() {
   }, [data, page]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <YStack flex={1}>
         {/* Header */}
-        <XStack
-          paddingHorizontal="$4"
-          paddingVertical="$3"
-          alignItems="center"
-          gap="$3"
-        >
-          <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Text size="lg">←</Text>
-          </Pressable>
-          <Heading level={4}>{category?.name || 'Categoria'}</Heading>
-        </XStack>
+        <ScreenHeader title={category?.name || 'Categoria'} onBack={() => router.back()} />
 
         {category?.description && (
           <YStack paddingHorizontal="$4" paddingBottom="$2">

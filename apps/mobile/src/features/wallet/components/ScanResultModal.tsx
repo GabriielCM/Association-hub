@@ -1,4 +1,5 @@
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { YStack } from 'tamagui';
 import { Text, Heading, Button, Avatar } from '@ahub/ui';
 import { formatPoints } from '@ahub/shared/utils';
@@ -31,12 +32,14 @@ export function ScanResultModal({
   onClose,
   onAction,
 }: ScanResultModalProps) {
+  const insets = useSafeAreaInsets();
+
   if (!result) {
     return (
       <Modal visible={visible} transparent animationType="slide">
         <View style={styles.backdrop}>
           <Pressable style={styles.backdropTouch} onPress={onClose} />
-          <View style={styles.sheet}>
+          <View style={[styles.sheet, { paddingBottom: insets.bottom }]}>
             <YStack gap="$4" padding="$4" alignItems="center">
               <Text style={{ fontSize: 48 }}>&#x26A0;&#xFE0F;</Text>
               <Heading level={4}>Erro</Heading>
@@ -77,7 +80,7 @@ export function ScanResultModal({
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.backdrop}>
         <Pressable style={styles.backdropTouch} onPress={onClose} />
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: insets.bottom }]}>
           <YStack gap="$4" padding="$4" alignItems="center">
             {transferData ? (
               <>

@@ -40,7 +40,7 @@ export default function ReceiptScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center">
           <Spinner />
         </YStack>
@@ -50,7 +50,7 @@ export default function ReceiptScreen() {
 
   if (isError || !receipt) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$3" padding="$4">
           <Text size="2xl">😔</Text>
           <Text weight="semibold">Comprovante nao encontrado</Text>
@@ -63,7 +63,7 @@ export default function ReceiptScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       {/* Header */}
       <XStack paddingHorizontal="$4" paddingVertical="$3" alignItems="center" gap="$3">
         <Pressable onPress={() => router.back()} hitSlop={8}>

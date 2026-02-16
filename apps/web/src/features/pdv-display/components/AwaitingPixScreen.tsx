@@ -1,35 +1,172 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 interface AwaitingPixScreenProps {
   code: string;
+  pixQrCode?: string | null;
+  pixCopyPaste?: string | null;
+  pixExpiresAt?: string | null;
+  totalMoney?: number;
   onCancel: () => void;
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Minimalist waiting screen displayed while a PIX payment is being processed.
- *
- * Shows a pulsing animation, the checkout code for reference, and a cancel
- * action. Designed for kiosk/touch environments with large tap targets.
- */
-export function AwaitingPixScreen({ code, onCancel }: AwaitingPixScreenProps) {
+function formatMoney(value: number): string {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+// ---------------------------------------------------------------------------
+// Component — Awaiting PIX with glassmorphism
+// ---------------------------------------------------------------------------
+
+export function AwaitingPixScreen({
+  code,
+  pixQrCode,
+  pixCopyPaste,
+  pixExpiresAt,
+  totalMoney,
+  onCancel,
+}: AwaitingPixScreenProps) {
+  const [countdown, setCountdown] = useState(0);
+  const hasPixData = !!pixQrCode || !!pixCopyPaste;
+
+  useEffect(() => {
+    if (!pixExpiresAt) return;
+
+    const updateCountdown = () => {
+      const remaining = Math.max(
+        0,
+        Math.floor((new Date(pixExpiresAt).getTime() - Date.now()) / 1000),
+      );
+      setCountdown(remaining);
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [pixExpiresAt]);
+
+  const timerColor =
+    countdown < 30
+      ? 'text-red-400'
+      : countdown < 60
+        ? 'text-yellow-400'
+        : 'text-gray-300';
+
+  // PIX QR available
+  if (hasPixData) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-dark-background px-6">
+        <h2 className="mb-2 text-center text-3xl font-bold text-dark-foreground">
+          Pague com PIX
+        </h2>
+        <p className="mb-6 text-center text-lg text-gray-400">
+          Escaneie o QR Code abaixo com o app do seu banco
+        </p>
+
+        {/* Amount */}
+        {totalMoney != null && totalMoney > 0 && (
+          <div className="mb-6 rounded-2xl border border-secondary/30 bg-secondary/10 px-8 py-3 backdrop-blur-xl">
+            <span className="text-2xl font-bold text-secondary">
+              {formatMoney(totalMoney)}
+            </span>
+          </div>
+        )}
+
+        {/* QR Code */}
+        <div className="mb-6 animate-pulse-glow rounded-3xl bg-white p-6">
+          {pixQrCode ? (
+            <img
+              src={pixQrCode}
+              alt="QR Code PIX"
+              className="h-64 w-64"
+              style={{ imageRendering: 'pixelated' }}
+            />
+          ) : (
+            <div className="flex h-64 w-64 items-center justify-center">
+              <span className="text-center text-sm text-gray-500">
+                QR Code indisponível
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Copy & paste code */}
+        {pixCopyPaste && (
+          <div className="mb-6 flex max-w-md flex-col items-center gap-1 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 backdrop-blur-xl">
+            <span className="text-xs text-gray-500">Código Copia e Cola</span>
+            <span className="break-all text-center font-mono text-xs text-gray-300">
+              {pixCopyPaste.length > 60
+                ? `${pixCopyPaste.substring(0, 60)}...`
+                : pixCopyPaste}
+            </span>
+          </div>
+        )}
+
+        {/* Countdown */}
+        {pixExpiresAt && (
+          <div className="mb-6 flex items-center gap-2">
+            <span className="text-sm text-gray-500">Expira em</span>
+            <span className={`text-lg font-bold ${timerColor}`}>
+              {formatTime(countdown)}
+            </span>
+          </div>
+        )}
+
+        {/* Waiting dots */}
+        <div className="mb-8 flex items-center gap-2">
+          <span
+            className="h-2.5 w-2.5 animate-bounce rounded-full bg-secondary"
+            style={{ animationDelay: '0ms' }}
+          />
+          <span
+            className="h-2.5 w-2.5 animate-bounce rounded-full bg-secondary"
+            style={{ animationDelay: '150ms' }}
+          />
+          <span
+            className="h-2.5 w-2.5 animate-bounce rounded-full bg-secondary"
+            style={{ animationDelay: '300ms' }}
+          />
+          <span className="ml-2 text-sm text-gray-500">
+            Aguardando pagamento...
+          </span>
+        </div>
+
+        {/* Cancel */}
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-2xl border border-white/10 bg-white/5 px-12 py-4 text-lg font-semibold text-gray-400 backdrop-blur-xl active:bg-white/10"
+          style={{ minHeight: 56 }}
+        >
+          Cancelar
+        </button>
+      </div>
+    );
+  }
+
+  // No PIX data yet — waiting state
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-dark-background px-6">
-      {/* Pulsing rings animation */}
+      {/* Pulsing rings */}
       <div className="relative mb-10 flex items-center justify-center">
-        {/* Outer ring */}
         <span className="absolute h-40 w-40 animate-ping rounded-full bg-secondary/10" />
-        {/* Middle ring */}
         <span className="absolute h-28 w-28 animate-pulse rounded-full bg-secondary/20" />
-        {/* Inner circle with PIX icon */}
-        <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-secondary/30">
+        <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-secondary/30 backdrop-blur-xl">
           <svg
             className="h-10 w-10 text-secondary"
             fill="none"
@@ -47,23 +184,21 @@ export function AwaitingPixScreen({ code, onCancel }: AwaitingPixScreenProps) {
         </div>
       </div>
 
-      {/* Status text */}
       <h2 className="mb-2 text-center text-2xl font-semibold text-dark-foreground">
         Aguardando pagamento PIX...
       </h2>
       <p className="mb-8 text-center text-base text-gray-500">
-        Complete o pagamento no seu app bancario
+        Complete o pagamento no seu app bancário
       </p>
 
-      {/* Checkout code */}
-      <div className="mb-10 flex flex-col items-center gap-1 rounded-lg bg-dark-surface px-8 py-4">
-        <span className="text-xs text-gray-500">Codigo do checkout</span>
+      <div className="mb-10 flex flex-col items-center gap-1 rounded-2xl border border-white/10 bg-white/5 px-8 py-4 backdrop-blur-xl">
+        <span className="text-xs text-gray-500">Código do checkout</span>
         <span className="font-mono text-2xl font-bold tracking-widest text-dark-foreground">
           {code}
         </span>
       </div>
 
-      {/* Spinner dots */}
+      {/* Bouncing dots */}
       <div className="mb-10 flex items-center gap-2">
         <span
           className="h-3 w-3 animate-bounce rounded-full bg-secondary"
@@ -79,11 +214,10 @@ export function AwaitingPixScreen({ code, onCancel }: AwaitingPixScreenProps) {
         />
       </div>
 
-      {/* Cancel button */}
       <button
         type="button"
         onClick={onCancel}
-        className="rounded-lg border-2 border-dark-border px-12 py-4 text-lg font-semibold text-gray-400 active:bg-dark-muted"
+        className="rounded-2xl border border-white/10 bg-white/5 px-12 py-4 text-lg font-semibold text-gray-400 backdrop-blur-xl active:bg-white/10"
         style={{ minHeight: 56 }}
       >
         Cancelar

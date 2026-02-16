@@ -11,7 +11,7 @@ import {
 import { YStack, XStack, View } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Text, Heading, Spinner, GlassCard, SafeImage, NativeViewFallback } from '@ahub/ui';
+import { Text, Spinner, GlassCard, SafeImage, NativeViewFallback, ScreenHeader } from '@ahub/ui';
 import * as Haptics from 'expo-haptics';
 import { resolveUploadUrl } from '@/config/constants';
 import { useSpace } from '@/features/spaces/hooks/useSpaces';
@@ -211,7 +211,7 @@ export default function SpaceDetailScreen() {
 
   if (isLoading || !space) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center">
           <Spinner />
         </YStack>
@@ -223,7 +223,7 @@ export default function SpaceDetailScreen() {
   const photos = rawPhotos.map((p) => resolveUploadUrl(p)).filter(Boolean) as string[];
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
     <View style={{ flex: 1, backgroundColor: '#F8F7FF' }}>
       <NativeViewFallback fallback={<View />}>
         <LinearGradient
@@ -233,20 +233,11 @@ export default function SpaceDetailScreen() {
       </NativeViewFallback>
       {/* Sticky header with subtle shadow */}
       <View style={styles.stickyHeader}>
-        <XStack
-          paddingHorizontal="$4"
-          paddingVertical="$3"
-          alignItems="center"
-          gap="$3"
-        >
-          <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Text size="lg">←</Text>
-          </Pressable>
-          <Heading level={4} style={{ flex: 1 }} numberOfLines={1}>
-            {space.name}
-          </Heading>
-          <SpaceStatusBadge status={space.status} />
-        </XStack>
+        <ScreenHeader
+          title={space.name}
+          onBack={() => router.back()}
+          rightContent={<SpaceStatusBadge status={space.status} />}
+        />
 
         <BookingProgressBar currentStep={currentStep} />
       </View>

@@ -18,6 +18,7 @@ export const PDV_EVENTS = {
   CHECKOUT_CANCELLED: 'checkout:cancelled',
   CHECKOUT_AWAITING_PIX: 'checkout:awaiting_pix',
   CHECKOUT_STATUS_CHANGED: 'checkout:status_changed',
+  CATALOG_UPDATED: 'catalog:updated',
 } as const;
 
 /**
@@ -32,6 +33,10 @@ export interface CheckoutEventPayload {
   expiresAt?: Date;
   paidAt?: Date;
   paymentMethod?: string;
+  orderCode?: string;
+  pixQrCode?: string;
+  pixCopyPaste?: string;
+  pixExpiresAt?: Date;
 }
 
 /**
@@ -129,6 +134,16 @@ export class PdvGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.debug(
       `Checkout status changed to ${payload.status} for device ${deviceId}: ${payload.code}`,
     );
+  }
+
+  /**
+   * Broadcast catalog updated notification to all connected display devices for a PDV.
+   * Display clients should refetch the product catalog on receiving this event.
+   */
+  broadcastCatalogUpdated(deviceId: string, payload: { pdvId: string; reason: string }) {
+    const room = `device:${deviceId}`;
+    this.server.to(room).emit(PDV_EVENTS.CATALOG_UPDATED, payload);
+    this.logger.debug(`Catalog updated event sent to device ${deviceId}: ${payload.reason}`);
   }
 
   /**

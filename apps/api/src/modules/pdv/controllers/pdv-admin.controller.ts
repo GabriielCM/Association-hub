@@ -8,7 +8,13 @@ import {
   Body,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
@@ -16,12 +22,18 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { writeFile } from 'fs/promises';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { JwtPayload } from '../../../common/types';
+import { sanitizeFilename, getFileExtension } from '../../../common/utils';
 import { PdvService } from '../pdv.service';
 import { CreatePdvDto, UpdatePdvDto } from '../dto/create-pdv.dto';
 import {
@@ -175,6 +187,58 @@ export class PdvAdminController {
       success: true,
       data: product,
       message: 'Produto atualizado',
+    };
+  }
+
+  @Post(':id/products/:productId/image')
+  @ApiOperation({ summary: 'Upload de imagem do produto' })
+  @ApiParam({ name: 'id', description: 'ID do PDV' })
+  @ApiParam({ name: 'productId', description: 'ID do produto' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Imagem do produto (max 5MB, jpg/png/webp)',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Imagem atualizada' })
+  @ApiResponse({ status: 400, description: 'Arquivo inválido' })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadProductImage(
+    @Param('productId') productId: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const uploadsDir = join(process.cwd(), 'uploads', 'pdv-products', productId);
+    if (!existsSync(uploadsDir)) {
+      mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const ext = getFileExtension(sanitizeFilename(file.originalname));
+    const fileName = `img-${Date.now()}${ext}`;
+    const filePath = join(uploadsDir, fileName);
+    await writeFile(filePath, file.buffer);
+
+    const imageUrl = `/uploads/pdv-products/${productId}/${fileName}`;
+    const product = await this.pdvService.updateProduct(productId, { imageUrl });
+
+    return {
+      success: true,
+      data: product,
+      message: 'Imagem do produto atualizada',
     };
   }
 

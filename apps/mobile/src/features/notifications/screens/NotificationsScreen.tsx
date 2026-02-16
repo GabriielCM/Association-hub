@@ -160,7 +160,7 @@ export function NotificationsScreen() {
   const hasUnread = (unreadData?.total ?? 0) > 0;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <YStack flex={1} backgroundColor="$background">
         {/* Header */}
         <XStack

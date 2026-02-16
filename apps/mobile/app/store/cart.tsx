@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, Pressable, Alert } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Text, Heading, Button, Spinner } from '@ahub/ui';
+import { Text, Heading, Button, Spinner, ScreenHeader } from '@ahub/ui';
 import {
   useCart,
   useAddToCart,
@@ -66,7 +66,7 @@ export default function CartScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center">
           <Spinner />
         </YStack>
@@ -77,19 +77,22 @@ export default function CartScreen() {
   const hasItems = cart && cart.items.length > 0;
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <YStack flex={1}>
         {/* Header */}
-        <XStack
-          paddingHorizontal="$4"
-          paddingVertical="$3"
-          alignItems="center"
-          justifyContent="space-between"
+        <ScreenHeader
+          onBack={() => router.back()}
+          rightContent={
+            hasItems ? (
+              <Pressable onPress={handleClear} hitSlop={8}>
+                <Text size="sm" color="error">
+                  Limpar
+                </Text>
+              </Pressable>
+            ) : undefined
+          }
         >
-          <XStack gap="$3" alignItems="center">
-            <Pressable onPress={() => router.back()} hitSlop={8}>
-              <Text size="lg">←</Text>
-            </Pressable>
+          <XStack gap="$2" alignItems="center" flex={1}>
             <Heading level={4}>Carrinho</Heading>
             {cart && cart.itemCount > 0 && (
               <Text size="sm" color="secondary">
@@ -97,15 +100,7 @@ export default function CartScreen() {
               </Text>
             )}
           </XStack>
-
-          {hasItems && (
-            <Pressable onPress={handleClear} hitSlop={8}>
-              <Text size="sm" color="error">
-                Limpar
-              </Text>
-            </Pressable>
-          )}
-        </XStack>
+        </ScreenHeader>
 
         {/* Expiration timer */}
         {cart?.reservedUntil && (

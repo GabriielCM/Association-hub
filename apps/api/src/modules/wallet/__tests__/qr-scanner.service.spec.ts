@@ -8,6 +8,7 @@ describe('QrScannerService', () => {
   let prisma: any;
   let cardService: any;
   let pointsService: any;
+  let pdvCheckoutService: any;
 
   const generateHash = (data: string) => {
     const secret = process.env.QR_CODE_SECRET || 'ahub-qr-secret-key';
@@ -30,7 +31,11 @@ describe('QrScannerService', () => {
       getBalance: vi.fn().mockResolvedValue({ balance: 1000 }),
     };
 
-    service = new QrScannerService(prisma, cardService, pointsService);
+    pdvCheckoutService = {
+      getCheckoutDetails: vi.fn(),
+    };
+
+    service = new QrScannerService(prisma, cardService, pointsService, pdvCheckoutService);
   });
 
   // ===========================================

@@ -1,12 +1,12 @@
 import { useCallback, useState, useRef, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { YStack, XStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import type { BarcodeScanningResult } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { Text, Heading, Button, Spinner } from '@ahub/ui';
+import { Text, Button, Spinner, ScreenHeader } from '@ahub/ui';
 import { useEvent } from '@/features/events/hooks/useEvents';
 import { useCheckin } from '@/features/events/hooks/useEventMutations';
 import { useEventsStore, useCheckinCelebration } from '@/stores/events.store';
@@ -105,7 +105,7 @@ export default function CheckInScreen() {
   // Permission states
   if (!permission) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} justifyContent="center" alignItems="center">
           <Spinner />
         </YStack>
@@ -115,7 +115,7 @@ export default function CheckInScreen() {
 
   if (!permission.granted) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack
           flex={1}
           justifyContent="center"
@@ -139,29 +139,9 @@ export default function CheckInScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       {/* Header */}
-      <XStack
-        alignItems="center"
-        gap="$2"
-        padding="$4"
-        position="absolute"
-        top={50}
-        left={0}
-        right={0}
-        zIndex={10}
-      >
-        <Button
-          variant="ghost"
-          size="sm"
-          onPress={() => router.back()}
-        >
-          ←
-        </Button>
-        <Heading level={4} style={{ color: '#fff' }}>
-          Check-in
-        </Heading>
-      </XStack>
+      <ScreenHeader title="Check-in" variant="overlay" onBack={() => router.back()} />
 
       {/* Camera */}
       <View style={styles.container}>

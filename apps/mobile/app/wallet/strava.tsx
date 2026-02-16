@@ -1,8 +1,8 @@
 import { Alert } from 'react-native';
 import { router } from 'expo-router';
-import { YStack, XStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Heading, Button, Spinner } from '@ahub/ui';
+import { Spinner, ScreenHeader } from '@ahub/ui';
 import {
   useStravaStatus,
   useStravaConnect,
@@ -69,16 +69,9 @@ export default function StravaScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <ScreenHeader title="Strava" headingLevel={3} onBack={() => router.back()} />
       <YStack flex={1} padding="$4" gap="$4">
-        {/* Header */}
-        <XStack alignItems="center" gap="$2">
-          <Button variant="ghost" size="sm" onPress={() => router.back()}>
-            ←
-          </Button>
-          <Heading level={3}>Strava</Heading>
-        </XStack>
-
         {/* Content */}
         {isLoading ? (
           <YStack flex={1} justifyContent="center" alignItems="center">

@@ -32,11 +32,14 @@ export class PdvDisplayController {
     for (const product of products) {
       const cat = product.category || 'Outros';
       if (!categories[cat]) categories[cat] = [];
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
       categories[cat].push({
         id: product.id,
         name: product.name,
         description: product.description,
-        imageUrl: product.imageUrl,
+        imageUrl: product.imageUrl
+          ? (product.imageUrl.startsWith('http') ? product.imageUrl : `${baseUrl}${product.imageUrl}`)
+          : null,
         pricePoints: product.pricePoints,
         priceMoney: Number(product.priceMoney),
         stock: product.stock,

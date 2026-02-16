@@ -40,7 +40,7 @@ export default function OrdersListScreen() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       {/* Header */}
       <XStack
         paddingHorizontal="$4"

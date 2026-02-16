@@ -62,7 +62,7 @@ export function ConversationsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <YStack flex={1} backgroundColor="$background">
         {/* Header */}
         <XStack

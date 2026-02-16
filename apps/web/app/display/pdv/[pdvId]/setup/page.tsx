@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { API_URL } from '@/config/constants';
 
 export default function PdvDisplaySetupPage() {
   const { pdvId } = useParams<{ pdvId: string }>();
@@ -24,8 +25,7 @@ export default function PdvDisplaySetupPage() {
 
     try {
       // Test credentials by fetching products
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${baseUrl}/api/v1/pdv/${pdvId}/products`, {
+      const res = await fetch(`${API_URL}/pdv/${pdvId}/products`, {
         headers: {
           'x-pdv-api-key': apiKey.trim(),
           'x-pdv-api-secret': apiSecret.trim(),

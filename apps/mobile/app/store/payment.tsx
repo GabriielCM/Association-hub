@@ -261,7 +261,7 @@ export default function PaymentScreen() {
         : pointsAmount ?? 0;
 
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <BiometricConfirm
           visible
           onConfirm={handleBiometricConfirm}
@@ -280,7 +280,7 @@ export default function PaymentScreen() {
   // Processing state
   if (step === 'processing' || step === 'stripe') {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$4" padding="$6">
           <Spinner />
           <Text size="lg" weight="semibold">
@@ -299,7 +299,7 @@ export default function PaymentScreen() {
   // Polling state (after Stripe PaymentSheet success)
   if (step === 'polling') {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <PaymentStatusPolling
           onConfirmed={handlePollingConfirmed}
           onTimeout={handlePollingTimeout}
@@ -311,7 +311,7 @@ export default function PaymentScreen() {
   // Error state
   if (step === 'error') {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$4" padding="$6">
           <Text size="2xl">😔</Text>
           <Heading level={4}>Erro no pagamento</Heading>
@@ -343,7 +343,7 @@ export default function PaymentScreen() {
 
   // Idle / initial state (brief, should transition quickly)
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <YStack flex={1} alignItems="center" justifyContent="center" gap="$3">
         <Spinner />
         <Text size="sm" color="secondary">

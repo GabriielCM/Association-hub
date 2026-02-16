@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { ImageIcon, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui';
 import { useToast } from '@/components/ui/use-toast';
-import { useAddPdvProduct, useUpdatePdvProduct } from '@/lib/hooks/useAdminPdv';
+import { useAddPdvProduct, useUpdatePdvProduct, useUploadPdvProductImage, useAdminPdvCategories } from '@/lib/hooks/useAdminPdv';
+import { resolveUploadUrl } from '@/config/constants';
 import type { PdvProductItem } from '@/lib/api/pdv.api';
 
 interface PdvProductDialogProps {
@@ -29,6 +31,8 @@ export function PdvProductDialog({
   const { toast } = useToast();
   const addProduct = useAddPdvProduct();
   const updateProduct = useUpdatePdvProduct();
+  const uploadImage = useUploadPdvProductImage();
+  const { data: categoryOptions } = useAdminPdvCategories();
   const isEditing = !!product;
 
   const [name, setName] = useState('');
@@ -37,7 +41,10 @@ export function PdvProductDialog({
   const [priceMoney, setPriceMoney] = useState(0);
   const [category, setCategory] = useState('');
   const [stock, setStock] = useState(0);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (product) {
@@ -47,6 +54,8 @@ export function PdvProductDialog({
       setPriceMoney(product.priceMoney);
       setCategory(product.category ?? '');
       setStock(product.stock);
+      setImagePreview(resolveUploadUrl(product.imageUrl));
+      setImageFile(null);
     } else {
       resetForm();
     }
@@ -73,13 +82,39 @@ export function PdvProductDialog({
       ...(category.trim() && { category: category.trim() }),
     };
 
+    const uploadImageAfterSave = (productId: string, successMsg: string) => {
+      if (!imageFile) {
+        toast({ title: successMsg });
+        resetForm();
+        onOpenChange(false);
+        return;
+      }
+      uploadImage.mutate(
+        { pdvId, productId, file: imageFile },
+        {
+          onSuccess: () => {
+            toast({ title: successMsg });
+            resetForm();
+            onOpenChange(false);
+          },
+          onError: (err) => {
+            toast({
+              title: 'Produto salvo, mas erro ao enviar imagem',
+              description: err.message,
+              variant: 'error',
+            });
+            onOpenChange(false);
+          },
+        }
+      );
+    };
+
     if (isEditing && product) {
       updateProduct.mutate(
         { pdvId, productId: product.id, data },
         {
           onSuccess: () => {
-            toast({ title: 'Produto atualizado!' });
-            onOpenChange(false);
+            uploadImageAfterSave(product.id, 'Produto atualizado!');
           },
           onError: (err) => {
             toast({ title: 'Erro', description: err.message, variant: 'error' });
@@ -90,10 +125,8 @@ export function PdvProductDialog({
       addProduct.mutate(
         { pdvId, data },
         {
-          onSuccess: () => {
-            toast({ title: 'Produto adicionado!' });
-            resetForm();
-            onOpenChange(false);
+          onSuccess: (newProduct) => {
+            uploadImageAfterSave(newProduct.id, 'Produto adicionado!');
           },
           onError: (err) => {
             toast({ title: 'Erro', description: err.message, variant: 'error' });
@@ -110,10 +143,16 @@ export function PdvProductDialog({
     setPriceMoney(0);
     setCategory('');
     setStock(0);
+    setImageFile(null);
+    setImagePreview(null);
     setErrors({});
   };
 
-  const isPending = addProduct.isPending || updateProduct.isPending;
+  const isPending = addProduct.isPending || updateProduct.isPending || uploadImage.isPending;
+
+  const currentImageSrc = imageFile
+    ? URL.createObjectURL(imageFile)
+    : imagePreview;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -125,6 +164,54 @@ export function PdvProductDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Image Upload */}
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              Imagem (opcional)
+            </label>
+            {currentImageSrc ? (
+              <div className="group relative h-32 w-32 overflow-hidden rounded-lg border bg-muted">
+                <img
+                  src={currentImageSrc}
+                  alt="Produto"
+                  className="h-full w-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImageFile(null);
+                    setImagePreview(null);
+                  }}
+                  className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                className="flex h-32 w-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-4 transition-colors hover:border-primary/50 hover:bg-muted/50"
+              >
+                <ImageIcon className="mb-1 h-6 w-6 text-muted-foreground" />
+                <span className="text-center text-xs text-muted-foreground">
+                  Clique para selecionar
+                </span>
+              </button>
+            )}
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) setImageFile(file);
+                e.target.value = '';
+              }}
+            />
+          </div>
+
           <div>
             <label className="mb-1 block text-sm font-medium">Nome</label>
             <input
@@ -169,20 +256,17 @@ export function PdvProductDialog({
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">
-                Preco (centavos R$)
+                Preco (R$)
               </label>
               <input
                 type="number"
                 value={priceMoney}
                 onChange={(e) => setPriceMoney(Number(e.target.value))}
-                min={1}
+                min={0.01}
+                step="0.01"
+                placeholder="Ex: 10.50"
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              {priceMoney > 0 && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  R$ {(priceMoney / 100).toFixed(2)}
-                </p>
-              )}
               {errors.priceMoney && (
                 <p className="mt-1 text-xs text-red-500">{errors.priceMoney}</p>
               )}
@@ -194,13 +278,18 @@ export function PdvProductDialog({
               <label className="mb-1 block text-sm font-medium">
                 Categoria (opcional)
               </label>
-              <input
-                type="text"
+              <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                placeholder="Ex: Bebidas"
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+              >
+                <option value="">Sem categoria</option>
+                {categoryOptions?.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Estoque</label>

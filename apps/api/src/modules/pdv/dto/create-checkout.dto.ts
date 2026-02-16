@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, ValidateNested, IsString, IsNumber, Min, ArrayMinSize } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsArray, ValidateNested, IsString, IsNumber, Min, ArrayMinSize, IsOptional, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CheckoutItemDto {
@@ -20,6 +20,11 @@ export class CreateCheckoutDto {
   @ValidateNested({ each: true })
   @Type(() => CheckoutItemDto)
   items: CheckoutItemDto[];
+
+  @ApiPropertyOptional({ description: 'Método de pagamento pré-selecionado', enum: ['POINTS', 'PIX'] })
+  @IsOptional()
+  @IsIn(['POINTS', 'PIX'])
+  paymentMethod?: 'POINTS' | 'PIX';
 }
 
 export class CheckoutStatusResponseDto {

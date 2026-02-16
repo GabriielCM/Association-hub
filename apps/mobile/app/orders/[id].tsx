@@ -1,8 +1,8 @@
-import { ScrollView, StyleSheet, Pressable } from 'react-native';
-import { YStack, XStack } from 'tamagui';
+import { ScrollView, StyleSheet } from 'react-native';
+import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Text, Heading, Button, Spinner } from '@ahub/ui';
+import { Text, Button, Spinner, ScreenHeader } from '@ahub/ui';
 import { useOrder } from '@/features/orders/hooks/useOrders';
 import { OrderStatusBadge } from '@/features/orders/components/OrderStatusBadge';
 import { OrderTimeline } from '@/features/orders/components/OrderTimeline';
@@ -16,7 +16,7 @@ export default function OrderDetailScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center">
           <Spinner />
         </YStack>
@@ -26,7 +26,7 @@ export default function OrderDetailScreen() {
 
   if (isError || !order) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$3" padding="$4">
           <Text size="2xl">😔</Text>
           <Text weight="semibold">Pedido nao encontrado</Text>
@@ -41,22 +41,13 @@ export default function OrderDetailScreen() {
   const hasVouchers = order.items.some((item) => item.type === 'VOUCHER');
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       {/* Header */}
-      <XStack
-        paddingHorizontal="$4"
-        paddingVertical="$3"
-        alignItems="center"
-        justifyContent="space-between"
-      >
-        <XStack gap="$3" alignItems="center">
-          <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Text size="lg">←</Text>
-          </Pressable>
-          <Heading level={4}>Pedido #{order.code}</Heading>
-        </XStack>
-        <OrderStatusBadge status={order.status} />
-      </XStack>
+      <ScreenHeader
+        title={`Pedido #${order.code}`}
+        onBack={() => router.back()}
+        rightContent={<OrderStatusBadge status={order.status} />}
+      />
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* Timeline */}

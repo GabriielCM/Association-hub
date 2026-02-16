@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, Pressable } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Text, Heading, Card, Button, Spinner } from '@ahub/ui';
+import { Text, Card, Button, Spinner, ScreenHeader } from '@ahub/ui';
 import { formatPoints } from '@ahub/shared/utils';
 import { useValidateCheckout } from '@/features/store/hooks/useCheckout';
 import { CartSummary } from '@/features/store/components/CartSummary';
@@ -39,7 +39,7 @@ export default function CheckoutScreen() {
 
   if (validateCheckout.isPending) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$3">
           <Spinner />
           <Text size="sm" color="secondary">
@@ -52,7 +52,7 @@ export default function CheckoutScreen() {
 
   if (validateCheckout.isError) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$3" padding="$4">
           <Text size="2xl">😔</Text>
           <Text weight="semibold">Erro ao validar</Text>
@@ -69,14 +69,9 @@ export default function CheckoutScreen() {
 
   if (validation && !validation.isValid) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+        <ScreenHeader title="Checkout" onBack={() => router.back()} />
         <YStack flex={1} padding="$4" gap="$4">
-          <XStack gap="$3" alignItems="center">
-            <Pressable onPress={() => router.back()} hitSlop={8}>
-              <Text size="lg">←</Text>
-            </Pressable>
-            <Heading level={4}>Checkout</Heading>
-          </XStack>
 
           <Card variant="flat">
             <YStack gap="$2">
@@ -106,19 +101,9 @@ export default function CheckoutScreen() {
     (selectedMethod !== 'POINTS' || validation.canPayWithPoints);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       {/* Header */}
-      <XStack
-        paddingHorizontal="$4"
-        paddingVertical="$3"
-        alignItems="center"
-        gap="$3"
-      >
-        <Pressable onPress={() => router.back()} hitSlop={8}>
-          <Text size="lg">←</Text>
-        </Pressable>
-        <Heading level={4}>Checkout</Heading>
-      </XStack>
+      <ScreenHeader title="Checkout" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* Order summary */}

@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { YStack, XStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Heading, Button, Spinner } from '@ahub/ui';
+import { Text, Heading, Button, Spinner, ScreenHeader } from '@ahub/ui';
 import { RecipientPicker } from '@/features/points/components/RecipientPicker';
 import { TransferForm } from '@/features/points/components/TransferForm';
 import { TransferReceipt } from '@/features/points/components/TransferReceipt';
@@ -70,26 +70,18 @@ export default function WalletTransferScreen() {
   }, [recipient, amount, message, authenticate, transferMutation, showCelebration]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      {step !== 'receipt' && (
+        <ScreenHeader
+          title="Transferir Pontos"
+          onBack={() => {
+            if (step === 'amount') setStep('recipient');
+            else if (step === 'confirm') setStep('amount');
+            else router.back();
+          }}
+        />
+      )}
       <YStack flex={1} padding="$4" gap="$4">
-        {/* Header */}
-        {step !== 'receipt' && (
-          <XStack alignItems="center" gap="$2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onPress={() => {
-                if (step === 'amount') setStep('recipient');
-                else if (step === 'confirm') setStep('amount');
-                else router.back();
-              }}
-            >
-              ←
-            </Button>
-            <Heading level={4}>Transferir Pontos</Heading>
-          </XStack>
-        )}
-
         {/* Steps */}
         {step === 'recipient' && (
           <RecipientPicker

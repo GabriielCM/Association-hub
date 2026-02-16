@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo } from 'react';
 import { FlatList } from 'react-native';
 import { router } from 'expo-router';
-import { YStack, XStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Heading, Button, Spinner } from '@ahub/ui';
+import { Text, Spinner, ScreenHeader } from '@ahub/ui';
 import { useBenefitsList, useCategories } from '@/features/card/hooks/useBenefits';
 import { PartnerCard } from '@/features/card/components/PartnerCard';
 import { PartnerFilters } from '@/features/card/components/PartnerFilters';
@@ -45,16 +45,9 @@ export default function BenefitsScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <ScreenHeader title="Benefícios" headingLevel={3} onBack={() => router.back()} />
       <YStack flex={1} padding="$4" gap="$4">
-        {/* Header */}
-        <XStack alignItems="center" gap="$2">
-          <Button variant="ghost" size="sm" onPress={() => router.back()}>
-            ←
-          </Button>
-          <Heading level={3}>Benefícios</Heading>
-        </XStack>
-
         {/* Filters */}
         <PartnerFilters
           categories={categoriesData?.data || []}

@@ -12,9 +12,14 @@ import {
   addPdvProduct,
   updatePdvProduct,
   removePdvProduct,
+  uploadPdvProductImage,
   getPdvStock,
   updatePdvStock,
   getPdvSales,
+  getPdvCategories,
+  createPdvCategory,
+  updatePdvCategory,
+  deletePdvCategory,
 } from '@/lib/api/pdv.api';
 import type {
   CreatePdvInput,
@@ -31,6 +36,7 @@ const pdvAdminKeys = {
   stock: (id: string) => ['admin', 'pdv', 'stock', id] as const,
   sales: (id: string, query?: Record<string, unknown>) =>
     ['admin', 'pdv', 'sales', id, query] as const,
+  categories: () => ['admin', 'pdv', 'categories'] as const,
 };
 
 // ===========================================
@@ -166,6 +172,24 @@ export function useRemovePdvProduct() {
   });
 }
 
+export function useUploadPdvProductImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      pdvId,
+      productId,
+      file,
+    }: {
+      pdvId: string;
+      productId: string;
+      file: File;
+    }) => uploadPdvProductImage(pdvId, productId, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: pdvAdminKeys.all });
+    },
+  });
+}
+
 // ===========================================
 // STOCK
 // ===========================================
@@ -191,6 +215,49 @@ export function useUpdatePdvStock() {
     }) => updatePdvStock(pdvId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: pdvAdminKeys.all });
+    },
+  });
+}
+
+// ===========================================
+// CATEGORIES
+// ===========================================
+
+export function useAdminPdvCategories() {
+  return useQuery({
+    queryKey: pdvAdminKeys.categories(),
+    queryFn: () => getPdvCategories(),
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useCreatePdvCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => createPdvCategory(name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: pdvAdminKeys.categories() });
+    },
+  });
+}
+
+export function useUpdatePdvCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      updatePdvCategory(id, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: pdvAdminKeys.categories() });
+    },
+  });
+}
+
+export function useDeletePdvCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deletePdvCategory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: pdvAdminKeys.categories() });
     },
   });
 }

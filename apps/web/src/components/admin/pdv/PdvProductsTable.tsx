@@ -2,6 +2,7 @@
 
 import { Edit2, Trash2 } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
+import { resolveUploadUrl } from '@/config/constants';
 import type { PdvProductItem } from '@/lib/api/pdv.api';
 
 interface PdvProductsTableProps {
@@ -36,7 +37,7 @@ export function PdvProductsTable({
                 <div className="flex items-center gap-2">
                   {product.imageUrl ? (
                     <img
-                      src={product.imageUrl}
+                      src={resolveUploadUrl(product.imageUrl) ?? ''}
                       alt={product.name}
                       className="h-8 w-8 rounded object-cover"
                     />
@@ -53,7 +54,7 @@ export function PdvProductsTable({
               </td>
               <td className="px-4 py-3 text-right">{product.pricePoints} pts</td>
               <td className="px-4 py-3 text-right">
-                R$ {(product.priceMoney / 100).toFixed(2)}
+                {product.priceMoney.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </td>
               <td className="px-4 py-3 text-center">{product.stock}</td>
               <td className="px-4 py-3">

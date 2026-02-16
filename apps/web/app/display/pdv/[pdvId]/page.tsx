@@ -10,6 +10,7 @@ import { usePdvDisplayWebSocket } from '@/features/pdv-display/hooks/usePdvDispl
 import { PdvDisplayLayout } from '@/features/pdv-display/components/PdvDisplayLayout';
 import { IdleScreen } from '@/features/pdv-display/components/IdleScreen';
 import { CatalogScreen } from '@/features/pdv-display/components/CatalogScreen';
+import { CartSidebar } from '@/features/pdv-display/components/CartSidebar';
 import { CartScreen } from '@/features/pdv-display/components/CartScreen';
 import { QrCodeScreen } from '@/features/pdv-display/components/QrCodeScreen';
 import { AwaitingPixScreen } from '@/features/pdv-display/components/AwaitingPixScreen';
@@ -22,7 +23,14 @@ export default function PdvDisplayPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const store = usePdvDisplayStore();
-  const { isConnected } = usePdvDisplayWebSocket(pdvId);
+  const {
+    isConnected,
+    onCheckoutPaid,
+    onCheckoutExpired,
+    onCheckoutCancelled,
+    onCheckoutAwaitingPix,
+    onCatalogUpdated,
+  } = usePdvDisplayWebSocket(pdvId);
 
   // Load credentials from localStorage
   useEffect(() => {
@@ -37,12 +45,10 @@ export default function PdvDisplayPage() {
       store.setCredentials(apiKey, apiSecret, pdvId);
       clientRef.current = createPdvDisplayClient(apiKey, apiSecret);
 
-      // Fetch products
       fetchProducts(clientRef.current, pdvId).then((data) => {
         store.setPdvName(data.pdvName);
         store.setCategories(data.categories);
       }).catch(() => {
-        // Credentials may be invalid
         localStorage.removeItem(`pdv-display-${pdvId}`);
         router.replace(`/display/pdv/${pdvId}/setup`);
       });
@@ -51,48 +57,47 @@ export default function PdvDisplayPage() {
     }
   }, [pdvId]);
 
-  // The WebSocket hook updates the store directly - no additional subscription needed
-
-  // Handle WebSocket checkout events
+  // Register checkout event handlers via WebSocket hook callbacks
   useEffect(() => {
-    if (!isConnected) return;
-
-    const handleCheckoutPaid = (data: any) => {
+    onCheckoutPaid((data) => {
       if (store.checkoutCode === data.code) {
         store.setSuccess(data.orderCode || data.code);
       }
-    };
-
-    const handleCheckoutExpired = (data: any) => {
+    });
+    onCheckoutExpired((data) => {
       if (store.checkoutCode === data.code) {
         store.reset();
       }
-    };
-
-    const handleCheckoutCancelled = (data: any) => {
+    });
+    onCheckoutCancelled((data) => {
       if (store.checkoutCode === data.code) {
         store.reset();
       }
-    };
-
-    const handleAwaitingPix = (data: any) => {
+    });
+    onCheckoutAwaitingPix((data) => {
       if (store.checkoutCode === data.code) {
+        store.setPixData(
+          data.pixQrCode || null,
+          data.pixCopyPaste || null,
+          data.pixExpiresAt || null,
+        );
         store.setScreen('awaiting_pix');
       }
-    };
+    });
+  }, [store.checkoutCode]);
 
-    // Store event handlers for the WS hook to call
-    (window as any).__pdvWsHandlers = {
-      onPaid: handleCheckoutPaid,
-      onExpired: handleCheckoutExpired,
-      onCancelled: handleCheckoutCancelled,
-      onAwaitingPix: handleAwaitingPix,
-    };
-
-    return () => {
-      delete (window as any).__pdvWsHandlers;
-    };
-  }, [isConnected, store.checkoutCode]);
+  // Register catalog refresh handler
+  useEffect(() => {
+    onCatalogUpdated(() => {
+      if (!clientRef.current || !pdvId) return;
+      fetchProducts(clientRef.current, pdvId)
+        .then((data) => {
+          store.setPdvName(data.pdvName);
+          store.setCategories(data.categories);
+        })
+        .catch((err) => console.error('Failed to refresh catalog:', err));
+    });
+  }, [pdvId]);
 
   const handleStart = useCallback(() => {
     store.setScreen('catalog');
@@ -120,7 +125,7 @@ export default function PdvDisplayPage() {
         quantity: item.quantity,
       }));
 
-      const result = await createCheckout(clientRef.current, pdvId, items);
+      const result = await createCheckout(clientRef.current, pdvId, items, store.paymentMethod);
       store.setCheckout(result.code, result.expiresAt, result.qrCodeData);
       store.setScreen('qrcode');
     } catch (err) {
@@ -128,7 +133,7 @@ export default function PdvDisplayPage() {
     } finally {
       setCheckoutLoading(false);
     }
-  }, [pdvId, store.cart]);
+  }, [pdvId, store.cart, store.paymentMethod]);
 
   const handleCancelCheckout = useCallback(async () => {
     if (!clientRef.current || !pdvId || !store.checkoutCode) return;
@@ -143,7 +148,6 @@ export default function PdvDisplayPage() {
 
   const handleIdle = useCallback(() => {
     if (store.screen === 'qrcode' || store.screen === 'awaiting_pix') {
-      // Don't interrupt checkout
       return;
     }
     store.reset();
@@ -154,67 +158,95 @@ export default function PdvDisplayPage() {
   }, []);
 
   const cartTotal = store.cartTotal();
-  const cartItemCount = store.cartItemCount();
 
   return (
     <PdvDisplayLayout
-      isConnected={isConnected}
-      pdvName={store.pdvName}
       onIdle={handleIdle}
       idleTimeout={120}
     >
+      {/* Idle */}
       {store.screen === 'idle' && (
-        <IdleScreen
-          pdvName={store.pdvName}
-          onStart={handleStart}
-        />
+        <div className="animate-fade-scale-in">
+          <IdleScreen pdvName={store.pdvName} onStart={handleStart} />
+        </div>
       )}
 
+      {/* Catalog + Cart Sidebar */}
       {store.screen === 'catalog' && (
-        <CatalogScreen
-          categories={store.categories}
-          onAddToCart={handleAddToCart}
-          cartItemCount={cartItemCount}
-          cartTotal={cartTotal}
-          onViewCart={handleViewCart}
-        />
+        <div className="flex h-screen animate-fade-scale-in">
+          <div className="flex-1 overflow-hidden">
+            <CatalogScreen
+              categories={store.categories}
+              onAddToCart={handleAddToCart}
+              pdvName={store.pdvName}
+              isConnected={isConnected}
+            />
+          </div>
+          <CartSidebar
+            items={store.cart}
+            total={cartTotal}
+            onUpdateQuantity={store.updateCartQuantity}
+            onRemove={store.removeFromCart}
+            onClear={store.clearCart}
+            onCheckout={handleViewCart}
+          />
+        </div>
       )}
 
+      {/* Cart / Payment method selection */}
       {store.screen === 'cart' && (
-        <CartScreen
-          items={store.cart}
-          total={cartTotal}
-          onUpdateQuantity={store.updateCartQuantity}
-          onRemove={store.removeFromCart}
-          onBack={handleBackToCatalog}
-          onCheckout={handleCheckout}
-          isLoading={checkoutLoading}
-        />
+        <div className="animate-fade-scale-in">
+          <CartScreen
+            items={store.cart}
+            total={cartTotal}
+            onUpdateQuantity={store.updateCartQuantity}
+            onRemove={store.removeFromCart}
+            onBack={handleBackToCatalog}
+            onCheckout={handleCheckout}
+            isLoading={checkoutLoading}
+            selectedPaymentMethod={store.paymentMethod}
+            onSelectPaymentMethod={store.setPaymentMethod}
+          />
+        </div>
       )}
 
+      {/* QR Code */}
       {store.screen === 'qrcode' && store.checkoutCode && (
-        <QrCodeScreen
-          code={store.checkoutCode}
-          qrCodeData={store.qrCodeData}
-          expiresAt={store.checkoutExpiresAt || ''}
-          totalPoints={cartTotal.points}
-          totalMoney={cartTotal.money}
-          onCancel={handleCancelCheckout}
-        />
+        <div className="animate-fade-scale-in">
+          <QrCodeScreen
+            code={store.checkoutCode}
+            qrCodeData={store.qrCodeData}
+            expiresAt={store.checkoutExpiresAt || ''}
+            totalPoints={cartTotal.points}
+            totalMoney={cartTotal.money}
+            items={store.cart}
+            onCancel={handleCancelCheckout}
+          />
+        </div>
       )}
 
+      {/* Awaiting PIX */}
       {store.screen === 'awaiting_pix' && store.checkoutCode && (
-        <AwaitingPixScreen
-          code={store.checkoutCode}
-          onCancel={handleCancelCheckout}
-        />
+        <div className="animate-fade-scale-in">
+          <AwaitingPixScreen
+            code={store.checkoutCode}
+            pixQrCode={store.pixQrCode}
+            pixCopyPaste={store.pixCopyPaste}
+            pixExpiresAt={store.pixExpiresAt}
+            totalMoney={cartTotal.money}
+            onCancel={handleCancelCheckout}
+          />
+        </div>
       )}
 
+      {/* Success */}
       {store.screen === 'success' && (
-        <SuccessScreen
-          orderCode={store.lastOrderCode || ''}
-          onDone={handleSuccessDone}
-        />
+        <div className="animate-fade-scale-in">
+          <SuccessScreen
+            orderCode={store.lastOrderCode || ''}
+            onDone={handleSuccessDone}
+          />
+        </div>
       )}
     </PdvDisplayLayout>
   );

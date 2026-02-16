@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { WS_URL } from '@/config/constants';
 
 // ===========================================
 // TYPES
@@ -15,6 +16,15 @@ export interface PdvCheckoutEventPayload {
   paymentMethod?: string;
   orderId?: string;
   orderCode?: string;
+  pixQrCode?: string;
+  pixCopyPaste?: string;
+  pixExpiresAt?: string;
+  totalMoney?: number;
+}
+
+export interface CatalogUpdatedPayload {
+  pdvId: string;
+  reason: string;
 }
 
 interface UsePdvDisplayWebSocketReturn {
@@ -24,13 +34,13 @@ interface UsePdvDisplayWebSocketReturn {
   onCheckoutExpired: (callback: (payload: PdvCheckoutEventPayload) => void) => void;
   onCheckoutCancelled: (callback: (payload: PdvCheckoutEventPayload) => void) => void;
   onCheckoutAwaitingPix: (callback: (payload: PdvCheckoutEventPayload) => void) => void;
+  onCatalogUpdated: (callback: (payload: CatalogUpdatedPayload) => void) => void;
 }
 
 // ===========================================
 // CONSTANTS
 // ===========================================
 
-const WS_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const RECONNECTION_DELAY = 5000;
 
 // ===========================================
@@ -55,6 +65,7 @@ export function usePdvDisplayWebSocket(
   const onExpiredRef = useRef<((payload: PdvCheckoutEventPayload) => void) | null>(null);
   const onCancelledRef = useRef<((payload: PdvCheckoutEventPayload) => void) | null>(null);
   const onAwaitingPixRef = useRef<((payload: PdvCheckoutEventPayload) => void) | null>(null);
+  const onCatalogUpdatedRef = useRef<((payload: CatalogUpdatedPayload) => void) | null>(null);
 
   // Callback registration functions
   const onCheckoutPaid = useCallback(
@@ -81,6 +92,13 @@ export function usePdvDisplayWebSocket(
   const onCheckoutAwaitingPix = useCallback(
     (callback: (payload: PdvCheckoutEventPayload) => void) => {
       onAwaitingPixRef.current = callback;
+    },
+    []
+  );
+
+  const onCatalogUpdated = useCallback(
+    (callback: (payload: CatalogUpdatedPayload) => void) => {
+      onCatalogUpdatedRef.current = callback;
     },
     []
   );
@@ -139,6 +157,11 @@ export function usePdvDisplayWebSocket(
       setLastEvent(payload);
     });
 
+    // Catalog updated - admin changed products
+    socket.on('catalog:updated', (payload: CatalogUpdatedPayload) => {
+      onCatalogUpdatedRef.current?.(payload);
+    });
+
     return () => {
       socket.disconnect();
       socketRef.current = null;
@@ -152,5 +175,6 @@ export function usePdvDisplayWebSocket(
     onCheckoutExpired,
     onCheckoutCancelled,
     onCheckoutAwaitingPix,
+    onCatalogUpdated,
   };
 }

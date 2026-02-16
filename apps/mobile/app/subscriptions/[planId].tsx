@@ -69,7 +69,7 @@ export default function PlanDetailScreen() {
 
   if (isLoading || !plan) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} justifyContent="center" alignItems="center">
           <Spinner />
         </YStack>
@@ -78,7 +78,7 @@ export default function PlanDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <ScrollView>
         <YStack padding="$4" gap="$4">
           {/* Color accent */}

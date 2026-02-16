@@ -105,12 +105,22 @@ describe('PdvCheckoutService', () => {
       create: vi.fn().mockResolvedValue({ id: 'notif-1' }),
     };
 
+    const pdvGateway = {
+      broadcastCheckoutCreated: vi.fn(),
+      broadcastCheckoutPaid: vi.fn(),
+      broadcastCheckoutExpired: vi.fn(),
+      broadcastCheckoutCancelled: vi.fn(),
+      broadcastCheckoutAwaitingPix: vi.fn(),
+      broadcastStatusChange: vi.fn(),
+    };
+
     service = new PdvCheckoutService(
       prisma,
       pointsService,
       stripeService,
       ordersService,
       notificationsService,
+      pdvGateway as any,
     );
   });
 

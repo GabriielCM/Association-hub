@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Text, Avatar } from '@ahub/ui';
+import { Text, Avatar, ScreenHeader } from '@ahub/ui';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSearchUsers } from '@/features/points/hooks/useRecipientSearch';
@@ -71,22 +71,10 @@ export function NewConversationScreen() {
   const results = searchResults ?? [];
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <YStack flex={1} backgroundColor="$background">
         {/* Header */}
-        <XStack
-          alignItems="center"
-          gap="$2"
-          paddingHorizontal="$3"
-          paddingVertical="$2"
-        >
-          <Pressable onPress={() => router.back()}>
-            <Text size="lg">←</Text>
-          </Pressable>
-          <Text weight="bold" size="xl">
-            Nova conversa
-          </Text>
-        </XStack>
+        <ScreenHeader title="Nova conversa" headingLevel={4} onBack={() => router.back()} />
 
         {/* Search */}
         <View paddingHorizontal="$3" paddingBottom="$2">

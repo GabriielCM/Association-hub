@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { ScrollView, Pressable, Alert, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { YStack, XStack, View } from 'tamagui';
-import { Text, Avatar, Card } from '@ahub/ui';
+import { Text, Avatar, Card, ScreenHeader } from '@ahub/ui';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/auth.store';
@@ -121,22 +121,10 @@ export function GroupInfoScreen() {
   if (!groupInfo) return null;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <YStack flex={1} backgroundColor="$background">
         {/* Header */}
-        <XStack
-          alignItems="center"
-          gap="$2"
-          paddingHorizontal="$3"
-          paddingVertical="$2"
-        >
-          <Pressable onPress={() => router.back()}>
-            <Text size="lg">←</Text>
-          </Pressable>
-          <Text weight="bold" size="xl">
-            Info do grupo
-          </Text>
-        </XStack>
+        <ScreenHeader title="Info do grupo" headingLevel={4} onBack={() => router.back()} />
 
         <ScrollView contentContainerStyle={styles.content}>
           {/* Group Avatar & Name */}

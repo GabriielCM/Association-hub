@@ -14,6 +14,7 @@ import {
   PdvProduct,
 } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PdvGateway } from './pdv.gateway';
 import { CreatePdvDto, UpdatePdvDto } from './dto/create-pdv.dto';
 import { CreatePdvProductDto, UpdatePdvProductDto, UpdateStockDto } from './dto/create-pdv-product.dto';
 import * as bcrypt from 'bcrypt';
@@ -30,6 +31,7 @@ export class PdvService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly pdvGateway: PdvGateway,
   ) {}
 
   /**
@@ -184,7 +186,7 @@ export class PdvService {
       throw new NotFoundException('PDV não encontrado');
     }
 
-    return this.prisma.pdvProduct.create({
+    const product = await this.prisma.pdvProduct.create({
       data: {
         pdvId,
         name: dto.name,
@@ -196,6 +198,10 @@ export class PdvService {
         stock: dto.stock || 0,
       },
     });
+
+    this.pdvGateway.broadcastCatalogUpdated(pdvId, { pdvId, reason: 'product_added' });
+
+    return product;
   }
 
   /**
@@ -223,7 +229,7 @@ export class PdvService {
       throw new NotFoundException('Produto não encontrado');
     }
 
-    return this.prisma.pdvProduct.update({
+    const updated = await this.prisma.pdvProduct.update({
       where: { id: productId },
       data: {
         name: dto.name,
@@ -236,6 +242,10 @@ export class PdvService {
         isActive: dto.isActive,
       },
     });
+
+    this.pdvGateway.broadcastCatalogUpdated(updated.pdvId, { pdvId: updated.pdvId, reason: 'product_updated' });
+
+    return updated;
   }
 
   /**
@@ -248,10 +258,14 @@ export class PdvService {
       throw new NotFoundException('Produto não encontrado');
     }
 
-    return this.prisma.pdvProduct.update({
+    const updated = await this.prisma.pdvProduct.update({
       where: { id: productId },
       data: { isActive: false },
     });
+
+    this.pdvGateway.broadcastCatalogUpdated(updated.pdvId, { pdvId: updated.pdvId, reason: 'product_deleted' });
+
+    return updated;
   }
 
   /**
@@ -280,6 +294,8 @@ export class PdvService {
     this.logger.log(
       `Stock updated for product ${dto.productId}: ${product.stock} -> ${newStock} (${dto.reason || 'manual'})`,
     );
+
+    this.pdvGateway.broadcastCatalogUpdated(updated.pdvId, { pdvId: updated.pdvId, reason: 'stock_updated' });
 
     // Check stock low alert (async, non-blocking)
     this.checkAndSendStockAlert(updated).catch((err) =>
@@ -363,6 +379,64 @@ export class PdvService {
         priceMoney: true,
       },
       orderBy: [{ category: 'asc' }, { name: 'asc' }],
+    });
+  }
+
+  // ===============================
+  // Categories
+  // ===============================
+
+  /**
+   * Get all categories for an association
+   */
+  async getCategories(associationId: string) {
+    return this.prisma.pdvCategory.findMany({
+      where: { associationId },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  /**
+   * Create a category for an association
+   */
+  async createCategory(associationId: string, name: string) {
+    return this.prisma.pdvCategory.create({
+      data: { associationId, name: name.trim() },
+    });
+  }
+
+  /**
+   * Update a category name
+   */
+  async updateCategory(categoryId: string, name: string) {
+    const category = await this.prisma.pdvCategory.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Categoria não encontrada');
+    }
+
+    return this.prisma.pdvCategory.update({
+      where: { id: categoryId },
+      data: { name: name.trim() },
+    });
+  }
+
+  /**
+   * Delete a category
+   */
+  async deleteCategory(categoryId: string) {
+    const category = await this.prisma.pdvCategory.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Categoria não encontrada');
+    }
+
+    return this.prisma.pdvCategory.delete({
+      where: { id: categoryId },
     });
   }
 

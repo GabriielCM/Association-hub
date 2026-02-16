@@ -38,7 +38,7 @@ export default function ResetPasswordScreen() {
   // No token
   if (!token) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} padding="$4" justifyContent="center">
           <Card variant="elevated" padding="$4">
             <YStack gap="$4" alignItems="center">
@@ -86,7 +86,7 @@ export default function ResetPasswordScreen() {
   // Reset complete
   if (resetComplete) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} padding="$4" justifyContent="center">
           <Card variant="elevated" padding="$4">
             <YStack gap="$4" alignItems="center">
@@ -126,7 +126,7 @@ export default function ResetPasswordScreen() {
 
   // Reset form
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
