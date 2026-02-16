@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "004-sanitize-uploaded-filenames-to-prevent-path-traver",
+  "spec": "005-hash-refresh-tokens-before-database-storage",
   "state": "building",
   "subtasks": {
-    "completed": 6,
-    "total": 8,
+    "completed": 3,
+    "total": 4,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Security Verification and Testing",
+    "current": "Integration Verification",
     "id": null,
-    "total": 2
+    "total": 1
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 8,
-    "started_at": "2026-02-15T10:41:09.855042"
+    "number": 5,
+    "started_at": "2026-02-15T10:42:47.371498"
   },
-  "last_update": "2026-02-15T11:04:29.476931"
+  "last_update": "2026-02-15T10:57:33.173518"
 }

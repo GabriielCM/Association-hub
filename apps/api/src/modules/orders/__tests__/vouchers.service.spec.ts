@@ -34,6 +34,9 @@ describe('VouchersService', () => {
         findMany: vi.fn(),
         update: vi.fn(),
       },
+      notification: {
+        findMany: vi.fn().mockResolvedValue([]), // No recent notifications by default
+      },
     };
 
     notificationsService = {
@@ -283,9 +286,11 @@ describe('VouchersService', () => {
         voucherExpiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
       }]);
 
-      const count = await service.sendExpirationWarnings();
+      const result = await service.sendExpirationWarnings();
 
-      expect(count).toBe(1);
+      expect(result.sent).toBe(1);
+      expect(result.total).toBe(1);
+      expect(result.skipped).toBe(0);
       expect(notificationsService.create).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: 'user-1',
@@ -297,9 +302,30 @@ describe('VouchersService', () => {
     it('should not send notifications when no expiring vouchers', async () => {
       prisma.orderItem.findMany.mockResolvedValue([]);
 
-      const count = await service.sendExpirationWarnings();
+      const result = await service.sendExpirationWarnings();
 
-      expect(count).toBe(0);
+      expect(result.total).toBe(0);
+      expect(result.sent).toBe(0);
+      expect(notificationsService.create).not.toHaveBeenCalled();
+    });
+
+    it('should skip vouchers already notified', async () => {
+      // Mock voucher expiring soon
+      prisma.orderItem.findMany.mockResolvedValue([{
+        ...mockVoucher,
+        voucherCode: 'NOTIFIED-VOUCHER',
+        voucherExpiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      }]);
+      // Mock that this voucher was already notified
+      prisma.notification.findMany.mockResolvedValue([
+        { groupKey: 'voucher-expiration:NOTIFIED-VOUCHER' },
+      ]);
+
+      const result = await service.sendExpirationWarnings();
+
+      expect(result.total).toBe(1);
+      expect(result.skipped).toBe(1);
+      expect(result.sent).toBe(0);
       expect(notificationsService.create).not.toHaveBeenCalled();
     });
   });

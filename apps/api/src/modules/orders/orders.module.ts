@@ -5,6 +5,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { StripeModule } from '../stripe/stripe.module';
 import { OrdersService } from './orders.service';
 import { VouchersService } from './vouchers.service';
+import { VoucherScheduler } from './schedulers/voucher.scheduler';
 import { OrdersController } from './controllers/orders.controller';
 import { OrdersAdminController } from './controllers/orders-admin.controller';
 
@@ -16,7 +17,7 @@ import { OrdersAdminController } from './controllers/orders-admin.controller';
     forwardRef(() => StripeModule),
   ],
   controllers: [OrdersController, OrdersAdminController],
-  providers: [OrdersService, VouchersService],
+  providers: [OrdersService, VouchersService, VoucherScheduler],
   exports: [OrdersService, VouchersService],
 })
 export class OrdersModule {}

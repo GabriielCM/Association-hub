@@ -6,6 +6,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 describe('PdvService', () => {
   let service: PdvService;
   let prisma: any;
+  let notificationsService: any;
 
   const mockPdv = {
     id: 'pdv-1',
@@ -46,9 +47,16 @@ describe('PdvService', () => {
       pdvSale: {
         findMany: vi.fn(),
       },
+      user: {
+        findMany: vi.fn(),
+      },
     };
 
-    service = new PdvService(prisma);
+    notificationsService = {
+      createBatch: vi.fn(),
+    };
+
+    service = new PdvService(prisma, notificationsService);
   });
 
   // ===========================================

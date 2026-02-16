@@ -7,6 +7,8 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { PdvService } from './pdv.service';
 import { PdvCheckoutService } from './pdv-checkout.service';
 import { PdvApiKeyGuard } from './guards/pdv-api-key.guard';
+import { PdvGateway } from './pdv.gateway';
+import { PdvScheduler } from './pdv.scheduler';
 import { PdvDisplayController } from './controllers/pdv-display.controller';
 import { PdvWalletController } from './controllers/pdv-wallet.controller';
 import { PdvAdminController } from './controllers/pdv-admin.controller';
@@ -20,7 +22,7 @@ import { PdvAdminController } from './controllers/pdv-admin.controller';
     NotificationsModule,
   ],
   controllers: [PdvDisplayController, PdvWalletController, PdvAdminController],
-  providers: [PdvService, PdvCheckoutService, PdvApiKeyGuard],
-  exports: [PdvService, PdvCheckoutService],
+  providers: [PdvService, PdvCheckoutService, PdvApiKeyGuard, PdvGateway, PdvScheduler],
+  exports: [PdvService, PdvCheckoutService, PdvGateway],
 })
 export class PdvModule {}

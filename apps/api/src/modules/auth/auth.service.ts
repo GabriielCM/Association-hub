@@ -95,24 +95,49 @@ export class AuthService {
   }
 
   async refreshToken(dto: RefreshTokenDto): Promise<AuthTokens> {
-    const storedToken = await this.prisma.refreshToken.findUnique({
-      where: { token: dto.refreshToken },
-      include: { user: true },
-    });
-
-    if (!storedToken) {
+    // Decode JWT to get userId (without full validation)
+    let payload: JwtPayload;
+    try {
+      payload = this.jwtService.verify(dto.refreshToken, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
+    } catch (error) {
       throw new UnauthorizedException('Refresh token inválido');
     }
 
-    if (storedToken.expiresAt < new Date()) {
-      await this.prisma.refreshToken.delete({ where: { id: storedToken.id } });
+    // Get all refresh tokens for this user
+    const userTokens = await this.prisma.refreshToken.findMany({
+      where: { userId: payload.sub },
+      include: { user: true },
+    });
+
+    if (userTokens.length === 0) {
+      throw new UnauthorizedException('Refresh token inválido');
+    }
+
+    // Find matching token by comparing hashes
+    let matchedToken = null;
+    for (const storedToken of userTokens) {
+      const isValidToken = await bcrypt.compare(dto.refreshToken, storedToken.token);
+      if (isValidToken) {
+        matchedToken = storedToken;
+        break;
+      }
+    }
+
+    if (!matchedToken) {
+      throw new UnauthorizedException('Refresh token inválido');
+    }
+
+    if (matchedToken.expiresAt < new Date()) {
+      await this.prisma.refreshToken.delete({ where: { id: matchedToken.id } });
       throw new UnauthorizedException('Refresh token expirado');
     }
 
     // Delete old token
-    await this.prisma.refreshToken.delete({ where: { id: storedToken.id } });
+    await this.prisma.refreshToken.delete({ where: { id: matchedToken.id } });
 
-    const { user } = storedToken;
+    const { user } = matchedToken;
     return this.generateTokens(user.id, user.email, user.role, user.associationId);
   }
 
@@ -143,13 +168,16 @@ export class AuthService {
       expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION', '30d'),
     });
 
-    // Store refresh token
+    // Hash refresh token before storing
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+
+    // Store hashed refresh token
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
 
     await this.prisma.refreshToken.create({
       data: {
-        token: refreshToken,
+        token: hashedRefreshToken,
         userId,
         expiresAt,
       },
