@@ -30,6 +30,7 @@ import { writeFile } from 'fs/promises';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators';
 import type { JwtPayload } from '../../common/types';
+import { sanitizeFilename, getFileExtension } from '../../common/utils';
 import { SpacesService } from './spaces.service';
 import {
   CreateSpaceDto,
@@ -130,7 +131,8 @@ export class AdminSpacesController {
       mkdirSync(uploadsDir, { recursive: true });
     }
 
-    const ext = file.originalname.split('.').pop();
+    const sanitizedFilename = sanitizeFilename(file.originalname);
+    const ext = getFileExtension(sanitizedFilename).replace('.', '');
     const fileName = `img-${Date.now()}.${ext}`;
     const filePath = join(uploadsDir, fileName);
     await writeFile(filePath, file.buffer);

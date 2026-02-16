@@ -31,6 +31,7 @@ import { writeFile } from 'fs/promises';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtPayload } from '../../common/types';
+import { sanitizeFilename } from '../../common/utils';
 import { MessagesService } from './messages.service';
 import { AddReactionDto } from './dto/add-reaction.dto';
 
@@ -78,7 +79,7 @@ export class MessagesController {
       mkdirSync(uploadsDir, { recursive: true });
     }
 
-    const fileName = `${Date.now()}-${file.originalname}`;
+    const fileName = `${Date.now()}-${sanitizeFilename(file.originalname)}`;
     const filePath = join(uploadsDir, fileName);
     await writeFile(filePath, file.buffer);
 

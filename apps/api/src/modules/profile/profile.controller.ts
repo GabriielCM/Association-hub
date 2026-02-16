@@ -31,6 +31,7 @@ import { writeFile } from 'fs/promises';
 import { JwtAuthGuard } from '../../common/guards';
 import { CurrentUser } from '../../common/decorators';
 import { JwtPayload } from '../../common/types';
+import { sanitizeFilename } from '../../common/utils';
 import { ProfileService } from './profile.service';
 import { UpdateProfileDto, UpdateBadgesDisplayDto } from './dto';
 
@@ -125,7 +126,7 @@ export class ProfileController {
       mkdirSync(uploadsDir, { recursive: true });
     }
 
-    const fileName = `${Date.now()}-${file.originalname}`;
+    const fileName = `${Date.now()}-${sanitizeFilename(file.originalname)}`;
     const filePath = join(uploadsDir, fileName);
     await writeFile(filePath, file.buffer);
 
