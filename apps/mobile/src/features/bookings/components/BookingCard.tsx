@@ -1,8 +1,10 @@
 import { Pressable, StyleSheet, Image } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Card, Text } from '@ahub/ui';
+import { Text, GlassCard } from '@ahub/ui';
 import { resolveUploadUrl } from '@/config/constants';
 import { BookingStatusBadge } from './BookingStatusBadge';
+import { PriceDisplay } from './PriceDisplay';
+import { colors } from '@ahub/ui/themes';
 import type { BookingListItem } from '@ahub/shared/types';
 
 interface BookingCardProps {
@@ -38,7 +40,7 @@ export function BookingCard({ booking, onPress, onCancel }: BookingCardProps) {
 
   return (
     <Pressable onPress={() => onPress(booking)}>
-      <Card variant="flat">
+      <GlassCard intensity="subtle" borderRadius={12} padding={12}>
         <YStack gap="$2">
           {/* Header: space + status */}
           <XStack justifyContent="space-between" alignItems="center">
@@ -75,9 +77,17 @@ export function BookingCard({ booking, onPress, onCancel }: BookingCardProps) {
 
           {/* Bottom: fee + cancel */}
           <XStack justifyContent="space-between" alignItems="center">
-            <Text size="sm" weight="medium" color="accent">
-              {feeLabel}
-            </Text>
+            {booking.discountApplied != null && booking.discountApplied > 0 && booking.fee != null ? (
+              <PriceDisplay
+                originalPrice={booking.fee}
+                finalPrice={booking.finalFee ?? booking.fee}
+                size="sm"
+              />
+            ) : (
+              <Text size="sm" weight="medium" style={{ color: colors.primary }}>
+                {feeLabel}
+              </Text>
+            )}
             {booking.canCancel && onCancel && (
               <Pressable
                 onPress={() => onCancel(booking)}
@@ -90,7 +100,7 @@ export function BookingCard({ booking, onPress, onCancel }: BookingCardProps) {
             )}
           </XStack>
         </YStack>
-      </Card>
+      </GlassCard>
     </Pressable>
   );
 }
@@ -109,7 +119,7 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(139, 92, 246, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },

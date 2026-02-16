@@ -12,11 +12,13 @@ import { CartService } from './services/cart.service';
 import { CheckoutService } from './services/checkout.service';
 import { FavoritesService } from './services/favorites.service';
 import { ReviewsService } from './services/reviews.service';
+import { StoreReportsService } from './services/reports.service';
 
 // Controllers
 import { StoreController } from './controllers/store.controller';
 import { StoreUserController } from './controllers/store-user.controller';
 import { StoreAdminController } from './controllers/store-admin.controller';
+import { StoreReportsController } from './controllers/store-reports.controller';
 
 // Schedulers
 import { CartScheduler } from './schedulers/cart.scheduler';
@@ -29,7 +31,7 @@ import { CartScheduler } from './schedulers/cart.scheduler';
     forwardRef(() => OrdersModule),
     NotificationsModule,
   ],
-  controllers: [StoreController, StoreUserController, StoreAdminController],
+  controllers: [StoreController, StoreUserController, StoreAdminController, StoreReportsController],
   providers: [
     CategoriesService,
     ProductsService,
@@ -37,6 +39,7 @@ import { CartScheduler } from './schedulers/cart.scheduler';
     CheckoutService,
     FavoritesService,
     ReviewsService,
+    StoreReportsService,
     CartScheduler,
   ],
   exports: [

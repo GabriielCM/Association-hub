@@ -54,7 +54,7 @@ export default function WalletTransferScreen() {
       {
         recipientId: recipient.userId,
         amount,
-        message: message || undefined,
+        ...(message ? { message } : {}),
       },
       {
         onSuccess: (result) => {
@@ -126,7 +126,7 @@ export default function WalletTransferScreen() {
                 disabled={transferMutation.isPending}
               >
                 {transferMutation.isPending ? (
-                  <Spinner size="small" />
+                  <Spinner size="sm" />
                 ) : authMethod === 'biometric' ? (
                   'Confirmar com biometria'
                 ) : authMethod === 'device_credential' ? (

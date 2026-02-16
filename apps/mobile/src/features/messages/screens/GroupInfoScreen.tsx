@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ScrollView, Pressable, Alert, StyleSheet, Image } from 'react-native';
+import { ScrollView, Pressable, Alert, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { YStack, XStack, View } from 'tamagui';
 import { Text, Avatar, Card } from '@ahub/ui';
@@ -9,7 +9,6 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useGroupInfo, useLeaveConversation } from '../hooks/useConversations';
 import { ParticipantsList } from '../components/ParticipantsList';
 import {
-  addParticipants,
   removeParticipant,
   promoteToAdmin,
   uploadMedia,

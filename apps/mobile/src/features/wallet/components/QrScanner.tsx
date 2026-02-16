@@ -64,7 +64,7 @@ export function QrScanner({ onScan, isProcessing }: QrScannerProps) {
     <View style={styles.container}>
       {isProcessing ? (
         <View style={styles.processingOverlay}>
-          <Spinner size="large" />
+          <Spinner size="lg" />
           <Text style={styles.processingText}>Processando...</Text>
         </View>
       ) : (

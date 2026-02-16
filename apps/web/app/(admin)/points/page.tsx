@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Coins, TrendingUp, TrendingDown, Users, ArrowRight } from 'lucide-react';
+import { Coins, TrendingUp, TrendingDown, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui';
-import { usePointsReports, useGrantPoints, useDeductPoints } from '@/lib/hooks/useAdminPoints';
+import { usePointsReports } from '@/lib/hooks/useAdminPoints';
 import { formatPoints } from '@ahub/shared/utils';
 
 export default function PointsOverviewPage() {

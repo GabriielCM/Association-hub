@@ -2,11 +2,12 @@ import { api } from './client';
 import type {
   ApiResponse,
   SubscriptionPlan,
+  PlanMutators,
   AdminSubscriberEntry,
   AdminSubscriptionReport,
 } from '@ahub/shared/types';
 
-interface AdminPlansResponse {
+export interface AdminPlansResponse {
   plans: Array<SubscriptionPlan & { isActive: boolean; subscribersCount: number; createdAt: Date; updatedAt: Date }>;
   stats: {
     totalPlans: number;
@@ -33,7 +34,7 @@ export async function createPlan(data: {
   iconUrl?: string;
   color?: string;
   displayOrder?: number;
-  mutators?: Record<string, number>;
+  mutators?: PlanMutators;
 }): Promise<{ plan: SubscriptionPlan; message: string }> {
   const response = await api.post<ApiResponse<{ plan: SubscriptionPlan; message: string }>>(
     '/admin/subscriptions/plans',
@@ -54,7 +55,7 @@ export async function updatePlan(
     iconUrl: string;
     color: string;
     displayOrder: number;
-    mutators: Record<string, number>;
+    mutators: PlanMutators;
   }>
 ): Promise<{ plan: SubscriptionPlan; message: string }> {
   const response = await api.put<ApiResponse<{ plan: SubscriptionPlan; message: string }>>(
@@ -77,11 +78,11 @@ export async function deletePlan(planId: string): Promise<void> {
 }
 
 export async function getSubscribers(query?: {
-  page?: number;
-  limit?: number;
-  planId?: string;
-  status?: string;
-  search?: string;
+  page?: number | undefined;
+  limit?: number | undefined;
+  planId?: string | undefined;
+  status?: string | undefined;
+  search?: string | undefined;
 }): Promise<{
   subscribers: AdminSubscriberEntry[];
   pagination: { page: number; limit: number; total: number; totalPages: number };

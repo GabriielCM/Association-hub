@@ -71,6 +71,9 @@ export const Text = styled(TamaguiText, {
       info: {
         color: '$info',
       },
+      white: {
+        color: '#FFFFFF',
+      },
     },
     align: {
       left: {

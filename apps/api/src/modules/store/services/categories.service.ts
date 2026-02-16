@@ -139,4 +139,20 @@ export class CategoriesService {
       data: { isActive: false },
     });
   }
+
+  /**
+   * Reorder categories by updating displayOrder
+   */
+  async reorderCategories(categoryIds: string[]) {
+    const updates = categoryIds.map((id, index) =>
+      this.prisma.storeCategory.update({
+        where: { id },
+        data: { displayOrder: index },
+      }),
+    );
+
+    await this.prisma.$transaction(updates);
+
+    return { success: true, count: categoryIds.length };
+  }
 }

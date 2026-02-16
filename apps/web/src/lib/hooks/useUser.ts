@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProfile } from '@/lib/api/auth.api';
 import { api } from '@/lib/api/client';
 import { useAuthStore } from '@/lib/stores/auth.store';
-import type { User, ApiResponse, UpdateProfileInput } from '@ahub/shared/types';
+import type { User, ApiResponse } from '@ahub/shared/types';
+import type { UpdateProfileInput } from '@ahub/shared/validation';
 
 const USER_QUERY_KEY = ['user', 'profile'] as const;
 

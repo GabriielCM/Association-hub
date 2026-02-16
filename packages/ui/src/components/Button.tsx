@@ -141,7 +141,7 @@ type ButtonFrameProps = GetProps<typeof ButtonFrame>;
 
 export interface ButtonProps extends ButtonFrameProps {
   children: React.ReactNode;
-  loading?: boolean;
+  loading?: boolean | undefined;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }

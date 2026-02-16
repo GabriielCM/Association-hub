@@ -120,9 +120,9 @@ export function ChatScreen() {
     (data: {
       content?: string;
       contentType: MessageContentType;
-      mediaUrl?: string;
-      mediaDuration?: number;
-      replyTo?: string;
+      mediaUrl?: string | undefined;
+      mediaDuration?: number | undefined;
+      replyTo?: string | undefined;
     }) => {
       sendMessage.mutate(data);
       stopTyping();
@@ -313,7 +313,6 @@ export function ChatScreen() {
                   shadowOffset={{ width: 0, height: 2 }}
                   shadowOpacity={0.2}
                   shadowRadius={4}
-                  elevation={4}
                   borderWidth={1}
                   borderColor="$borderColor"
                 >

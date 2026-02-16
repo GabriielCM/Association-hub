@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, Platform } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, GlassCard } from '@ahub/ui';
+import * as Haptics from 'expo-haptics';
 import { useSpaceAvailability } from '../hooks/useSpaces';
+import { colors } from '@ahub/ui/themes';
 import type { AvailabilityStatus } from '@ahub/shared/types';
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -78,6 +80,7 @@ export function AvailabilityCalendar({
   });
 
   const goToPrevMonth = () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (month === 0) {
       setMonth(11);
       setYear(year - 1);
@@ -87,6 +90,7 @@ export function AvailabilityCalendar({
   };
 
   const goToNextMonth = () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (month === 11) {
       setMonth(0);
       setYear(year + 1);
@@ -96,6 +100,7 @@ export function AvailabilityCalendar({
   };
 
   const handleDayPress = (dateStr: string, status: AvailabilityStatus | undefined) => {
+    if (Platform.OS !== 'web') Haptics.selectionAsync();
     if (status === 'disponivel') {
       onSelectDate(dateStr);
     } else if (status === 'ocupado' || status === 'pendente') {
@@ -115,6 +120,7 @@ export function AvailabilityCalendar({
   }
 
   return (
+    <GlassCard intensity="subtle" borderRadius={12} padding={12}>
     <YStack gap="$3">
       {/* Month navigation */}
       <XStack justifyContent="space-between" alignItems="center">
@@ -203,6 +209,7 @@ export function AvailabilityCalendar({
         ))}
       </XStack>
     </YStack>
+    </GlassCard>
   );
 }
 
@@ -230,7 +237,7 @@ const styles = StyleSheet.create({
   },
   todayBorder: {
     borderWidth: 2,
-    borderColor: '#3B82F6',
+    borderColor: colors.primary,
   },
   centered: {
     textAlign: 'center',

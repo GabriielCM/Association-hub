@@ -1,11 +1,11 @@
-import { ScrollView, Pressable, StyleSheet, View } from 'react-native';
+import { ScrollView, Pressable, StyleSheet } from 'react-native';
 import { XStack, YStack } from 'tamagui';
 import { Text, Input } from '@ahub/ui';
 import type { PartnerCategory } from '@ahub/shared/types';
 
 interface PartnerFiltersProps {
   categories: PartnerCategory[];
-  selectedCategory?: string;
+  selectedCategory?: string | undefined;
   searchQuery: string;
   onCategoryChange: (category?: string) => void;
   onSearchChange: (query: string) => void;
@@ -59,7 +59,7 @@ function CategoryChip({
 }: {
   label: string;
   isSelected: boolean;
-  count?: number;
+  count?: number | undefined;
   onPress: () => void;
 }) {
   return (

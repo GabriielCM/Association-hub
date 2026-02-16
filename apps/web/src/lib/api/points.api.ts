@@ -22,9 +22,9 @@ export async function updateConfig(
     sources?: Array<{
       type: string;
       isActive: boolean;
-      defaultPoints?: number;
-      pointsPerKm?: number;
-      points?: number;
+      defaultPoints?: number | undefined;
+      pointsPerKm?: number | undefined;
+      points?: number | undefined;
     }>;
     strava?: { dailyLimitKm: number; eligibleActivities: string[] };
     pointsToMoneyRate?: number;

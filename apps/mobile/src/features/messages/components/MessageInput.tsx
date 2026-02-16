@@ -17,9 +17,9 @@ interface MessageInputProps {
   onSend: (data: {
     content?: string;
     contentType: MessageContentType;
-    mediaUrl?: string;
-    mediaDuration?: number;
-    replyTo?: string;
+    mediaUrl?: string | undefined;
+    mediaDuration?: number | undefined;
+    replyTo?: string | undefined;
   }) => void;
   onTextChange?: (text: string) => void;
   onRecordingChange?: (isRecording: boolean) => void;
@@ -232,7 +232,7 @@ export function MessageInput({
                 alignItems="center"
                 justifyContent="center"
               >
-                <Text color="white" weight="bold" size="sm">
+                <Text style={{ color: '#FFFFFF' }} weight="bold" size="sm">
                   ➤
                 </Text>
               </View>
@@ -281,7 +281,7 @@ export function MessageInput({
                   alignItems="center"
                   justifyContent="center"
                 >
-                  <Text color="white" weight="bold" size="sm">
+                  <Text style={{ color: '#FFFFFF' }} weight="bold" size="sm">
                     ➤
                   </Text>
                 </View>
@@ -300,7 +300,7 @@ export function MessageInput({
                   alignItems="center"
                   justifyContent="center"
                 >
-                  <Text color="white" size="sm">
+                  <Text style={{ color: '#FFFFFF' }} size="sm">
                     🎤
                   </Text>
                 </View>

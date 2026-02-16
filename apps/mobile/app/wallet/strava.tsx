@@ -2,7 +2,7 @@ import { Alert } from 'react-native';
 import { router } from 'expo-router';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Heading, Button, Spinner } from '@ahub/ui';
+import { Heading, Button, Spinner } from '@ahub/ui';
 import {
   useStravaStatus,
   useStravaConnect,
@@ -82,7 +82,7 @@ export default function StravaScreen() {
         {/* Content */}
         {isLoading ? (
           <YStack flex={1} justifyContent="center" alignItems="center">
-            <Spinner size="large" />
+            <Spinner size="lg" />
           </YStack>
         ) : strava?.connected ? (
           <StravaConnectedView

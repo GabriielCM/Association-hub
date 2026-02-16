@@ -20,6 +20,7 @@ import {
   Coins,
   Crown,
   Handshake,
+  ClipboardList,
 } from 'lucide-react';
 
 import { useAuthContext } from '@/lib/providers/auth-provider';
@@ -36,6 +37,7 @@ const navigation = [
   { name: 'Eventos', href: '/events', icon: Calendar },
   { name: 'Loja', href: '/store', icon: ShoppingBag },
   { name: 'PDV', href: '/pdv', icon: Store },
+  { name: 'Pedidos', href: '/orders', icon: ClipboardList },
   { name: 'Espaços', href: '/spaces', icon: Building2 },
   { name: 'Reservas', href: '/bookings', icon: CalendarCheck },
   { name: 'Relatórios', href: '/reports', icon: BarChart3 },

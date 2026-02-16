@@ -38,7 +38,7 @@ export default function WalletHomeScreen() {
                   Último saldo: {formatPoints(cachedBalance)} pts
                 </Text>
               )}
-              <Spinner size="large" />
+              <Spinner size="lg" />
             </YStack>
           ) : dashboard ? (
             <>

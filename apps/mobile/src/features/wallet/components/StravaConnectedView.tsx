@@ -33,7 +33,7 @@ export function StravaConnectedView({
       <YStack
         gap="$2"
         padding="$4"
-        borderRadius="$3"
+        borderRadius={12}
         backgroundColor="$backgroundSecondary"
       >
         <Text weight="semibold">Progresso do dia</Text>
@@ -78,7 +78,7 @@ export function StravaConnectedView({
         <Button onPress={onSync} disabled={isSyncing}>
           {isSyncing ? (
             <XStack gap="$2" alignItems="center">
-              <Spinner size="small" />
+              <Spinner size="sm" />
               <Text style={{ color: '#fff' }}>Sincronizando...</Text>
             </XStack>
           ) : (

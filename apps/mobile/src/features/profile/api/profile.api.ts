@@ -1,4 +1,4 @@
-import { get, put, post } from '@/services/api/client';
+import { get, put } from '@/services/api/client';
 import { api } from '@/services/api/client';
 import type {
   UserProfile,
@@ -23,10 +23,10 @@ export async function getUserRankings(userId: string): Promise<UserRankingsRespo
 }
 
 export async function updateProfile(data: {
-  name?: string;
-  username?: string;
-  bio?: string;
-  phone?: string;
+  name?: string | undefined;
+  username?: string | undefined;
+  bio?: string | undefined;
+  phone?: string | undefined;
 }): Promise<UpdateProfileResult> {
   return put<UpdateProfileResult>('/user/profile', data);
 }

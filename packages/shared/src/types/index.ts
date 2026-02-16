@@ -6,17 +6,17 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  username?: string;
-  bio?: string;
-  avatarUrl?: string;
-  phone?: string;
+  username?: string | undefined;
+  bio?: string | undefined;
+  avatarUrl?: string | undefined;
+  phone?: string | undefined;
   role: UserRole;
   status: UserStatus;
   isVerified: boolean;
-  verifiedAt?: Date;
+  verifiedAt?: Date | undefined;
   associationId: string;
-  memberId?: string;
-  usernameChangedAt?: Date;
+  memberId?: string | undefined;
+  usernameChangedAt?: Date | undefined;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -105,14 +105,14 @@ export interface TransferResult {
 export interface RecentRecipient {
   userId: string;
   name: string;
-  avatar?: string;
+  avatar?: string | undefined;
   lastTransferAt: Date;
 }
 
 export interface UserSearchResult {
   userId: string;
   name: string;
-  avatar?: string;
+  avatar?: string | undefined;
   memberSince?: string;
 }
 
@@ -142,10 +142,10 @@ export interface RankingResponse {
 export interface PointsHistoryFilter {
   page?: number;
   limit?: number;
-  type?: TransactionType;
-  source?: TransactionSource;
-  startDate?: string;
-  endDate?: string;
+  type?: TransactionType | undefined;
+  source?: TransactionSource | undefined;
+  startDate?: string | undefined;
+  endDate?: string | undefined;
 }
 
 export interface PointsHistoryResponse {
@@ -162,9 +162,9 @@ export interface PointsHistoryResponse {
 export interface AdminPointsSourceConfig {
   type: string;
   label: string;
-  defaultPoints?: number;
-  pointsPerKm?: number;
-  points?: number;
+  defaultPoints?: number | undefined;
+  pointsPerKm?: number | undefined;
+  points?: number | undefined;
   isActive: boolean;
 }
 
@@ -533,8 +533,8 @@ export interface PartnerDetail {
 export interface BenefitsFilter {
   page?: number;
   perPage?: number;
-  search?: string;
-  category?: string;
+  search?: string | undefined;
+  category?: string | undefined;
   sortBy?: 'name' | 'recent';
 }
 
@@ -986,8 +986,8 @@ export interface Order {
 }
 
 export interface OrdersFilter {
-  source?: OrderSource;
-  status?: OrderStatus;
+  source?: OrderSource | undefined;
+  status?: OrderStatus | undefined;
   startDate?: string;
   endDate?: string;
   page?: number;
@@ -1371,7 +1371,7 @@ export interface NotificationSettingsResponse {
 }
 
 export interface NotificationsQueryParams {
-  category?: NotificationCategory;
+  category?: NotificationCategory | undefined;
   isRead?: boolean;
   grouped?: boolean;
   page?: number;
@@ -1472,12 +1472,12 @@ export interface Message {
   sender: {
     id: string;
     name: string;
-    avatarUrl?: string;
+    avatarUrl?: string | undefined;
   };
   content: string;
   contentType: MessageContentType;
-  mediaUrl?: string;
-  mediaDuration?: number;
+  mediaUrl?: string | undefined;
+  mediaDuration?: number | undefined;
   replyTo?: {
     id: string;
     content: string;
@@ -1503,7 +1503,7 @@ export interface MessagesListResponse {
   data: Message[];
   pagination: {
     hasMore: boolean;
-    oldestId?: string;
+    oldestId?: string | undefined;
   };
 }
 
@@ -1515,24 +1515,24 @@ export interface ConversationsQueryParams {
 
 export interface MessagesQueryParams {
   limit?: number;
-  before?: string;
-  after?: string;
+  before?: string | undefined;
+  after?: string | undefined;
 }
 
 export interface CreateConversationRequest {
   type: 'DIRECT' | 'GROUP';
   participantIds: string[];
-  groupName?: string;
-  groupDescription?: string;
-  groupImageUrl?: string;
+  groupName?: string | undefined;
+  groupDescription?: string | undefined;
+  groupImageUrl?: string | undefined;
 }
 
 export interface SendMessageRequest {
   content?: string;
   contentType: MessageContentType;
-  mediaUrl?: string;
-  mediaDuration?: number;
-  replyTo?: string;
+  mediaUrl?: string | undefined;
+  mediaDuration?: number | undefined;
+  replyTo?: string | undefined;
 }
 
 export interface UpdateConversationSettingsRequest {
@@ -1596,6 +1596,63 @@ export interface WsPresenceUpdate {
   userId: string;
   isOnline: boolean;
   lastSeenAt?: string;
+}
+
+// ===========================================
+// SALES REPORT TYPES (shared across PDV, Orders, Store)
+// ===========================================
+
+export type ReportPeriod = 'today' | 'week' | 'month' | 'year';
+export type ReportGroupBy = 'day' | 'week' | 'month';
+
+export interface SalesReportSummary {
+  totalOrders: number;
+  totalPointsRevenue: number;
+  totalMoneyRevenue: number;
+  totalCashback: number;
+  averageOrderValue: number;
+}
+
+export interface SalesReportByPeriod {
+  date: string;
+  orders: number;
+  pointsRevenue: number;
+  moneyRevenue: number;
+}
+
+export interface SalesReportByProduct {
+  productId: string;
+  productName: string;
+  quantitySold: number;
+  pointsRevenue: number;
+  moneyRevenue: number;
+}
+
+export interface SalesReportByPaymentMethod {
+  method: string;
+  count: number;
+  totalPoints: number;
+  totalMoney: number;
+}
+
+export interface SalesReport {
+  period: ReportPeriod;
+  startDate: string;
+  endDate: string;
+  summary: SalesReportSummary;
+  byPeriod: SalesReportByPeriod[];
+  byProduct: SalesReportByProduct[];
+  byPaymentMethod: SalesReportByPaymentMethod[];
+}
+
+export interface OrdersSummaryCounters {
+  pending: number;
+  confirmed: number;
+  ready: number;
+  completed: number;
+  cancelled: number;
+  totalRevenueMoney: number;
+  totalRevenuePoints: number;
 }
 
 // API Response types

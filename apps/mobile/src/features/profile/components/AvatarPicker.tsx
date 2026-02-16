@@ -3,8 +3,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { Avatar, Text } from '@ahub/ui';
 
 interface AvatarPickerProps {
-  currentAvatarUrl?: string;
-  name?: string;
+  currentAvatarUrl?: string | undefined;
+  name?: string | undefined;
   onImageSelected: (image: { uri: string; name: string; type: string }) => void;
   isUploading?: boolean;
 }

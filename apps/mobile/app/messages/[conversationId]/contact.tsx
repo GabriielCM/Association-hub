@@ -22,7 +22,7 @@ export default function ContactDetailScreen() {
 
   const { data: profile } = useProfile(otherParticipant?.id ?? '');
 
-  const isMuted = conversation?.isMuted ?? false;
+  const isMuted = conversation?.settings?.isMuted ?? false;
 
   const handleToggleMute = () => {
     if (!conversationId) return;

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Pressable, Animated, StyleSheet } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
-import { Text, Avatar } from '@ahub/ui';
+import { Text } from '@ahub/ui';
 import { Swipeable } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import type { Notification, NotificationCategory } from '@ahub/shared/types';

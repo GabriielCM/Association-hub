@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { useCallback } from 'react';
+import { Pressable } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
 import { Text, Avatar } from '@ahub/ui';
 import type { Message, MessageStatus } from '@ahub/shared/types';
@@ -112,14 +112,16 @@ export function MessageBubble({
                 <Text
                   size="xs"
                   weight="semibold"
-                  color={isOwn ? 'white' : 'primary'}
+                  color={isOwn ? undefined : 'primary'}
+                  style={isOwn ? { color: '#FFFFFF' } : undefined}
                   numberOfLines={1}
                 >
                   {message.replyTo.senderName}
                 </Text>
                 <Text
                   size="xs"
-                  color={isOwn ? 'rgba(255,255,255,0.7)' : 'secondary'}
+                  color={isOwn ? undefined : 'secondary'}
+                  style={isOwn ? { color: 'rgba(255,255,255,0.7)' } : undefined}
                   numberOfLines={1}
                 >
                   {message.replyTo.contentType === 'IMAGE'
@@ -135,9 +137,9 @@ export function MessageBubble({
           {/* Content */}
           {isDeleted ? (
             <Text
-              color={isOwn ? 'rgba(255,255,255,0.7)' : 'secondary'}
+              color={isOwn ? undefined : 'secondary'}
               size="sm"
-              style={{ fontStyle: 'italic' }}
+              style={isOwn ? { fontStyle: 'italic', color: 'rgba(255,255,255,0.7)' } : { fontStyle: 'italic' }}
             >
               Mensagem apagada
             </Text>
@@ -151,7 +153,7 @@ export function MessageBubble({
             />
           ) : (
             <Text
-              color={isOwn ? 'white' : undefined}
+              style={isOwn ? { color: '#FFFFFF' } : undefined}
               size="sm"
             >
               {message.content}
@@ -162,8 +164,8 @@ export function MessageBubble({
           <XStack alignItems="center" justifyContent="flex-end" gap="$1">
             <Text
               size="xs"
-              color={isOwn ? 'rgba(255,255,255,0.6)' : 'secondary'}
-              style={{ fontSize: 10 }}
+              color={isOwn ? undefined : 'secondary'}
+              style={isOwn ? { fontSize: 10, color: 'rgba(255,255,255,0.6)' } : { fontSize: 10 }}
             >
               {formatTime(message.createdAt)}
             </Text>
@@ -172,12 +174,19 @@ export function MessageBubble({
                 size="xs"
                 color={
                   message.status === 'READ'
-                    ? '#60A5FA'
+                    ? undefined
                     : isOwn
-                      ? 'rgba(255,255,255,0.6)'
+                      ? undefined
                       : 'secondary'
                 }
-                style={{ fontSize: 10 }}
+                style={{
+                  fontSize: 10,
+                  ...(message.status === 'READ'
+                    ? { color: '#60A5FA' }
+                    : isOwn
+                      ? { color: 'rgba(255,255,255,0.6)' }
+                      : {}),
+                }}
               >
                 {STATUS_ICONS[message.status]}
               </Text>

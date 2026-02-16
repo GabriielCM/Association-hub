@@ -18,7 +18,7 @@ const CATEGORIES: { value: FilterValue; label: string; icon: string }[] = [
 interface CategoryFilterProps {
   selected: FilterValue;
   onSelect: (category: FilterValue) => void;
-  unreadByCategory?: Record<string, number>;
+  unreadByCategory?: Record<string, number> | undefined;
 }
 
 export function CategoryFilter({

@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 
 import { Text, Heading, Card, Avatar, Badge, Spinner } from '@ahub/ui';
 import { useAuthContext } from '@/providers/AuthProvider';
-import { formatPoints, formatRelativeDate } from '@ahub/shared/utils';
+import { formatPoints } from '@ahub/shared/utils';
 import { useBalance } from '@/features/points/hooks/usePoints';
 import { usePointsHistory } from '@/features/points/hooks/usePointsHistory';
 import { TransactionItem } from '@/features/points/components/TransactionItem';

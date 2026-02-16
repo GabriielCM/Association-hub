@@ -45,7 +45,7 @@ export default function TransferScreen() {
       {
         recipientId: wizard.recipient.userId,
         amount: wizard.amount,
-        message: wizard.message || undefined,
+        ...(wizard.message ? { message: wizard.message } : {}),
       },
       {
         onSuccess: (result) => {

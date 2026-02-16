@@ -15,7 +15,7 @@ export function RankingsTab({ userId }: RankingsTabProps) {
   if (isLoading) {
     return (
       <YStack flex={1} justifyContent="center" alignItems="center" paddingVertical="$6">
-        <Spinner size="large" />
+        <Spinner size="lg" />
       </YStack>
     );
   }

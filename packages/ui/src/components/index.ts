@@ -23,6 +23,14 @@ export type { AvatarProps } from './Avatar';
 export { Badge } from './Badge';
 export type { BadgeProps, BadgeDotProps } from './Badge';
 
+export { GlassCard } from './GlassCard';
+export type { GlassCardProps } from './GlassCard';
+
+export { NativeViewFallback } from './NativeViewFallback';
+
+export { SafeImage } from './SafeImage';
+export type { SafeImageProps } from './SafeImage';
+
 export { Loading, Spinner, Skeleton, LoadingOverlay, FullPageLoading } from './Loading';
 export type {
   SpinnerProps,

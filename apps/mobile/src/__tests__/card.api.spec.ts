@@ -33,12 +33,14 @@ const mockCard: MemberCard = {
   id: 'card-1',
   cardNumber: 'AHUB-00001',
   status: 'ACTIVE',
+  issuedAt: new Date('2025-01-01'),
   user: {
+    id: 'user-1',
     name: 'João Silva',
     avatarUrl: 'https://example.com/avatar.jpg',
-    memberSince: new Date('2025-01-01'),
   },
   association: {
+    id: 'assoc-1',
     name: 'Associação Teste',
     logoUrl: 'https://example.com/logo.png',
     phone: '11999999999',
@@ -57,19 +59,17 @@ const mockHistoryResponse: CardHistoryResponse = {
     {
       id: 'log-1',
       type: 'CHECKIN',
-      description: 'Check-in no evento',
       location: 'Sede da Associação',
       scannedAt: new Date(),
     },
     {
       id: 'log-2',
       type: 'BENEFIT_USED',
-      description: 'Desconto utilizado',
       partner: { id: 'p1', name: 'Parceiro A', logoUrl: 'https://example.com/p.png' },
       scannedAt: new Date(),
     },
   ],
-  meta: { page: 1, perPage: 20, total: 2, totalPages: 1 },
+  meta: { currentPage: 1, perPage: 20, totalCount: 2, totalPages: 1 },
 };
 
 const mockBenefitsResponse: BenefitsListResponse = {
@@ -79,12 +79,12 @@ const mockBenefitsResponse: BenefitsListResponse = {
       name: 'Restaurante Bom',
       logoUrl: 'https://example.com/rest.png',
       benefit: '10% de desconto',
-      category: { id: 'cat-1', name: 'Gastronomia', slug: 'gastronomia', icon: '🍕' },
+      category: { id: 'cat-1', name: 'Gastronomia', slug: 'gastronomia', icon: '🍕', color: '#FF6B00' },
       isNew: true,
       isEligible: true,
     },
   ],
-  meta: { page: 1, perPage: 20, total: 1, totalPages: 1 },
+  meta: { currentPage: 1, perPage: 20, totalCount: 1, totalPages: 1 },
 };
 
 const mockCategories: PartnerCategory[] = [
@@ -98,7 +98,7 @@ const mockPartnerDetail: PartnerDetail = {
   logoUrl: 'https://example.com/rest.png',
   benefit: '10% de desconto',
   instructions: 'Apresente a carteirinha',
-  category: { id: 'cat-1', name: 'Gastronomia', slug: 'gastronomia', icon: '🍕' },
+  category: { id: 'cat-1', name: 'Gastronomia', slug: 'gastronomia', icon: '🍕', color: '#FF6B6B' },
   isNew: true,
   isEligible: true,
   contact: {

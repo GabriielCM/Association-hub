@@ -12,11 +12,11 @@ const USERNAME_COOLDOWN_DAYS = 30;
 
 interface EditProfileFormProps {
   initialValues: {
-    name?: string;
-    username?: string;
-    bio?: string;
-    phone?: string;
-    usernameChangedAt?: string | null;
+    name?: string | undefined;
+    username?: string | undefined;
+    bio?: string | undefined;
+    phone?: string | undefined;
+    usernameChangedAt?: string | null | undefined;
   };
   onSubmit: (data: UpdateProfileFullInput) => void;
   onAvatarOnlySave?: () => void;
@@ -121,8 +121,7 @@ export function EditProfileForm({
                 onBlur={onBlur}
                 autoCapitalize="none"
                 autoCorrect={false}
-                editable={!usernameLocked}
-                opacity={usernameLocked ? 0.5 : 1}
+                disabled={usernameLocked}
               />
               {isCheckingUsername && !usernameLocked && (
                 <View style={styles.usernameStatus}>

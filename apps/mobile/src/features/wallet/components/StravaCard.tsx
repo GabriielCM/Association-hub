@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Button, Card } from '@ahub/ui';
+import { Text, Card } from '@ahub/ui';
 import type { StravaStatus } from '@ahub/shared/types';
 
 interface StravaCardProps {

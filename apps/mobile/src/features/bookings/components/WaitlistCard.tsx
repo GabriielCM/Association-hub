@@ -1,6 +1,8 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, Platform } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Card, Text, Badge } from '@ahub/ui';
+import { Text, Badge, GlassCard } from '@ahub/ui';
+import * as Haptics from 'expo-haptics';
+import { colors } from '@ahub/ui/themes';
 import type { WaitlistEntry } from '@ahub/shared/types';
 
 interface WaitlistCardProps {
@@ -27,7 +29,7 @@ function formatTimeRemaining(expiresAt: string): string {
 
 export function WaitlistCard({ entry, onConfirm, onLeave }: WaitlistCardProps) {
   return (
-    <Card variant="flat">
+    <GlassCard intensity="subtle" borderRadius={12} padding={12}>
       <YStack gap="$2">
         <XStack justifyContent="space-between" alignItems="center">
           <Text weight="semibold" size="sm">
@@ -55,7 +57,10 @@ export function WaitlistCard({ entry, onConfirm, onLeave }: WaitlistCardProps) {
 
         <XStack gap="$2" justifyContent="flex-end">
           <Pressable
-            onPress={() => onLeave(entry)}
+            onPress={() => {
+              if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onLeave(entry);
+            }}
             style={[styles.btn, styles.leaveBtn]}
           >
             <Text size="xs" color="secondary">
@@ -64,7 +69,10 @@ export function WaitlistCard({ entry, onConfirm, onLeave }: WaitlistCardProps) {
           </Pressable>
           {entry.notified && (
             <Pressable
-              onPress={() => onConfirm(entry)}
+              onPress={() => {
+                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                onConfirm(entry);
+              }}
               style={[styles.btn, styles.confirmBtn]}
             >
               <Text size="xs" style={{ color: '#FFFFFF' }} weight="semibold">
@@ -74,7 +82,7 @@ export function WaitlistCard({ entry, onConfirm, onLeave }: WaitlistCardProps) {
           )}
         </XStack>
       </YStack>
-    </Card>
+    </GlassCard>
   );
 }
 
@@ -85,9 +93,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   leaveBtn: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(156, 163, 175, 0.15)',
   },
   confirmBtn: {
-    backgroundColor: '#22C55E',
+    backgroundColor: colors.successDark,
   },
 });

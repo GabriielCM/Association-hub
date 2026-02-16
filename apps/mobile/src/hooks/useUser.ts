@@ -4,7 +4,7 @@ import { getProfile } from '@/services/api/auth.api';
 import { api } from '@/services/api/client';
 import { useAuthStore } from '@/stores/auth.store';
 import type { User, ApiResponse } from '@ahub/shared/types';
-import type { UpdateProfileInput } from '@ahub/shared/validation';
+import type { UpdateProfileInput, UpdateProfileFullInput } from '@ahub/shared/validation';
 
 const USER_QUERY_KEY = ['user', 'profile'] as const;
 
@@ -26,7 +26,7 @@ export function useUser() {
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: UpdateProfileInput) => {
+    mutationFn: async (data: UpdateProfileInput | UpdateProfileFullInput) => {
       const response = await api.patch<ApiResponse<User>>(
         '/user/profile',
         data
@@ -45,7 +45,7 @@ export function useUser() {
   });
 
   const updateProfile = useCallback(
-    async (data: UpdateProfileInput) => {
+    async (data: UpdateProfileInput | UpdateProfileFullInput) => {
       return updateProfileMutation.mutateAsync(data);
     },
     [updateProfileMutation]

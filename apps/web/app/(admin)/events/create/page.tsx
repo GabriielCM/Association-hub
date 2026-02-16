@@ -76,7 +76,8 @@ export default function CreateEventPage() {
   };
 
   const handleDisplayRemove = (index: number) => {
-    URL.revokeObjectURL(displayPreviews[index]);
+    const url = displayPreviews[index];
+    if (url) URL.revokeObjectURL(url);
     setDisplayFiles((prev) => prev.filter((_, i) => i !== index));
     setDisplayPreviews((prev) => prev.filter((_, i) => i !== index));
   };

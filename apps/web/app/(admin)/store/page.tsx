@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Tag,
   Search,
+  BarChart3,
 } from 'lucide-react';
 import { Button, Spinner } from '@/components/ui';
 import { useToast } from '@/components/ui/use-toast';
@@ -19,6 +20,7 @@ import {
   useAdminCategories,
   useDeleteProduct,
 } from '@/lib/hooks/useAdminStore';
+import { LowStockAlert } from '@/components/admin/store/LowStockAlert';
 import type { ProductType } from '@ahub/shared/types';
 
 export default function StorePage() {
@@ -72,6 +74,12 @@ export default function StorePage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link href="/store/reports">
+            <Button variant="outline" size="sm">
+              <BarChart3 className="mr-1 h-4 w-4" />
+              Relatorios
+            </Button>
+          </Link>
           <Link href="/store/reviews">
             <Button variant="outline" size="sm">
               <MessageSquare className="mr-1 h-4 w-4" />
@@ -134,6 +142,9 @@ export default function StorePage() {
           </div>
         </div>
       )}
+
+      {/* Low Stock Alert */}
+      <LowStockAlert />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">

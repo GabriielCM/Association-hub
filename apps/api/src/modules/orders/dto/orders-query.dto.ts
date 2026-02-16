@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsInt, Min, Max, IsDateString } from 'class-validator';
+import { IsEnum, IsOptional, IsInt, Min, Max, IsDateString, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrderStatus, OrderSource } from '@prisma/client';
 
@@ -44,4 +44,9 @@ export class AdminOrdersQueryDto extends OrdersQueryDto {
   @ApiPropertyOptional({ description: 'Filtrar por usuário' })
   @IsOptional()
   userId?: string;
+
+  @ApiPropertyOptional({ description: 'Buscar por código do pedido ou nome do cliente' })
+  @IsString()
+  @IsOptional()
+  search?: string;
 }

@@ -1,5 +1,5 @@
-import { YStack, XStack } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { YStack, XStack, View } from 'tamagui';
+import { Text, GlassCard } from '@ahub/ui';
 import type { SpaceDetail } from '@ahub/shared/types';
 
 interface SpaceRulesProps {
@@ -64,19 +64,28 @@ export function SpaceRules({ space }: SpaceRulesProps) {
 
   return (
     <YStack gap="$2">
-      <Text weight="semibold" size="base">
+      <Text weight="semibold" size="lg">
         Regras de Reserva
       </Text>
-      {rules.map((rule) => (
-        <XStack key={rule.label} justifyContent="space-between">
-          <Text size="sm" color="secondary">
-            {rule.label}
-          </Text>
-          <Text size="sm" weight="medium">
-            {rule.value}
-          </Text>
-        </XStack>
-      ))}
+      <GlassCard intensity="subtle" borderRadius={12} padding={12}>
+        <YStack gap="$2">
+          {rules.map((rule, index) => (
+            <YStack key={rule.label} gap="$2">
+              <XStack justifyContent="space-between">
+                <Text size="sm" color="secondary">
+                  {rule.label}
+                </Text>
+                <Text size="sm" weight="medium">
+                  {rule.value}
+                </Text>
+              </XStack>
+              {index < rules.length - 1 && (
+                <View height={1} backgroundColor="rgba(0,0,0,0.06)" />
+              )}
+            </YStack>
+          ))}
+        </YStack>
+      </GlassCard>
     </YStack>
   );
 }

@@ -10,7 +10,7 @@ function formatDuration(seconds?: number): string {
 
 interface AudioMessageProps {
   mediaUrl: string;
-  duration?: number;
+  duration?: number | undefined;
   isOwn: boolean;
 }
 
@@ -25,7 +25,7 @@ export function AudioMessage({ duration, isOwn }: AudioMessageProps) {
         alignItems="center"
         justifyContent="center"
       >
-        <Text color="white" size="sm" weight="bold">▶</Text>
+        <Text style={{ color: '#FFFFFF' }} size="sm" weight="bold">▶</Text>
       </View>
       <YStack flex={1} gap="$0.5">
         <View
@@ -37,8 +37,8 @@ export function AudioMessage({ duration, isOwn }: AudioMessageProps) {
         />
         <Text
           size="xs"
-          color={isOwn ? 'rgba(255,255,255,0.6)' : 'secondary'}
-          style={{ fontSize: 10 }}
+          color={isOwn ? undefined : 'secondary'}
+          style={isOwn ? { fontSize: 10, color: 'rgba(255,255,255,0.6)' } : { fontSize: 10 }}
         >
           {formatDuration(duration)}
         </Text>

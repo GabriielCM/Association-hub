@@ -79,6 +79,14 @@ export class StoreAdminController {
     return this.categoriesService.deleteCategory(id);
   }
 
+  @Post('categories/reorder')
+  @ApiOperation({ summary: 'Reordenar categorias' })
+  @ApiResponse({ status: 200, description: 'Categorias reordenadas' })
+  async reorderCategories(@Body() body: { categoryIds: string[] }) {
+    const result = await this.categoriesService.reorderCategories(body.categoryIds);
+    return { success: true, data: result };
+  }
+
   // =====================
   // PRODUTOS
   // =====================
@@ -203,6 +211,14 @@ export class StoreAdminController {
     @Body() body: { stockCount: number },
   ) {
     return this.productsService.updateVariantStock(productId, variantId, body.stockCount);
+  }
+
+  @Get('products/low-stock')
+  @ApiOperation({ summary: 'Listar produtos com estoque baixo' })
+  @ApiResponse({ status: 200, description: 'Produtos com estoque baixo' })
+  async getLowStockProducts(@Request() req: any) {
+    const products = await this.productsService.getLowStockProducts(req.user.associationId);
+    return { success: true, data: products };
   }
 
   // =====================

@@ -127,16 +127,16 @@ function getStartDate(period: string): string {
   const now = new Date();
   switch (period) {
     case 'today':
-      return now.toISOString().split('T')[0];
+      return now.toISOString().split('T')[0] ?? '';
     case 'week': {
       const weekAgo = new Date(now);
       weekAgo.setDate(weekAgo.getDate() - 7);
-      return weekAgo.toISOString().split('T')[0];
+      return weekAgo.toISOString().split('T')[0] ?? '';
     }
     case 'month': {
       const monthAgo = new Date(now);
       monthAgo.setMonth(monthAgo.getMonth() - 1);
-      return monthAgo.toISOString().split('T')[0];
+      return monthAgo.toISOString().split('T')[0] ?? '';
     }
     default:
       return '';

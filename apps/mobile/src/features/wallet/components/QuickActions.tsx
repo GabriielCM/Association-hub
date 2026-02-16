@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { XStack, YStack } from 'tamagui';
+import { XStack } from 'tamagui';
 import { Text } from '@ahub/ui';
 
 interface QuickActionsProps {

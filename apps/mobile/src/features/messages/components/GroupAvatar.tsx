@@ -5,7 +5,7 @@ import type { ConversationParticipant } from '@ahub/shared/types';
 
 interface GroupAvatarProps {
   participants: ConversationParticipant[];
-  imageUrl?: string;
+  imageUrl?: string | undefined;
   size?: number;
 }
 
@@ -45,7 +45,7 @@ export function GroupAvatar({
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       <View style={styles.grid}>
-        {shown.map((p, i) => (
+        {shown.map((p) => (
           <View
             key={p.id}
             style={[styles.gridItem, { width: miniSize, height: miniSize }]}

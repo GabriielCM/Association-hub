@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { XStack, YStack } from 'tamagui';
 import { Text, Spinner } from '@ahub/ui';
 import { formatPoints } from '@ahub/shared/utils';

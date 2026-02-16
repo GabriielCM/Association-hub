@@ -17,7 +17,7 @@ export function RankingRow({ ranking }: RankingRowProps) {
   return (
     <XStack
       padding="$3"
-      borderRadius="$3"
+      borderRadius={12}
       backgroundColor="$backgroundSecondary"
       alignItems="center"
       gap="$3"

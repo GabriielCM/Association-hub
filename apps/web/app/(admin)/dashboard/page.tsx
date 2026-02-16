@@ -105,7 +105,7 @@ interface StatCardProps {
   value: string;
   change: string;
   trend: 'up' | 'down';
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ElementType;
 }
 
 function StatCard({ title, value, change, trend, icon: Icon }: StatCardProps) {

@@ -12,6 +12,7 @@ import {
   DollarSign,
   TrendingUp,
   Box,
+  Monitor,
 } from 'lucide-react';
 import { Button, Spinner } from '@/components/ui';
 import { useToast } from '@/components/ui/use-toast';
@@ -124,6 +125,12 @@ export default function PdvDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Link href={`/display/pdv/${pdvId}`} target="_blank">
+            <Button variant="outline" size="sm">
+              <Monitor className="mr-1 h-4 w-4" />
+              Abrir Display
+            </Button>
+          </Link>
           <Button
             variant="outline"
             size="sm"

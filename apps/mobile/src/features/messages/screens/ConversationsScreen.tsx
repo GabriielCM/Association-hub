@@ -115,7 +115,7 @@ export function ConversationsScreen() {
                 padding="$6"
                 gap="$2"
               >
-                <Text size="3xl">💬</Text>
+                <Text size="2xl">💬</Text>
                 <Text color="secondary" size="sm" align="center">
                   {search
                     ? 'Nenhuma conversa encontrada'
@@ -152,7 +152,6 @@ export function ConversationsScreen() {
             shadowOffset={{ width: 0, height: 4 }}
             shadowOpacity={0.3}
             shadowRadius={8}
-            elevation={8}
           >
             <Text color="white" size="xl" weight="bold">
               +

@@ -21,7 +21,7 @@ export function useUpdateProfile() {
   return useMutation<
     UpdateProfileResult,
     Error,
-    { name?: string; username?: string; bio?: string; phone?: string }
+    { name?: string | undefined; username?: string | undefined; bio?: string | undefined; phone?: string | undefined }
   >({
     mutationFn: updateProfile,
     onSuccess: (data) => {

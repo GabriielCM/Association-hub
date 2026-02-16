@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 
-import { Text, Heading, Input, Button, Card } from '@ahub/ui';
+import { Text, Input, Button, Card } from '@ahub/ui';
 import { formatPoints } from '@ahub/shared/utils';
 import { useBalance } from '../hooks/usePoints';
 

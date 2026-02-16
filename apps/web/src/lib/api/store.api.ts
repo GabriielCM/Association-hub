@@ -359,3 +359,61 @@ export async function moderateReview(
     throw extractApiError(error, 'Falha ao moderar avaliacao');
   }
 }
+
+// ===========================================
+// REPORTS
+// ===========================================
+
+export async function getStoreReport(query: {
+  period?: string;
+  startDate?: string;
+  endDate?: string;
+  groupBy?: string;
+}): Promise<any> {
+  try {
+    const response = await api.get('/admin/store/reports/sales', { params: query });
+    return response.data?.data || response.data;
+  } catch (error) {
+    throw extractApiError(error, 'Falha ao buscar relatorio de vendas');
+  }
+}
+
+export async function getProductSalesReport(query: {
+  period?: string;
+}): Promise<any[]> {
+  try {
+    const response = await api.get('/admin/store/reports/products', { params: query });
+    return response.data?.data || response.data;
+  } catch (error) {
+    throw extractApiError(error, 'Falha ao buscar vendas por produto');
+  }
+}
+
+export async function exportStoreCsv(query: {
+  period?: string;
+  startDate?: string;
+  endDate?: string;
+}): Promise<Blob> {
+  const response = await api.get('/admin/store/reports/export', {
+    params: query,
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
+export async function getLowStockProducts(): Promise<any[]> {
+  try {
+    const response = await api.get('/admin/store/products/low-stock');
+    return response.data?.data || response.data;
+  } catch (error) {
+    throw extractApiError(error, 'Falha ao buscar produtos com estoque baixo');
+  }
+}
+
+export async function reorderCategories(categoryIds: string[]): Promise<void> {
+  try {
+    await api.post('/admin/store/categories/reorder', { categoryIds });
+  } catch (error) {
+    throw extractApiError(error, 'Falha ao reordenar categorias');
+  }
+}

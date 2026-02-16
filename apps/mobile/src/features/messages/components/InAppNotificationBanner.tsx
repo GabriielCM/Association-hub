@@ -4,11 +4,10 @@ import {
   Pressable,
   StyleSheet,
   Image,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { XStack, YStack, View } from 'tamagui';
-import { Text, Avatar } from '@ahub/ui';
+import { Text } from '@ahub/ui';
 import { router } from 'expo-router';
 import { DeviceEventEmitter } from 'react-native';
 
@@ -18,9 +17,9 @@ export interface NotificationBannerData {
   conversationId: string;
   title: string;
   body: string;
-  mediaUrl?: string;
-  senderName?: string;
-  groupName?: string;
+  mediaUrl?: string | undefined;
+  senderName?: string | undefined;
+  groupName?: string | undefined;
 }
 
 const AUTO_DISMISS_MS = 4000;
@@ -123,7 +122,7 @@ export function InAppNotificationBanner() {
             alignItems="center"
             justifyContent="center"
           >
-            <Text color="white" weight="bold" size="sm">
+            <Text style={{ color: '#FFFFFF' }} weight="bold" size="sm">
               {(dataRef.current?.groupName ?? dataRef.current?.senderName ?? '?').charAt(0)}
             </Text>
           </View>

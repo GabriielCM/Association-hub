@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import * as authApi from '@/lib/api/auth.api';
 import { useAuthStore } from '@/lib/stores/auth.store';
-import type { LoginInput, RegisterInput } from '@ahub/shared/types';
+import type { LoginInput, RegisterInput } from '@ahub/shared/validation';
 
 interface UseAuthReturn {
   // State

@@ -4,8 +4,8 @@ import QRCode from 'react-native-qrcode-svg';
 import type { OrderStatus } from '@ahub/shared/types';
 
 interface PickupInfoProps {
-  pickupCode?: string;
-  pickupLocation?: string;
+  pickupCode?: string | undefined;
+  pickupLocation?: string | undefined;
   status: OrderStatus;
 }
 

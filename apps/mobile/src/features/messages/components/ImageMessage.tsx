@@ -57,7 +57,7 @@ export function ImageMessage({ mediaUrl }: ImageMessageProps) {
             resizeMode="contain"
           />
           <Pressable onPress={handleClose} style={styles.closeBtn}>
-            <Text color="white" size="lg" weight="bold">
+            <Text style={{ color: '#FFFFFF' }} size="lg" weight="bold">
               ✕
             </Text>
           </Pressable>

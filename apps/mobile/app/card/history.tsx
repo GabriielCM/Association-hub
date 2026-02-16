@@ -52,7 +52,7 @@ export default function CardHistoryScreen() {
           ListEmptyComponent={
             isLoading ? (
               <YStack alignItems="center" paddingVertical="$8">
-                <Spinner size="large" />
+                <Spinner size="lg" />
               </YStack>
             ) : (
               <YStack alignItems="center" paddingVertical="$8">

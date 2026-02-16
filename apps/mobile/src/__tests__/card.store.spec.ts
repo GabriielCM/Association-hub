@@ -6,12 +6,14 @@ const mockCard: MemberCard = {
   id: 'card-1',
   cardNumber: 'AHUB-00001',
   status: 'ACTIVE',
+  issuedAt: new Date('2025-01-01'),
   user: {
+    id: 'user-1',
     name: 'João Silva',
     avatarUrl: 'https://example.com/avatar.jpg',
-    memberSince: new Date('2025-01-01'),
   },
   association: {
+    id: 'assoc-1',
     name: 'Associação Teste',
     logoUrl: 'https://example.com/logo.png',
     phone: '11999999999',

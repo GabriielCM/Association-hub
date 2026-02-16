@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { ScrollView, Switch, Pressable, StyleSheet } from 'react-native';
-import { YStack, XStack, View } from 'tamagui';
+import { YStack, XStack } from 'tamagui';
 import { Text, Card } from '@ahub/ui';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,7 +20,7 @@ const CATEGORY_ICONS: Record<NotificationCategory, string> = {
 };
 
 export function NotificationSettingsScreen() {
-  const { data: settingsData, isLoading } = useNotificationSettings();
+  const { data: settingsData } = useNotificationSettings();
   const updateSettings = useUpdateSettings();
 
   const handleTogglePush = useCallback(

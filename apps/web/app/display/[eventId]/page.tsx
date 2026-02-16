@@ -64,7 +64,7 @@ export default function DisplayPage({
 
   if (!data) return null;
 
-  const { event, association, currentCheckin, qrCode, stats } = data;
+  const { event, qrCode, stats } = data;
   const eventColor = event.color || '#6366F1';
 
   // CANCELED state

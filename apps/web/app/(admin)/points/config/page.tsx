@@ -39,8 +39,11 @@ export default function PointsConfigPage() {
 
   const toggleSource = (index: number) => {
     const updated = [...sources];
-    updated[index] = { ...updated[index], isActive: !updated[index].isActive };
-    setSources(updated);
+    const current = updated[index];
+    if (current) {
+      updated[index] = { ...current, isActive: !current.isActive };
+      setSources(updated);
+    }
   };
 
   if (isLoading) {
@@ -104,9 +107,9 @@ export default function PointsConfigPage() {
                     type="number"
                     value={source.defaultPoints}
                     onChange={(e) => {
-                      const updated = [...sources];
-                      updated[i] = { ...updated[i], defaultPoints: parseInt(e.target.value) || 0 };
-                      setSources(updated);
+                      setSources((prev) => prev.map((s, idx) =>
+                        idx === i ? { ...s, defaultPoints: parseInt(e.target.value) || 0 } : s
+                      ));
                     }}
                     className="w-20 rounded border border-border bg-background px-2 py-1 text-sm"
                   />
@@ -117,9 +120,9 @@ export default function PointsConfigPage() {
                       type="number"
                       value={source.pointsPerKm}
                       onChange={(e) => {
-                        const updated = [...sources];
-                        updated[i] = { ...updated[i], pointsPerKm: parseFloat(e.target.value) || 0 };
-                        setSources(updated);
+                        setSources((prev) => prev.map((s, idx) =>
+                          idx === i ? { ...s, pointsPerKm: parseFloat(e.target.value) || 0 } : s
+                        ));
                       }}
                       className="w-20 rounded border border-border bg-background px-2 py-1 text-sm"
                     />
@@ -132,9 +135,9 @@ export default function PointsConfigPage() {
                       type="number"
                       value={source.points}
                       onChange={(e) => {
-                        const updated = [...sources];
-                        updated[i] = { ...updated[i], points: parseInt(e.target.value) || 0 };
-                        setSources(updated);
+                        setSources((prev) => prev.map((s, idx) =>
+                          idx === i ? { ...s, points: parseInt(e.target.value) || 0 } : s
+                        ));
                       }}
                       className="w-20 rounded border border-border bg-background px-2 py-1 text-sm"
                     />

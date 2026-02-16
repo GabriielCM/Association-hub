@@ -19,10 +19,10 @@ describe('Notification Store (Web)', () => {
 
       const state = useNotificationStore.getState();
       expect(state.notifications).toHaveLength(1);
-      expect(state.notifications[0].id).toMatch(/^notif_/);
-      expect(state.notifications[0].title).toBe('Test');
-      expect(state.notifications[0].read).toBe(false);
-      expect(state.notifications[0].createdAt).toBeDefined();
+      expect(state.notifications[0]!.id).toMatch(/^notif_/);
+      expect(state.notifications[0]!.title).toBe('Test');
+      expect(state.notifications[0]!.read).toBe(false);
+      expect(state.notifications[0]!.createdAt).toBeDefined();
     });
 
     it('should increment unread count', () => {
@@ -53,8 +53,8 @@ describe('Notification Store (Web)', () => {
       });
 
       const { notifications } = useNotificationStore.getState();
-      expect(notifications[0].title).toBe('Second');
-      expect(notifications[1].title).toBe('First');
+      expect(notifications[0]!.title).toBe('Second');
+      expect(notifications[1]!.title).toBe('First');
     });
 
     it('should limit to 50 notifications', () => {
@@ -77,7 +77,7 @@ describe('Notification Store (Web)', () => {
         data: { orderId: '123' },
       });
 
-      expect(useNotificationStore.getState().notifications[0].data).toEqual({
+      expect(useNotificationStore.getState().notifications[0]!.data).toEqual({
         orderId: '123',
       });
     });
@@ -91,11 +91,11 @@ describe('Notification Store (Web)', () => {
         type: 'info',
       });
 
-      const id = useNotificationStore.getState().notifications[0].id;
+      const id = useNotificationStore.getState().notifications[0]!.id;
       useNotificationStore.getState().markAsRead(id);
 
       const state = useNotificationStore.getState();
-      expect(state.notifications[0].read).toBe(true);
+      expect(state.notifications[0]!.read).toBe(true);
       expect(state.unreadCount).toBe(0);
     });
 
@@ -118,7 +118,7 @@ describe('Notification Store (Web)', () => {
         type: 'info',
       });
 
-      const id = useNotificationStore.getState().notifications[0].id;
+      const id = useNotificationStore.getState().notifications[0]!.id;
       useNotificationStore.getState().markAsRead(id);
       useNotificationStore.getState().markAsRead(id); // second time
 
@@ -155,7 +155,7 @@ describe('Notification Store (Web)', () => {
         type: 'info',
       });
 
-      const id = useNotificationStore.getState().notifications[0].id;
+      const id = useNotificationStore.getState().notifications[0]!.id;
       useNotificationStore.getState().removeNotification(id);
 
       const state = useNotificationStore.getState();
@@ -175,7 +175,7 @@ describe('Notification Store (Web)', () => {
         type: 'info',
       });
 
-      const id = useNotificationStore.getState().notifications[0].id;
+      const id = useNotificationStore.getState().notifications[0]!.id;
       useNotificationStore.getState().markAsRead(id);
       useNotificationStore.getState().removeNotification(id);
 

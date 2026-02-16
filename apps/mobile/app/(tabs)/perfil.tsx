@@ -15,7 +15,7 @@ import { ProfileTabs } from '@/features/profile/components/ProfileTabs';
 export default function PerfilScreen() {
   const { user } = useAuthContext();
   const userId = user?.id || '';
-  const { data: profile, isLoading, refetch } = useProfile(userId);
+  const { data: profile, refetch } = useProfile(userId);
 
   const [refreshing, setRefreshing] = useState(false);
 

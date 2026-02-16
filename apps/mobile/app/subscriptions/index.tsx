@@ -1,5 +1,5 @@
 import { ScrollView } from 'react-native';
-import { YStack, XStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 

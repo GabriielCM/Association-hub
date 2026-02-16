@@ -6,7 +6,7 @@ import { OnlineStatus } from './OnlineStatus';
 
 interface ParticipantsListProps {
   participants: ConversationParticipant[];
-  currentUserId?: string;
+  currentUserId?: string | undefined;
   isAdmin?: boolean;
   onRemove?: (userId: string) => void;
   onPromote?: (userId: string) => void;

@@ -1,13 +1,11 @@
 import { useState, useCallback } from 'react';
-import { Pressable, Switch, StyleSheet } from 'react-native';
+import { Pressable, Switch } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
 import { Text, Card } from '@ahub/ui';
 import {
   useDndSettings,
   useUpdateDnd,
 } from '../hooks/useNotificationSettings';
-import type { DoNotDisturbSettings } from '@ahub/shared/types';
-
 const DAYS = [
   { value: 0, label: 'Dom' },
   { value: 1, label: 'Seg' },
@@ -23,8 +21,8 @@ export function DNDSettings() {
   const updateDnd = useUpdateDnd();
 
   const [localEnabled, setLocalEnabled] = useState(dndSettings?.enabled ?? false);
-  const [localStartTime, setLocalStartTime] = useState(dndSettings?.startTime ?? '22:00');
-  const [localEndTime, setLocalEndTime] = useState(dndSettings?.endTime ?? '08:00');
+  const [localStartTime] = useState(dndSettings?.startTime ?? '22:00');
+  const [localEndTime] = useState(dndSettings?.endTime ?? '08:00');
   const [localDays, setLocalDays] = useState<number[]>(
     dndSettings?.daysOfWeek ?? [0, 1, 2, 3, 4, 5, 6]
   );

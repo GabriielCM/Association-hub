@@ -20,7 +20,7 @@ function formatValue(value: number, type: RankingType): string {
 interface RankingListProps {
   entries: RankingEntry[];
   type: RankingType;
-  currentUser?: { position: number; value: number };
+  currentUser?: { position: number; value: number } | undefined;
 }
 
 export function RankingList({ entries, type, currentUser }: RankingListProps) {

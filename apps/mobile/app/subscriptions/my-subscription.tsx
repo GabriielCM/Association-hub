@@ -181,13 +181,11 @@ export default function MySubscriptionScreen() {
                   placeholder="Motivo do cancelamento (opcional)"
                   value={cancelReason}
                   onChangeText={setCancelReason}
-                  maxLength={500}
                 />
                 <Button
-                  variant="outline"
+                  variant="danger"
                   onPress={handleCancel}
                   disabled={cancelMutation.isPending}
-                  color="$error"
                 >
                   {cancelMutation.isPending ? 'Cancelando...' : 'Cancelar assinatura'}
                 </Button>

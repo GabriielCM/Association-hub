@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, Users, Calendar } from 'lucide-react';
+import { Bell, Users } from 'lucide-react';
 import { Spinner } from '@/components/ui';
 import { useAdminNotifications } from '@/lib/hooks/useAdminNotifications';
 

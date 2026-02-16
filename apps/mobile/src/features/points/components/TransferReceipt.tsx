@@ -6,7 +6,7 @@ import type { TransferResult } from '@ahub/shared/types';
 
 interface TransferReceiptProps {
   result: TransferResult;
-  message?: string;
+  message?: string | undefined;
   onClose: () => void;
 }
 

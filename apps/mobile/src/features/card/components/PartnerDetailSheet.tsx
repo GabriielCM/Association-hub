@@ -31,7 +31,7 @@ export function PartnerDetailSheet({ partnerId, visible, onClose }: PartnerDetai
 
         {isLoading || !partner ? (
           <YStack flex={1} justifyContent="center" alignItems="center">
-            <Spinner size="large" />
+            <Spinner size="lg" />
           </YStack>
         ) : (
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -57,7 +57,7 @@ export function PartnerDetailSheet({ partnerId, visible, onClose }: PartnerDetai
               </XStack>
 
               {/* Benefit */}
-              <YStack gap="$2" padding="$4" borderRadius="$3" backgroundColor="$backgroundSecondary">
+              <YStack gap="$2" padding="$4" borderRadius={12} backgroundColor="$backgroundSecondary">
                 <Text weight="semibold">Benefício</Text>
                 <Text>{partner.benefit}</Text>
                 {partner.instructions && (

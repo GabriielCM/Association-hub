@@ -67,10 +67,10 @@ interface TypingUser {
 
 interface ConversationItemProps {
   conversation: Conversation;
-  currentUserId?: string;
-  presenceMap?: Map<string, PresenceInfo>;
-  typingUsers?: TypingUser[];
-  recordingUsers?: TypingUser[];
+  currentUserId?: string | undefined;
+  presenceMap?: Map<string, PresenceInfo> | undefined;
+  typingUsers?: TypingUser[] | undefined;
+  recordingUsers?: TypingUser[] | undefined;
 }
 
 export function ConversationItem({
@@ -216,9 +216,8 @@ export function ConversationItem({
                 marginLeft="$1"
               >
                 <Text
-                  color="white"
                   weight="bold"
-                  style={{ fontSize: 10, lineHeight: 12 }}
+                  style={{ fontSize: 10, lineHeight: 12, color: '#FFFFFF' }}
                 >
                   {conversation.unreadCount > 99
                     ? '99+'

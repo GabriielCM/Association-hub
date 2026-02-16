@@ -206,20 +206,20 @@ describe('Subscriptions API (Web Admin)', () => {
       vi.mocked(api.get).mockResolvedValueOnce({
         data: { success: true, data: mockReport },
       });
-      const result = await getReport('month');
+      const result = await getReport('30d');
       expect(api.get).toHaveBeenCalledWith('/admin/subscriptions/report', {
-        params: { period: 'month' },
+        params: { period: '30d' },
       });
       expect(result).toEqual(mockReport);
     });
 
-    it('should default to month period', async () => {
+    it('should default to 30d period', async () => {
       vi.mocked(api.get).mockResolvedValueOnce({
         data: { success: true, data: { summary: {}, byPlan: [] } },
       });
       await getReport();
       expect(api.get).toHaveBeenCalledWith('/admin/subscriptions/report', {
-        params: { period: 'month' },
+        params: { period: '30d' },
       });
     });
   });

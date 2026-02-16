@@ -14,6 +14,7 @@ import { OrdersQueryDto, AdminOrdersQueryDto } from './dto/orders-query.dto';
 import { CancelOrderDto } from './dto/cancel-order.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { Decimal } from '@prisma/client/runtime/library';
+import * as crypto from 'crypto';
 
 interface CreateOrderInput {
   userId: string;
@@ -66,15 +67,41 @@ export class OrdersService {
   }
 
   /**
-   * Generate pickup QR code data
+   * Generate pickup QR code data with HMAC signature
    */
   private generatePickupCode(orderId: string, orderCode: string): string {
-    return JSON.stringify({
+    const payload = {
       type: 'order_pickup',
       orderId,
       code: orderCode,
       timestamp: Date.now(),
-    });
+    };
+    const dataStr = JSON.stringify(payload);
+    const signature = crypto
+      .createHmac('sha256', this.getPickupSecret())
+      .update(dataStr)
+      .digest('hex');
+    return JSON.stringify({ ...payload, signature });
+  }
+
+  private getPickupSecret(): string {
+    return process.env.PICKUP_HMAC_SECRET || 'ahub-pickup-secret-default';
+  }
+
+  /**
+   * Verify pickup QR code HMAC signature
+   */
+  private verifyPickupSignature(qrData: any): boolean {
+    const { signature, ...payload } = qrData;
+    if (!signature) return false;
+    const expected = crypto
+      .createHmac('sha256', this.getPickupSecret())
+      .update(JSON.stringify(payload))
+      .digest('hex');
+    return crypto.timingSafeEqual(
+      Buffer.from(signature, 'hex'),
+      Buffer.from(expected, 'hex'),
+    );
   }
 
   /**
@@ -432,6 +459,44 @@ export class OrdersService {
       }
     }
 
+    // Reverse cashback if it was credited
+    if (order.cashbackTransactionId && order.cashbackEarned && order.cashbackEarned > 0) {
+      try {
+        await this.pointsService.debitPoints(
+          order.userId,
+          order.cashbackEarned,
+          'ADMIN_DEBIT',
+          `Estorno de cashback do pedido #${order.code}`,
+          { orderId: order.id, type: 'cashback_reversal' },
+        );
+        refundResults.cashbackReversed = order.cashbackEarned;
+      } catch (error) {
+        this.logger.warn(`Failed to reverse cashback for order ${orderId}: ${error.message}`);
+      }
+    }
+
+    // Restore stock for store orders
+    if (order.source === OrderSource.STORE) {
+      try {
+        for (const item of order.items) {
+          if (item.variantId) {
+            await this.prisma.productVariant.update({
+              where: { id: item.variantId },
+              data: { stockCount: { increment: item.quantity } },
+            });
+          } else {
+            await this.prisma.storeProduct.update({
+              where: { id: item.productId },
+              data: { stockCount: { increment: item.quantity } },
+            });
+          }
+        }
+        refundResults.stockRestored = true;
+      } catch (error) {
+        this.logger.warn(`Failed to restore stock for order ${orderId}: ${error.message}`);
+      }
+    }
+
     // Update order
     const cancelledOrder = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.order.update({
@@ -487,12 +552,17 @@ export class OrdersService {
       try {
         const qrData = JSON.parse(code);
         if (qrData.type === 'order_pickup' && qrData.orderId) {
+          // Verify HMAC signature if present
+          if (qrData.signature && !this.verifyPickupSignature(qrData)) {
+            throw new BadRequestException('QR code com assinatura invalida');
+          }
           order = await this.prisma.order.findUnique({
             where: { id: qrData.orderId },
             include: { items: true },
           });
         }
-      } catch {
+      } catch (e) {
+        if (e instanceof BadRequestException) throw e;
         // Not a valid QR code JSON
       }
     }
@@ -559,13 +629,21 @@ export class OrdersService {
    * Get all orders (Admin)
    */
   async getAllOrders(query: AdminOrdersQueryDto) {
-    const { status, source, userId, startDate, endDate, page = 1, limit = 10 } = query;
+    const { status, source, userId, search, startDate, endDate, page = 1, limit = 10 } = query;
 
     const where: any = {};
 
     if (status) where.status = status;
     if (source) where.source = source;
     if (userId) where.userId = userId;
+
+    if (search) {
+      where.OR = [
+        { code: { equals: search.toUpperCase() } },
+        { user: { name: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
 
     if (startDate || endDate) {
       where.createdAt = {};

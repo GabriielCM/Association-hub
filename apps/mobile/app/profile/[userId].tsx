@@ -18,7 +18,7 @@ export default function UserProfileScreen() {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <YStack flex={1} justifyContent="center" alignItems="center">
-          <Spinner size="large" />
+          <Spinner size="lg" />
         </YStack>
       </SafeAreaView>
     );

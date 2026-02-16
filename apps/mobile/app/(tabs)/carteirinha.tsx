@@ -37,7 +37,7 @@ export default function CarteirinhaScreen() {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <YStack flex={1} justifyContent="center" alignItems="center">
-          <Spinner size="large" />
+          <Spinner size="lg" />
           <Text color="secondary" marginTop="$2">
             Carregando carteirinha...
           </Text>

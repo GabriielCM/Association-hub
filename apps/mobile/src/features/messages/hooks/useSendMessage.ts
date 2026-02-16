@@ -49,13 +49,13 @@ export function useSendMessage(conversationId: string) {
         messageKeys.messages(conversationId),
         (old) => {
           if (!old) return old;
-          const firstPage = old.pages[0];
+          const firstPage = old.pages[0]!;
           return {
             ...old,
             pages: [
               {
-                ...firstPage,
                 data: [optimisticMessage, ...firstPage.data],
+                pagination: firstPage.pagination,
               },
               ...old.pages.slice(1),
             ],

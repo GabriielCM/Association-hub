@@ -1,12 +1,16 @@
 import { useCallback, useMemo } from 'react';
-import { FlatList, StyleSheet, Pressable } from 'react-native';
-import { YStack, XStack, View } from 'tamagui';
+import { FlatList, StyleSheet, Pressable, Platform, View } from 'react-native';
+import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Text, Heading, Spinner } from '@ahub/ui';
+import * as Haptics from 'expo-haptics';
 import { useSpaces } from '@/features/spaces/hooks/useSpaces';
 import { SpaceCard } from '@/features/spaces/components/SpaceCard';
+import { EmptyStateIllustration } from '@/features/shared/components/EmptyStateIllustration';
 import type { SpaceListItem } from '@ahub/shared/types';
+
+const ItemSeparator = () => <View style={{ height: 12 }} />;
 
 export default function SpacesListScreen() {
   const {
@@ -37,6 +41,11 @@ export default function SpacesListScreen() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const handleRefresh = useCallback(() => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    refetch();
+  }, [refetch]);
+
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       {/* Header */}
@@ -58,35 +67,28 @@ export default function SpacesListScreen() {
           <Spinner />
         </YStack>
       ) : spaces.length === 0 ? (
-        <YStack
-          flex={1}
-          alignItems="center"
-          justifyContent="center"
-          gap="$3"
-          padding="$4"
-        >
-          <Text size="2xl">🏠</Text>
-          <Text weight="semibold">Nenhum espaço disponível</Text>
-          <Text color="secondary" size="sm" align="center">
-            Os espaços aparecerão aqui quando cadastrados
-          </Text>
-        </YStack>
+        <EmptyStateIllustration
+          animation="no-spaces"
+          title="Nenhum espaço disponível"
+          description="Os espaços aparecerão aqui quando cadastrados pela administração."
+        />
       ) : (
         <FlatList
           data={spaces}
           keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <SpaceCard space={item} onPress={handleSpacePress} />
           )}
           contentContainerStyle={styles.list}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={ItemSeparator}
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.3}
           refreshing={isFetching && !isFetchingNextPage}
-          onRefresh={() => refetch()}
+          onRefresh={handleRefresh}
           ListFooterComponent={
             isFetchingNextPage ? (
-              <YStack padding="$3" alignItems="center">
+              <YStack padding="$3" alignItems="center" justifyContent="center">
                 <Spinner />
               </YStack>
             ) : null
@@ -99,10 +101,7 @@ export default function SpacesListScreen() {
 
 const styles = StyleSheet.create({
   list: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  separator: {
-    height: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
 });

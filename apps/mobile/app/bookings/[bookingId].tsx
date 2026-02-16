@@ -3,11 +3,14 @@ import { ScrollView, StyleSheet, Pressable, Image } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Text, Heading, Spinner, Card } from '@ahub/ui';
+import { Text, Heading, Spinner, GlassCard } from '@ahub/ui';
 import { resolveUploadUrl } from '@/config/constants';
 import { useBooking } from '@/features/bookings/hooks/useBookings';
 import { BookingStatusBadge } from '@/features/bookings/components/BookingStatusBadge';
 import { CancelBookingSheet } from '@/features/bookings/components/CancelBookingSheet';
+import { PriceDisplay } from '@/features/bookings/components/PriceDisplay';
+import { colors } from '@ahub/ui/themes';
+
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
   return d.toLocaleDateString('pt-BR', {
@@ -56,6 +59,13 @@ export default function BookingDetailScreen() {
           ? `${booking.startTime} - ${booking.endTime}`
           : '';
 
+  const hasDiscount =
+    booking.discountApplied != null &&
+    booking.discountApplied > 0 &&
+    booking.fee != null &&
+    booking.finalFee != null &&
+    booking.fee !== booking.finalFee;
+
   const feeLabel =
     booking.finalFee != null && booking.finalFee > 0
       ? `R$ ${(booking.finalFee / 100).toFixed(2)}`
@@ -84,7 +94,7 @@ export default function BookingDetailScreen() {
 
         <YStack padding="$4" gap="$5">
           {/* Space card */}
-          <Card variant="flat">
+          <GlassCard intensity="subtle" borderRadius={12} padding={12}>
             <XStack gap="$3" alignItems="center">
               <View style={styles.spaceImage}>
                 {booking.space.mainImageUrl ? (
@@ -117,35 +127,38 @@ export default function BookingDetailScreen() {
                 </Pressable>
               </YStack>
             </XStack>
-          </Card>
+          </GlassCard>
 
           {/* Booking details */}
           <YStack gap="$3">
             <Text weight="semibold" size="base">
               Detalhes
             </Text>
-            <YStack gap="$2.5" padding="$3" style={styles.detailsCard}>
-              <XStack justifyContent="space-between">
-                <Text size="sm" color="secondary">Data</Text>
-                <Text size="sm" weight="medium">{formatDate(booking.date)}</Text>
-              </XStack>
-              <XStack justifyContent="space-between">
-                <Text size="sm" color="secondary">Período</Text>
-                <Text size="sm" weight="medium">{periodLabel}</Text>
-              </XStack>
-              <XStack justifyContent="space-between">
-                <Text size="sm" color="secondary">Taxa</Text>
-                <Text size="sm" weight="semibold" color="accent">{feeLabel}</Text>
-              </XStack>
-              {booking.discountApplied != null && booking.discountApplied > 0 && (
+            <GlassCard intensity="subtle" borderRadius={12} padding={12}>
+              <YStack gap="$2.5">
                 <XStack justifyContent="space-between">
-                  <Text size="sm" color="secondary">Desconto assinatura</Text>
-                  <Text size="sm" weight="medium" color="success">
-                    -{booking.discountApplied}%
-                  </Text>
+                  <Text size="sm" color="secondary">Data</Text>
+                  <Text size="sm" weight="medium">{formatDate(booking.date)}</Text>
                 </XStack>
-              )}
-            </YStack>
+                <XStack justifyContent="space-between">
+                  <Text size="sm" color="secondary">Período</Text>
+                  <Text size="sm" weight="medium">{periodLabel}</Text>
+                </XStack>
+                <XStack justifyContent="space-between" alignItems="center">
+                  <Text size="sm" color="secondary">Taxa</Text>
+                  {hasDiscount ? (
+                    <PriceDisplay
+                      originalPrice={booking.fee!}
+                      finalPrice={booking.finalFee!}
+                      {...(booking.discountApplied != null ? { discountPercentage: booking.discountApplied } : {})}
+                      size="sm"
+                    />
+                  ) : (
+                    <Text size="sm" weight="semibold" color="accent">{feeLabel}</Text>
+                  )}
+                </XStack>
+              </YStack>
+            </GlassCard>
           </YStack>
 
           {/* Timeline */}
@@ -198,24 +211,34 @@ export default function BookingDetailScreen() {
 
           {/* Rejection/cancellation reason */}
           {booking.rejectionReason && (
-            <YStack gap="$2" padding="$3" style={styles.reasonCard}>
-              <Text size="sm" weight="medium" color="error">
-                Motivo da rejeição
-              </Text>
-              <Text size="sm" color="secondary">
-                {booking.rejectionReason}
-              </Text>
-            </YStack>
+            <GlassCard intensity="subtle" borderRadius={12} padding={12}>
+              <YStack
+                gap="$2"
+                style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)', borderRadius: 8, padding: 12 }}
+              >
+                <Text size="sm" weight="medium" color="error">
+                  Motivo da rejeição
+                </Text>
+                <Text size="sm" color="secondary">
+                  {booking.rejectionReason}
+                </Text>
+              </YStack>
+            </GlassCard>
           )}
           {booking.cancellationReason && (
-            <YStack gap="$2" padding="$3" style={styles.reasonCard}>
-              <Text size="sm" weight="medium" color="error">
-                Motivo do cancelamento
-              </Text>
-              <Text size="sm" color="secondary">
-                {booking.cancellationReason}
-              </Text>
-            </YStack>
+            <GlassCard intensity="subtle" borderRadius={12} padding={12}>
+              <YStack
+                gap="$2"
+                style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)', borderRadius: 8, padding: 12 }}
+              >
+                <Text size="sm" weight="medium" color="error">
+                  Motivo do cancelamento
+                </Text>
+                <Text size="sm" color="secondary">
+                  {booking.cancellationReason}
+                </Text>
+              </YStack>
+            </GlassCard>
           )}
 
           {/* Cancel button */}
@@ -253,7 +276,7 @@ function TimelineItem({
   active: boolean;
   isError?: boolean;
 }) {
-  const dotColor = isError ? '#EF4444' : active ? '#22C55E' : '#D1D5DB';
+  const dotColor = isError ? colors.errorDark : active ? colors.successDark : '#D1D5DB';
   return (
     <XStack gap="$3" alignItems="center">
       <View style={[styles.dot, { backgroundColor: dotColor }]} />
@@ -288,17 +311,9 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(139, 92, 246, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  detailsCard: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-  },
-  reasonCard: {
-    backgroundColor: '#FEF2F2',
-    borderRadius: 12,
   },
   dot: {
     width: 12,
@@ -309,7 +324,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#EF4444',
+    borderColor: colors.errorDark,
     alignItems: 'center',
   },
 });

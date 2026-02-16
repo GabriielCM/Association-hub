@@ -11,7 +11,8 @@ import { FilterBar } from '@/features/points/components/FilterBar';
 import type { PointTransaction, TransactionType } from '@ahub/shared/types';
 
 export default function WalletHistoryScreen() {
-  const [typeFilter, setTypeFilter] = useState<TransactionType | undefined>();
+  const [periodFilter, setPeriodFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState<TransactionType | ''>('');
   const [selectedTransaction, setSelectedTransaction] = useState<PointTransaction | null>(null);
 
   const {
@@ -20,7 +21,7 @@ export default function WalletHistoryScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = usePointsHistory({ type: typeFilter });
+  } = usePointsHistory({ type: typeFilter || undefined });
 
   const transactions = useMemo(
     () => data?.pages.flatMap((page) => page.data) || [],
@@ -44,6 +45,8 @@ export default function WalletHistoryScreen() {
 
         {/* Filters */}
         <FilterBar
+          selectedPeriod={periodFilter}
+          onPeriodChange={setPeriodFilter}
           selectedType={typeFilter}
           onTypeChange={setTypeFilter}
         />
@@ -63,7 +66,7 @@ export default function WalletHistoryScreen() {
           ListEmptyComponent={
             isLoading ? (
               <YStack alignItems="center" paddingVertical="$8">
-                <Spinner size="large" />
+                <Spinner size="lg" />
               </YStack>
             ) : (
               <YStack alignItems="center" paddingVertical="$8">

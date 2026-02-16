@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { FlatList, RefreshControl, Pressable, StyleSheet } from 'react-native';
-import { YStack, XStack, View } from 'tamagui';
+import { YStack, XStack } from 'tamagui';
 import { Text } from '@ahub/ui';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +10,6 @@ import {
   useMarkAllAsRead,
   useDeleteNotification,
   useClearReadNotifications,
-  useMarkGroupAsRead,
 } from '../hooks/useNotificationMutations';
 import { useNotificationWebSocket } from '../hooks/useNotificationWebSocket';
 import { NotificationItem } from '../components/NotificationItem';
@@ -56,7 +55,6 @@ export function NotificationsScreen() {
 
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
-  const markGroupAsRead = useMarkGroupAsRead();
   const deleteNotification = useDeleteNotification();
   const clearRead = useClearReadNotifications();
 
@@ -83,13 +81,6 @@ export function NotificationsScreen() {
   const handleClearRead = useCallback(() => {
     clearRead.mutate();
   }, [clearRead]);
-
-  const handleMarkGroupRead = useCallback(
-    (groupKey: string) => {
-      markGroupAsRead.mutate(groupKey);
-    },
-    [markGroupAsRead]
-  );
 
   // Group notifications by date section
   const sectioned = useMemo(() => {
@@ -230,7 +221,7 @@ export function NotificationsScreen() {
                 padding="$6"
                 gap="$2"
               >
-                <Text size="3xl">🔔</Text>
+                <Text size="2xl">🔔</Text>
                 <Text color="secondary" size="sm" align="center">
                   {filter === 'ALL'
                     ? 'Nenhuma notificação ainda'

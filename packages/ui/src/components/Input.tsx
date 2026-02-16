@@ -1,6 +1,6 @@
 import { styled, YStack, XStack, View, Text } from 'tamagui';
 import { forwardRef, useState } from 'react';
-import { TextInput, type TextInputProps } from 'react-native';
+import { TextInput, type TextInputProps, type StyleProp, type TextStyle } from 'react-native';
 
 const InputContainer = styled(YStack, {
   name: 'InputContainer',
@@ -102,7 +102,7 @@ const IconWrapper = styled(View, {
 export interface InputProps {
   label?: string;
   placeholder?: string;
-  value?: string;
+  value?: string | undefined;
   defaultValue?: string;
   onChangeText?: (value: string) => void;
   onBlur?: () => void;
@@ -112,11 +112,17 @@ export interface InputProps {
   rightIcon?: React.ReactNode;
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
+  editable?: boolean;
   autoFocus?: boolean;
   secureTextEntry?: boolean;
   keyboardType?: TextInputProps['keyboardType'];
   autoCapitalize?: TextInputProps['autoCapitalize'];
   autoComplete?: TextInputProps['autoComplete'];
+  autoCorrect?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
+  maxLength?: number;
+  style?: StyleProp<TextStyle>;
 }
 
 export const Input = forwardRef<TextInput, InputProps>(
@@ -134,11 +140,17 @@ export const Input = forwardRef<TextInput, InputProps>(
       rightIcon,
       size = 'md',
       disabled,
+      editable,
       autoFocus,
       secureTextEntry,
       keyboardType,
       autoCapitalize,
       autoComplete,
+      autoCorrect,
+      multiline,
+      numberOfLines,
+      maxLength,
+      style: customStyle,
     },
     ref
   ) => {
@@ -158,25 +170,29 @@ export const Input = forwardRef<TextInput, InputProps>(
           {leftIcon && <IconWrapper>{leftIcon}</IconWrapper>}
           <TextInput
             ref={ref}
-            style={{
+            style={[{
               flex: 1,
               fontFamily: 'Inter',
               fontSize,
               color: '#1F2937',
               padding: 0,
               margin: 0,
-            }}
+            }, customStyle]}
             value={value}
             defaultValue={defaultValue}
             onChangeText={onChangeText}
             placeholder={placeholder}
             placeholderTextColor="#9CA3AF"
-            editable={!disabled}
+            editable={editable !== undefined ? editable : !disabled}
             autoFocus={autoFocus}
             secureTextEntry={secureTextEntry}
             keyboardType={keyboardType}
             autoCapitalize={autoCapitalize}
             autoComplete={autoComplete}
+            autoCorrect={autoCorrect}
+            multiline={multiline}
+            numberOfLines={numberOfLines}
+            maxLength={maxLength}
             onFocus={() => setIsFocused(true)}
             onBlur={() => {
               setIsFocused(false);

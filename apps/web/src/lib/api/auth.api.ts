@@ -1,12 +1,7 @@
 import { api, setTokens, clearTokens } from './client';
 import { STORAGE_KEYS } from '@/config/constants';
-import type {
-  AuthTokens,
-  User,
-  ApiResponse,
-  LoginInput,
-  RegisterInput,
-} from '@ahub/shared/types';
+import type { AuthTokens, User, ApiResponse } from '@ahub/shared/types';
+import type { LoginInput, RegisterInput } from '@ahub/shared/validation';
 
 export interface LoginResponse {
   tokens: AuthTokens;

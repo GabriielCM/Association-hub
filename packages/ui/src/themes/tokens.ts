@@ -186,3 +186,30 @@ export const iconSizes = {
   lg: 24,
   xl: 32,
 } as const;
+
+// Glassmorphism tokens
+export const glass = {
+  // Blur intensities
+  blurSm: 8,
+  blurMd: 16,
+  blurLg: 24,
+
+  // Light mode backgrounds
+  bgLight: 'rgba(255, 255, 255, 0.65)',
+  bgLightSubtle: 'rgba(255, 255, 255, 0.45)',
+
+  // Dark mode backgrounds
+  bgDark: 'rgba(37, 37, 66, 0.65)',
+  bgDarkSubtle: 'rgba(37, 37, 66, 0.45)',
+
+  // Borders
+  borderLight: 'rgba(255, 255, 255, 0.25)',
+  borderDark: 'rgba(255, 255, 255, 0.15)',
+
+  // Tinted glass (brand colors at low opacity)
+  primaryTint: 'rgba(139, 92, 246, 0.12)',
+  secondaryTint: 'rgba(6, 182, 212, 0.10)',
+  successTint: 'rgba(34, 197, 94, 0.12)',
+  errorTint: 'rgba(239, 68, 68, 0.10)',
+} as const;
+

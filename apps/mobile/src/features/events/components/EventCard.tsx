@@ -47,7 +47,7 @@ export function EventCard({ event }: EventCardProps) {
     return [];
   }, [event.bannerDisplay, event.bannerFeed]);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [, setCurrentIndex] = useState(0);
 
   // Animated opacity values for crossfade
   const opacities = useRef<Animated.Value[]>([]);
@@ -63,12 +63,12 @@ export function EventCard({ event }: EventCardProps) {
       setCurrentIndex((prev) => {
         const next = (prev + 1) % banners.length;
         Animated.parallel([
-          Animated.timing(opacities.current[prev], {
+          Animated.timing(opacities.current[prev]!, {
             toValue: 0,
             duration: 800,
             useNativeDriver: true,
           }),
-          Animated.timing(opacities.current[next], {
+          Animated.timing(opacities.current[next]!, {
             toValue: 1,
             duration: 800,
             useNativeDriver: true,

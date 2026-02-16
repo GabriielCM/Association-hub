@@ -5,11 +5,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Heading, Button, Spinner } from '@ahub/ui';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useUserBadges } from '@/features/profile/hooks/useProfile';
-import { useUpdateBadgesDisplay } from '@/features/profile/hooks/useEditProfile';
+
 import { BadgeCard } from '@/features/profile/components/BadgeCard';
 import { RankingRow } from '@/features/profile/components/RankingRow';
 import { useUserRankings } from '@/features/profile/hooks/useProfile';
-import type { UserBadge } from '@ahub/shared/types';
 
 export default function BadgesScreen() {
   const { user } = useAuthContext();
@@ -23,7 +22,7 @@ export default function BadgesScreen() {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <YStack flex={1} justifyContent="center" alignItems="center">
-          <Spinner size="large" />
+          <Spinner size="lg" />
         </YStack>
       </SafeAreaView>
     );
@@ -31,12 +30,6 @@ export default function BadgesScreen() {
 
   const badges = badgesData?.data || [];
   const rankings = rankingsData?.data || [];
-
-  const renderBadge = ({ item }: { item: UserBadge }) => (
-    <View style={styles.badgeWrapper}>
-      <BadgeCard badge={item} />
-    </View>
-  );
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>

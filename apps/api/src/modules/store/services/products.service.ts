@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
   BadRequestException,
@@ -15,8 +16,12 @@ import {
 } from '../dto/product.dto';
 import { Decimal } from '@prisma/client/runtime/library';
 
+const LOW_STOCK_THRESHOLD = 10;
+
 @Injectable()
 export class ProductsService {
+  private readonly logger = new Logger(ProductsService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -536,11 +541,40 @@ export class ProductsService {
         throw new BadRequestException('Estoque não pode ficar negativo');
       }
 
-      return this.prisma.storeProduct.update({
+      const updated = await this.prisma.storeProduct.update({
         where: { id: productId },
         data: { stockCount: newStock },
       });
+
+      // Check for low stock alert
+      if (newStock > 0 && newStock <= LOW_STOCK_THRESHOLD) {
+        this.logger.warn(`Low stock alert: product ${productId} has ${newStock} units remaining`);
+      }
+
+      return updated;
     }
+  }
+
+  /**
+   * Get products with low stock
+   */
+  async getLowStockProducts(associationId: string) {
+    return this.prisma.storeProduct.findMany({
+      where: {
+        category: { associationId },
+        isActive: true,
+        stockType: 'limited',
+        stockCount: { lte: LOW_STOCK_THRESHOLD, gt: 0 },
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        stockCount: true,
+        images: { take: 1, select: { url: true } },
+      },
+      orderBy: { stockCount: 'asc' },
+    });
   }
 
   /**

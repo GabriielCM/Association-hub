@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, TextInput, ActivityIndicator } from 'react-native';
+import { Modal, Pressable, StyleSheet, TextInput, ActivityIndicator, Platform, View } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, NativeViewFallback } from '@ahub/ui';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { useCancelBooking } from '../hooks/useBookings';
+import { colors } from '@ahub/ui/themes';
 import type { BookingListItem } from '@ahub/shared/types';
 
 interface CancelBookingSheetProps {
@@ -25,6 +28,7 @@ export function CancelBookingSheet({
   const handleCancel = () => {
     if (!booking) return;
     setError(null);
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
     cancelBooking.mutate(
       {
@@ -51,6 +55,13 @@ export function CancelBookingSheet({
     <Modal visible={visible} transparent animationType="slide">
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+          <NativeViewFallback
+            fallback={
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255,255,255,0.85)' }]} />
+            }
+          >
+            <BlurView intensity={16} tint="light" style={StyleSheet.absoluteFill} />
+          </NativeViewFallback>
           <YStack gap="$4" padding="$4">
             <YStack gap="$1" alignItems="center">
               <Text weight="bold" size="lg">
@@ -119,9 +130,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.65)',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    overflow: 'hidden',
   },
   input: {
     borderWidth: 1,
@@ -143,9 +155,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backBtn: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(156, 163, 175, 0.15)',
   },
   cancelBtn: {
-    backgroundColor: '#EF4444',
+    backgroundColor: colors.errorDark,
   },
 });

@@ -60,11 +60,11 @@ export function useDeletePlan() {
 }
 
 export function useSubscribers(query?: {
-  page?: number;
-  limit?: number;
-  planId?: string;
-  status?: string;
-  search?: string;
+  page?: number | undefined;
+  limit?: number | undefined;
+  planId?: string | undefined;
+  status?: string | undefined;
+  search?: string | undefined;
 }) {
   return useQuery({
     queryKey: subsAdminKeys.subscribers(query as Record<string, unknown>),

@@ -115,7 +115,7 @@ function RecipientRow({
   onPress,
 }: {
   name: string;
-  avatar?: string;
+  avatar?: string | undefined;
   onPress: () => void;
 }) {
   return (

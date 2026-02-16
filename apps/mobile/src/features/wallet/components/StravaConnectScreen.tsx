@@ -58,7 +58,7 @@ export function StravaConnectScreen({
       {/* Connect Button */}
       <Button onPress={onConnect} disabled={isConnecting}>
         {isConnecting ? (
-          <Spinner size="small" />
+          <Spinner size="sm" />
         ) : (
           'Conectar com Strava'
         )}

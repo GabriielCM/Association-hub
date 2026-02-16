@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, Platform } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { Text } from '@ahub/ui';
+import * as Haptics from 'expo-haptics';
+import { colors, glass } from '@ahub/ui/themes';
 import type { SpaceDetail } from '@ahub/shared/types';
 
 interface PeriodSelectorProps {
@@ -50,7 +52,10 @@ export function PeriodSelector({
             return (
               <Pressable
                 key={shift.name}
-                onPress={() => onShiftChange(shift.name)}
+                onPress={() => {
+                  if (Platform.OS !== 'web') Haptics.selectionAsync();
+                  onShiftChange(shift.name);
+                }}
                 style={[
                   styles.shiftChip,
                   isSelected && styles.shiftChipSelected,
@@ -111,6 +116,7 @@ export function PeriodSelector({
                 <Pressable
                   key={`start-${h}`}
                   onPress={() => {
+                    if (Platform.OS !== 'web') Haptics.selectionAsync();
                     setLocalStart(h);
                     setLocalEnd('');
                     onTimeChange(h, '');
@@ -141,6 +147,7 @@ export function PeriodSelector({
                   <Pressable
                     key={`end-${h}`}
                     onPress={() => {
+                      if (Platform.OS !== 'web') Haptics.selectionAsync();
                       setLocalEnd(h);
                       onTimeChange(localStart, h);
                     }}
@@ -174,24 +181,32 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: glass.borderLight,
+    backgroundColor: glass.bgLightSubtle,
     alignItems: 'center',
   },
   shiftChipSelected: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#3B82F6',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   timeChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: glass.borderLight,
+    backgroundColor: glass.bgLightSubtle,
   },
   timeChipSelected: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#3B82F6',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
   },
 });

@@ -66,6 +66,7 @@
     ]
   },
   "dependencies": {
+    "expo-image": "~3.0.11",
     "whatwg-fetch": "^3.6.20"
   }
 }

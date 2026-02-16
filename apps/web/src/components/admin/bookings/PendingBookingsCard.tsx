@@ -13,7 +13,7 @@ interface PendingBookingsCardProps {
 }
 
 function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00');
+  const d = new Date(dateStr.split('T')[0] + 'T00:00:00');
   return d.toLocaleDateString('pt-BR', {
     weekday: 'short',
     day: '2-digit',

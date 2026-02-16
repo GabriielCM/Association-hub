@@ -1,9 +1,10 @@
 import { useState, useCallback, useMemo } from 'react';
-import { FlatList, StyleSheet, Pressable } from 'react-native';
+import { FlatList, StyleSheet, Pressable, Platform } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Text, Heading, Spinner } from '@ahub/ui';
+import * as Haptics from 'expo-haptics';
 import {
   useMyBookings,
   useWaitlistPosition,
@@ -13,6 +14,8 @@ import {
 import { BookingCard } from '@/features/bookings/components/BookingCard';
 import { WaitlistCard } from '@/features/bookings/components/WaitlistCard';
 import { CancelBookingSheet } from '@/features/bookings/components/CancelBookingSheet';
+import { EmptyStateIllustration } from '@/features/shared/components/EmptyStateIllustration';
+import { colors } from '@ahub/ui/themes';
 import type { BookingListItem, MyBookingsFilter, WaitlistEntry } from '@ahub/shared/types';
 
 type Tab = 'pending' | 'approved' | 'history';
@@ -52,6 +55,11 @@ export default function MyBookingsScreen() {
 
   const waitlistEntries = waitlistData?.entries ?? [];
 
+  const handleTabChange = useCallback((tab: Tab) => {
+    if (Platform.OS !== 'web') Haptics.selectionAsync();
+    setActiveTab(tab);
+  }, []);
+
   const handleBookingPress = useCallback((booking: BookingListItem) => {
     router.push({
       pathname: '/bookings/[bookingId]' as any,
@@ -83,6 +91,11 @@ export default function MyBookingsScreen() {
     [leaveWaitlist],
   );
 
+  const handleRefresh = useCallback(() => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    refetch();
+  }, [refetch]);
+
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       {/* Header */}
@@ -103,14 +116,14 @@ export default function MyBookingsScreen() {
         {(['pending', 'approved', 'history'] as const).map((tab) => (
           <Pressable
             key={tab}
-            onPress={() => setActiveTab(tab)}
+            onPress={() => handleTabChange(tab)}
             style={[styles.tab, activeTab === tab && styles.tabActive]}
           >
             <Text
               size="sm"
               weight={activeTab === tab ? 'semibold' : 'regular'}
               style={{
-                color: activeTab === tab ? '#3B82F6' : '#6B7280',
+                color: activeTab === tab ? colors.primary : '#6B7280',
               }}
             >
               {TAB_LABELS[tab]}
@@ -142,56 +155,33 @@ export default function MyBookingsScreen() {
           <Spinner />
         </YStack>
       ) : isError ? (
-        <YStack
-          flex={1}
-          alignItems="center"
-          justifyContent="center"
-          gap="$3"
-          padding="$4"
-        >
-          <Text size="2xl">⚠️</Text>
-          <Text weight="semibold">Erro ao carregar reservas</Text>
-          <Text color="secondary" size="sm" align="center">
-            {error?.message || 'Tente novamente mais tarde'}
-          </Text>
-          <Pressable onPress={() => refetch()} style={styles.browseButton}>
-            <Text size="sm" weight="semibold" style={{ color: '#3B82F6' }}>
-              Tentar novamente
-            </Text>
-          </Pressable>
-        </YStack>
+        <EmptyStateIllustration
+          animation="error"
+          title="Erro ao carregar reservas"
+          description={error?.message || 'Tente novamente mais tarde'}
+          ctaLabel="Tentar novamente"
+          onCtaPress={() => refetch()}
+        />
       ) : bookings.length === 0 ? (
-        <YStack
-          flex={1}
-          alignItems="center"
-          justifyContent="center"
-          gap="$3"
-          padding="$4"
-        >
-          <Text size="2xl">📅</Text>
-          <Text weight="semibold">
-            {activeTab === 'pending'
+        <EmptyStateIllustration
+          animation="no-bookings"
+          title={
+            activeTab === 'pending'
               ? 'Nenhuma reserva pendente'
               : activeTab === 'approved'
                 ? 'Nenhuma reserva aprovada'
-                : 'Nenhuma reserva no histórico'}
-          </Text>
-          <Text color="secondary" size="sm" align="center">
-            {activeTab === 'history'
+                : 'Nenhuma reserva no histórico'
+          }
+          description={
+            activeTab === 'history'
               ? 'Reservas concluídas ou canceladas aparecerão aqui'
-              : 'Reserve um espaço para começar'}
-          </Text>
-          {activeTab === 'pending' && (
-            <Pressable
-              onPress={() => router.push('/spaces' as any)}
-              style={styles.browseButton}
-            >
-              <Text size="sm" weight="semibold" style={{ color: '#3B82F6' }}>
-                Ver Espaços
-              </Text>
-            </Pressable>
-          )}
-        </YStack>
+              : 'Reserve um espaço para começar'
+          }
+          {...(activeTab === 'pending' && {
+            ctaLabel: 'Ver Espaços',
+            onCtaPress: () => router.push('/spaces' as any),
+          })}
+        />
       ) : (
         <FlatList
           data={bookings}
@@ -208,7 +198,7 @@ export default function MyBookingsScreen() {
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.3}
           refreshing={isFetching && !isFetchingNextPage}
-          onRefresh={() => refetch()}
+          onRefresh={handleRefresh}
           ListFooterComponent={
             isFetchingNextPage ? (
               <YStack padding="$3" alignItems="center">
@@ -238,10 +228,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
   },
   tabActive: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    borderColor: colors.primary,
   },
   list: {
     padding: 16,
@@ -249,12 +242,5 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 12,
-  },
-  browseButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3B82F6',
   },
 });
