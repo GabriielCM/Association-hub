@@ -9,7 +9,7 @@ import {
 import { YStack, XStack, View } from 'tamagui';
 import { Text } from '@ahub/ui';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/auth.store';
 import { useConversations } from '../hooks/useConversations';
 import { usePresence } from '../hooks/usePresence';
@@ -17,6 +17,7 @@ import { ConversationItem } from '../components/ConversationItem';
 import type { Conversation } from '@ahub/shared/types';
 
 export function ConversationsScreen() {
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
   const user = useAuthStore((s) => s.user);
 
@@ -62,7 +63,7 @@ export function ConversationsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <YStack flex={1} backgroundColor="$background">
         {/* Header */}
         <XStack
@@ -132,14 +133,16 @@ export function ConversationsScreen() {
             ) : null
           }
           contentContainerStyle={
-            filtered.length === 0 ? styles.emptyList : undefined
+            filtered.length === 0
+              ? [styles.emptyList, { paddingBottom: 80 + insets.bottom }]
+              : { paddingBottom: 80 + insets.bottom }
           }
         />
 
         {/* FAB: New conversation */}
         <Pressable
           onPress={handleNewConversation}
-          style={styles.fab}
+          style={[styles.fab, { bottom: 24 + insets.bottom }]}
         >
           <View
             width={56}
