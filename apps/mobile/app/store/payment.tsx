@@ -245,7 +245,13 @@ export default function PaymentScreen() {
     Alert.alert(
       'Processamento em andamento',
       'Seu pagamento esta sendo processado. Verifique seus pedidos em alguns instantes.',
-      [{ text: 'Ver pedidos', onPress: () => router.replace('/store' as any) }],
+      [{
+        text: 'Ver pedidos',
+        onPress: () => {
+          router.dismissTo('/(tabs)' as any);
+          setTimeout(() => router.push('/orders' as any), 0);
+        },
+      }],
     );
   }, []);
 

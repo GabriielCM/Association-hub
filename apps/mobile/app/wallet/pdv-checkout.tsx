@@ -38,7 +38,7 @@ export default function PdvCheckoutScreen() {
             checkout?.totalPoints ?? 0,
             `Pagamento em ${checkout?.pdv.name ?? 'PDV'}`
           );
-          router.navigate('/wallet');
+          router.dismissTo('/wallet' as any);
         },
         onError: (err) => {
           Alert.alert('Erro', err.message ?? 'Falha no pagamento.');
@@ -53,7 +53,7 @@ export default function PdvCheckoutScreen() {
         ? `Pagamento confirmado! Cashback: +${cashbackEarned} pts`
         : `Pagamento em ${checkout?.pdv.name ?? 'PDV'}`;
       showCelebration(cashbackEarned, message);
-      router.navigate('/wallet');
+      router.dismissTo('/wallet' as any);
     },
     [checkout, showCelebration]
   );

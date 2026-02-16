@@ -104,19 +104,22 @@ export default function ConfirmationScreen() {
         <YStack gap="$3" width="100%">
           {orderId ? (
             <Button
-              onPress={() =>
-                router.replace({
-                  pathname: '/orders/[id]' as any,
-                  params: { id: orderId },
-                })
-              }
+              onPress={() => {
+                router.dismissTo('/(tabs)' as any);
+                setTimeout(() => {
+                  router.push({
+                    pathname: '/orders/[id]' as any,
+                    params: { id: orderId },
+                  });
+                }, 0);
+              }}
             >
               Ver pedido
             </Button>
           ) : null}
           <Button
             variant="outline"
-            onPress={() => router.replace('/store' as any)}
+            onPress={() => router.dismissTo('/(tabs)/loja' as any)}
           >
             Continuar comprando
           </Button>

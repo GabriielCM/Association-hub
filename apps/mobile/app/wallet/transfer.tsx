@@ -138,7 +138,7 @@ export default function WalletTransferScreen() {
           <TransferReceipt
             result={transferResult}
             message={message || undefined}
-            onClose={() => router.back()}
+            onClose={() => router.dismissTo('/wallet' as any)}
           />
         )}
       </YStack>
