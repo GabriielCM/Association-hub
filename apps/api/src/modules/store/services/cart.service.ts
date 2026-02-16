@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -10,6 +11,7 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class CartService {
+  private readonly logger = new Logger(CartService.name);
   private readonly RESERVATION_MINUTES = 30;
 
   constructor(private readonly prisma: PrismaService) {}
@@ -350,6 +352,88 @@ export class CartService {
       where: { cartId: cart.id },
       data: { reservedStock: false },
     });
+  }
+
+  // ===========================================
+  // SCHEDULED JOBS (called by scheduler)
+  // ===========================================
+
+  /**
+   * Expire stock reservations that have passed their reserved time
+   * Called by scheduler to clean up abandoned carts
+   */
+  async expireReservations(): Promise<number> {
+    const now = new Date();
+
+    // Find all carts with expired reservations
+    const expiredCarts = await this.prisma.cart.findMany({
+      where: {
+        reservedUntil: {
+          not: null,
+          lt: now,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (expiredCarts.length === 0) {
+      return 0;
+    }
+
+    const cartIds = expiredCarts.map((cart) => cart.id);
+
+    // Clear reservation on items
+    await this.prisma.cartItem.updateMany({
+      where: { cartId: { in: cartIds } },
+      data: { reservedStock: false },
+    });
+
+    // Clear reservation timestamp on carts
+    await this.prisma.cart.updateMany({
+      where: { id: { in: cartIds } },
+      data: { reservedUntil: null },
+    });
+
+    if (expiredCarts.length > 0) {
+      this.logger.log(`Released ${expiredCarts.length} expired cart reservations`);
+    }
+
+    return expiredCarts.length;
+  }
+
+  /**
+   * Cleanup abandoned carts that haven't been updated for a specified number of days
+   * Called by scheduler to remove old empty carts
+   */
+  async cleanupAbandonedCarts(daysOld: number = 30): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+
+    // Find abandoned carts (no items, old updatedAt)
+    const abandonedCarts = await this.prisma.cart.findMany({
+      where: {
+        updatedAt: { lt: cutoffDate },
+        items: { none: {} },
+      },
+      select: { id: true },
+    });
+
+    if (abandonedCarts.length === 0) {
+      return 0;
+    }
+
+    const cartIds = abandonedCarts.map((cart) => cart.id);
+
+    // Delete abandoned carts
+    await this.prisma.cart.deleteMany({
+      where: { id: { in: cartIds } },
+    });
+
+    if (abandonedCarts.length > 0) {
+      this.logger.log(`Cleaned up ${abandonedCarts.length} abandoned carts`);
+    }
+
+    return abandonedCarts.length;
   }
 
   /**

@@ -210,11 +210,33 @@ export class VouchersService {
 
   /**
    * Send expiration warning notifications
+   * Uses groupKey to prevent duplicate notifications within 24 hours
    */
-  async sendExpirationWarnings() {
+  async sendExpirationWarnings(): Promise<{ total: number; sent: number; skipped: number }> {
     const vouchers = await this.getVouchersExpiringSoon(7);
 
+    if (vouchers.length === 0) {
+      this.logger.log('No vouchers expiring soon');
+      return { total: 0, sent: 0, skipped: 0 };
+    }
+
+    // Get voucher codes that were already notified in the last 24 hours
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const recentlyNotifiedGroupKeys = await this.getRecentlyNotifiedVouchers(twentyFourHoursAgo);
+
+    let sentCount = 0;
+    let skippedCount = 0;
+
     for (const voucher of vouchers) {
+      const groupKey = `voucher-expiration:${voucher.voucherCode}`;
+
+      // Skip if already notified in the last 24 hours
+      if (recentlyNotifiedGroupKeys.has(groupKey)) {
+        this.logger.debug(`Skipping notification for ${voucher.voucherCode} - already notified`);
+        skippedCount++;
+        continue;
+      }
+
       const daysUntilExpiration = Math.ceil(
         (voucher.voucherExpiresAt!.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
       );
@@ -230,11 +252,43 @@ export class VouchersService {
           orderId: voucher.orderId,
           expiresAt: voucher.voucherExpiresAt,
         },
+        groupKey,
       });
+
+      sentCount++;
     }
 
-    this.logger.log(`Sent ${vouchers.length} voucher expiration warnings`);
+    this.logger.log(
+      `Voucher expiration warnings: ${sentCount} sent, ${skippedCount} skipped (already notified)`,
+    );
 
-    return vouchers.length;
+    return { total: vouchers.length, sent: sentCount, skipped: skippedCount };
+  }
+
+  /**
+   * Get voucher codes that have been notified recently (within cutoff time)
+   * Returns a Set of groupKeys for efficient lookup
+   */
+  private async getRecentlyNotifiedVouchers(cutoffTime: Date): Promise<Set<string>> {
+    const recentNotifications = await this.prisma.notification.findMany({
+      where: {
+        groupKey: {
+          startsWith: 'voucher-expiration:',
+        },
+        createdAt: {
+          gte: cutoffTime,
+        },
+      },
+      select: {
+        groupKey: true,
+      },
+      distinct: ['groupKey'],
+    });
+
+    return new Set(
+      recentNotifications
+        .map((n) => n.groupKey)
+        .filter((key): key is string => key !== null),
+    );
   }
 }
