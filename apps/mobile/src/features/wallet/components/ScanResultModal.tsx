@@ -1,9 +1,11 @@
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { YStack } from 'tamagui';
-import { Text, Heading, Button, Avatar } from '@ahub/ui';
+import { Text, Heading, Button, Avatar, Icon } from '@ahub/ui';
+import type { PhosphorIcon } from '@ahub/ui';
 import { formatPoints } from '@ahub/shared/utils';
 import type { QrScanResult } from '@ahub/shared/types';
+import { CreditCard, MapPin, PaperPlaneTilt, Storefront, DeviceMobile, Warning } from '@ahub/ui/src/icons';
 
 interface ScanResultModalProps {
   result: QrScanResult | null;
@@ -19,11 +21,11 @@ const TYPE_LABELS: Record<string, string> = {
   pdv_payment: 'Pagamento PDV',
 };
 
-const TYPE_ICONS: Record<string, string> = {
-  member_card: '🪪',
-  event_checkin: '📍',
-  user_transfer: '💸',
-  pdv_payment: '🏪',
+const TYPE_ICONS: Record<string, PhosphorIcon> = {
+  member_card: CreditCard,
+  event_checkin: MapPin,
+  user_transfer: PaperPlaneTilt,
+  pdv_payment: Storefront,
 };
 
 export function ScanResultModal({
@@ -41,7 +43,7 @@ export function ScanResultModal({
           <Pressable style={styles.backdropTouch} onPress={onClose} />
           <View style={[styles.sheet, { paddingBottom: insets.bottom }]}>
             <YStack gap="$4" padding="$4" alignItems="center">
-              <Text style={{ fontSize: 48 }}>&#x26A0;&#xFE0F;</Text>
+              <Icon icon={Warning} size="xl" color="error" weight="duotone" />
               <Heading level={4}>Erro</Heading>
               <YStack gap="$2" alignItems="center">
                 <View style={styles.errorBadge}>
@@ -63,7 +65,7 @@ export function ScanResultModal({
     );
   }
 
-  const icon = TYPE_ICONS[result.type] ?? '📱';
+  const icon = TYPE_ICONS[result.type] ?? DeviceMobile;
   const label = TYPE_LABELS[result.type] ?? result.type;
 
   // Extract transfer recipient data
@@ -120,7 +122,7 @@ export function ScanResultModal({
                   )}
                 </YStack>
                 <View style={styles.cardInfoRow}>
-                  <Text style={{ fontSize: 16 }}>🪪</Text>
+                  <Icon icon={CreditCard} size="md" color="secondary" />
                   <Text color="secondary" size="sm">
                     {memberCardData.card.cardNumber}
                   </Text>
@@ -131,7 +133,7 @@ export function ScanResultModal({
               </>
             ) : (
               <>
-                <Text style={{ fontSize: 48 }}>{icon}</Text>
+                <Icon icon={icon} size="xl" color="primary" />
                 <Heading level={4}>{label}</Heading>
 
                 {result.valid ? (

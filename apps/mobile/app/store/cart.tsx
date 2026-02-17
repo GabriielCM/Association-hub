@@ -3,7 +3,8 @@ import { FlatList, StyleSheet, Pressable, Alert } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Text, Heading, Button, Spinner, ScreenHeader } from '@ahub/ui';
+import { Text, Heading, Button, Spinner, ScreenHeader, Icon } from '@ahub/ui';
+import { ShoppingCart } from '@ahub/ui/src/icons';
 import {
   useCart,
   useAddToCart,
@@ -119,7 +120,7 @@ export default function CartScreen() {
             gap="$3"
             padding="$4"
           >
-            <Text size="2xl">🛒</Text>
+            <Icon icon={ShoppingCart} size="xl" color="muted" weight="duotone" />
             <Text weight="semibold">Carrinho vazio</Text>
             <Text color="secondary" size="sm" align="center">
               Adicione produtos da loja ao seu carrinho

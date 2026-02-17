@@ -2,7 +2,9 @@ import { ScrollView, Pressable, Linking, StyleSheet, View, Image } from 'react-n
 import { useLocalSearchParams, router } from 'expo-router';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Heading, Button, Avatar, Spinner, Badge, ScreenHeader } from '@ahub/ui';
+import { Text, Heading, Button, Avatar, Spinner, Badge, ScreenHeader, Icon } from '@ahub/ui';
+import { Lock, ChatCircle, Globe, Camera, MapPin, Phone } from '@ahub/ui/src/icons';
+import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import { usePartnerDetails } from '@/features/card/hooks/useBenefits';
 
 const DAY_NAMES: Record<string, string> = {
@@ -102,7 +104,7 @@ export default function PartnerDetailScreen() {
           {!partner.isEligible && (
             <View style={styles.lockedBanner}>
               <XStack alignItems="center" gap="$2">
-                <Text style={{ fontSize: 20 }}>🔒</Text>
+                <Icon icon={Lock} size="lg" color="#92400E" />
                 <YStack flex={1}>
                   <Text style={styles.lockedTitle}>
                     Benefício exclusivo para assinantes
@@ -152,7 +154,7 @@ export default function PartnerDetailScreen() {
               <View style={styles.contactGrid}>
                 {partner.contact.phone && (
                   <ContactCard
-                    icon="📞"
+                    icon={Phone}
                     label="Telefone"
                     value={partner.contact.phone}
                     onPress={() => openUrl(`tel:${partner.contact.phone}`)}
@@ -160,7 +162,7 @@ export default function PartnerDetailScreen() {
                 )}
                 {partner.contact.whatsapp && (
                   <ContactCard
-                    icon="💬"
+                    icon={ChatCircle}
                     label="WhatsApp"
                     value={partner.contact.whatsapp}
                     onPress={() => openUrl(`https://wa.me/${partner.contact.whatsapp!.replace(/\D/g, '')}`)}
@@ -168,7 +170,7 @@ export default function PartnerDetailScreen() {
                 )}
                 {partner.contact.website && (
                   <ContactCard
-                    icon="🌐"
+                    icon={Globe}
                     label="Website"
                     value={partner.contact.website.replace(/^https?:\/\//, '')}
                     onPress={() => openUrl(partner.contact.website!)}
@@ -176,7 +178,7 @@ export default function PartnerDetailScreen() {
                 )}
                 {partner.contact.instagram && (
                   <ContactCard
-                    icon="📸"
+                    icon={Camera}
                     label="Instagram"
                     value={`@${partner.contact.instagram.replace('@', '')}`}
                     onPress={() => openUrl(`https://instagram.com/${partner.contact.instagram!.replace('@', '')}`)}
@@ -198,7 +200,7 @@ export default function PartnerDetailScreen() {
                 }}
                 style={({ pressed }) => [styles.addressCard, pressed && { opacity: 0.7 }]}
               >
-                <Text style={{ fontSize: 20 }}>📍</Text>
+                <Icon icon={MapPin} size="lg" color="primary" />
                 <YStack flex={1} gap={2}>
                   <Text size="sm">{partner.address.street}</Text>
                   <Text color="secondary" size="xs">
@@ -265,7 +267,7 @@ function ContactCard({
   value,
   onPress,
 }: {
-  icon: string;
+  icon: PhosphorIcon;
   label: string;
   value: string;
   onPress: () => void;
@@ -275,7 +277,7 @@ function ContactCard({
       onPress={onPress}
       style={({ pressed }) => [styles.contactCard, pressed && { opacity: 0.7 }]}
     >
-      <Text style={{ fontSize: 20 }}>{icon}</Text>
+      <Icon icon={icon} size="lg" color="primary" />
       <Text color="secondary" size="xs">{label}</Text>
       <Text size="sm" numberOfLines={1} weight="medium">{value}</Text>
     </Pressable>

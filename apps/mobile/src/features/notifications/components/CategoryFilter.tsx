@@ -1,18 +1,20 @@
 import { useCallback } from 'react';
 import { ScrollView, Pressable, StyleSheet } from 'react-native';
 import { XStack, View } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { NOTIFICATION_ICONS } from '@ahub/ui/src/icons';
+import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import type { NotificationCategory } from '@ahub/shared/types';
 
 type FilterValue = NotificationCategory | 'ALL';
 
-const CATEGORIES: { value: FilterValue; label: string; icon: string }[] = [
-  { value: 'ALL', label: 'Todas', icon: '📋' },
-  { value: 'SOCIAL', label: 'Social', icon: '💬' },
-  { value: 'EVENTS', label: 'Eventos', icon: '🎉' },
-  { value: 'POINTS', label: 'Pontos', icon: '⭐' },
-  { value: 'RESERVATIONS', label: 'Reservas', icon: '📅' },
-  { value: 'SYSTEM', label: 'Sistema', icon: '🔔' },
+const CATEGORIES: { value: FilterValue; label: string; icon: PhosphorIcon }[] = [
+  { value: 'ALL', label: 'Todas', icon: NOTIFICATION_ICONS.ALL },
+  { value: 'SOCIAL', label: 'Social', icon: NOTIFICATION_ICONS.SOCIAL },
+  { value: 'EVENTS', label: 'Eventos', icon: NOTIFICATION_ICONS.EVENTS },
+  { value: 'POINTS', label: 'Pontos', icon: NOTIFICATION_ICONS.POINTS },
+  { value: 'RESERVATIONS', label: 'Reservas', icon: NOTIFICATION_ICONS.RESERVATIONS },
+  { value: 'SYSTEM', label: 'Sistema', icon: NOTIFICATION_ICONS.SYSTEM },
 ];
 
 interface CategoryFilterProps {
@@ -47,7 +49,7 @@ export function CategoryFilter({
             borderRadius="$full"
             backgroundColor={isActive ? '$primary' : '$backgroundHover'}
           >
-            <Text size="sm">{item.icon}</Text>
+            <Icon icon={item.icon} size="sm" color={isActive ? 'white' : 'secondary'} />
             <Text
               size="xs"
               weight="semibold"

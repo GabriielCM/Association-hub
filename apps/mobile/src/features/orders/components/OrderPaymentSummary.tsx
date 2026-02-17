@@ -1,12 +1,14 @@
 import { YStack, XStack } from 'tamagui';
-import { Text, Card } from '@ahub/ui';
+import { Text, Card, Icon } from '@ahub/ui';
+import { PAYMENT_ICONS } from '@ahub/ui/src/icons';
+import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import { formatPoints, formatCurrency } from '@ahub/shared/utils';
 import type { Order } from '@ahub/shared/types';
 
-const PAYMENT_METHOD_LABELS: Record<string, { icon: string; label: string }> = {
-  POINTS: { icon: '🪙', label: 'Pontos' },
-  MONEY: { icon: '💳', label: 'Cartao' },
-  MIXED: { icon: '🔀', label: 'Misto' },
+const PAYMENT_METHOD_LABELS: Record<string, { icon: PhosphorIcon; label: string }> = {
+  POINTS: { icon: PAYMENT_ICONS.POINTS, label: 'Pontos' },
+  MONEY: { icon: PAYMENT_ICONS.MONEY, label: 'Cartao' },
+  MIXED: { icon: PAYMENT_ICONS.MIXED, label: 'Misto' },
 };
 
 interface OrderPaymentSummaryProps {
@@ -15,7 +17,7 @@ interface OrderPaymentSummaryProps {
 
 export function OrderPaymentSummary({ order }: OrderPaymentSummaryProps) {
   const method = PAYMENT_METHOD_LABELS[order.paymentMethod] ?? {
-    icon: '💰',
+    icon: PAYMENT_ICONS.POINTS,
     label: order.paymentMethod,
   };
 
@@ -31,7 +33,7 @@ export function OrderPaymentSummary({ order }: OrderPaymentSummaryProps) {
             Metodo
           </Text>
           <XStack gap="$1" alignItems="center">
-            <Text size="sm">{method.icon}</Text>
+            <Icon icon={method.icon} size="sm" color="primary" />
             <Text size="sm" weight="medium">
               {method.label}
             </Text>

@@ -88,30 +88,38 @@ export class DashboardService {
   }
 
   private async getLast7DaysChart(userId: string): Promise<number[]> {
-    const result: number[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+    // Single query with GROUP BY instead of 7 sequential queries
+    const rows = await this.prisma.$queryRaw<
+      Array<{ day: Date; total: bigint | null }>
+    >`
+      SELECT DATE("createdAt") as day, SUM(amount) as total
+      FROM "PointTransaction"
+      WHERE "userId" = ${userId}
+        AND "createdAt" >= ${sevenDaysAgo}
+        AND amount > 0
+      GROUP BY DATE("createdAt")
+      ORDER BY day ASC
+    `;
+
+    // Build result array filling in zeros for missing days
+    const dayMap = new Map<string, number>();
+    for (const row of rows) {
+      const key = new Date(row.day).toISOString().slice(0, 10);
+      dayMap.set(key, Number(row.total || 0));
+    }
+
+    const result: number[] = [];
     for (let i = 6; i >= 0; i--) {
-      const dayStart = new Date(today);
-      dayStart.setDate(dayStart.getDate() - i);
-
-      const dayEnd = new Date(dayStart);
-      dayEnd.setDate(dayEnd.getDate() + 1);
-
-      const dayTotal = await this.prisma.pointTransaction.aggregate({
-        where: {
-          userId,
-          createdAt: {
-            gte: dayStart,
-            lt: dayEnd,
-          },
-          amount: { gt: 0 }, // Only credits
-        },
-        _sum: { amount: true },
-      });
-
-      result.push(dayTotal._sum.amount || 0);
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      result.push(dayMap.get(key) || 0);
     }
 
     return result;

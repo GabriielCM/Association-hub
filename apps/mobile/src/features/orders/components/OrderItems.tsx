@@ -1,6 +1,7 @@
 import { Image, StyleSheet } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Text, Badge } from '@ahub/ui';
+import { Text, Badge, Icon } from '@ahub/ui';
+import { Package } from '@ahub/ui/src/icons';
 import { formatPoints, formatCurrency } from '@ahub/shared/utils';
 import type { OrderItem } from '@ahub/shared/types';
 
@@ -32,7 +33,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
         />
       ) : (
         <View style={[styles.image, styles.placeholder]}>
-          <Text size="lg">📦</Text>
+          <Icon icon={Package} size="lg" color="muted" />
         </View>
       )}
 

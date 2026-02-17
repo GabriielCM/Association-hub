@@ -2,7 +2,8 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Card, Text, Heading, Badge, Button } from '@ahub/ui';
+import { Card, Text, Heading, Badge, Button, Icon } from '@ahub/ui';
+import { ArrowUpRight, ArrowDownLeft } from '@ahub/ui/src/icons';
 import { formatPoints, formatDateTime } from '@ahub/shared/utils';
 import type { PointTransaction } from '@ahub/shared/types';
 import { SOURCE_LABELS } from './TransactionItem';
@@ -82,7 +83,7 @@ function TransferDetailContent({
   return (
     <YStack gap="$3" alignItems="center">
       <View style={styles.checkCircle}>
-        <Text style={styles.checkIcon}>{isOutgoing ? '↗' : '↙'}</Text>
+        <Icon icon={isOutgoing ? ArrowUpRight : ArrowDownLeft} size="lg" color="#16A34A" />
       </View>
 
       <Heading level={4} align="center">

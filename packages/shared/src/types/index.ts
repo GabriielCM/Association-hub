@@ -1600,6 +1600,61 @@ export interface WsPresenceUpdate {
 }
 
 // ===========================================
+// DASHBOARD TYPES
+// ===========================================
+
+export type {
+  StoryType,
+  StoryUserListItem,
+  StoryResponse,
+  StoryView,
+  StoryViewsResponse,
+  StoriesListResponse,
+  UserStoriesResponse,
+  PostType,
+  PostAuthor,
+  PostContent,
+  FeedPost,
+  FeedResponse,
+  CreatePostResponse,
+  LikeResponse,
+  ReactionType,
+  CommentAuthor,
+  CommentReactions,
+  FeedComment,
+  CommentsListResponse,
+  PollOptionResult,
+  PollResults,
+  VotePollResponse,
+  CreatePollResponse,
+  ReportReason,
+  ReportStatus,
+  Reporter,
+  ModerationReport,
+  ReportResponse,
+  SuspendUserResponse,
+  UserSummary,
+  DashboardSummary,
+  AdminDashboardStats,
+  CreatePostRequest,
+  UpdatePostRequest,
+  CreateTextStoryRequest,
+  CreateCommentRequest,
+  CreatePollRequest,
+  VotePollRequest,
+  CreateReportRequest,
+  SuspendUserRequest,
+  ResolveReportRequest,
+  FeedQueryParams,
+  CommentsQueryParams,
+  WsFeedPostNew,
+  WsFeedPostLiked,
+  WsFeedPostDeleted,
+  WsStoryNew,
+  WsPollVoteUpdate,
+} from './dashboard';
+
+// ===========================================
 // SALES REPORT TYPES (shared across PDV, Orders, Store)
 // ===========================================
 

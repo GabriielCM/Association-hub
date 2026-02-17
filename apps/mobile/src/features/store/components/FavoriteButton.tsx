@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet } from 'react-native';
-import { Text } from '@ahub/ui';
+import { Icon } from '@ahub/ui';
+import { Heart } from '@ahub/ui/src/icons';
 import { useToggleFavorite } from '../hooks/useFavorites';
 
 interface FavoriteButtonProps {
@@ -24,7 +25,7 @@ export function FavoriteButton({
       hitSlop={8}
       disabled={toggleFavorite.isPending}
     >
-      <Text size="base">{isFavorited ? '❤️' : '🤍'}</Text>
+      <Icon icon={Heart} size="md" weight={isFavorited ? 'fill' : 'regular'} color={isFavorited ? 'error' : 'muted'} />
     </Pressable>
   );
 }

@@ -2,7 +2,8 @@ import { ScrollView, StyleSheet } from 'react-native';
 import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Text, Button, Spinner, ScreenHeader } from '@ahub/ui';
+import { Text, Button, Spinner, ScreenHeader, Icon } from '@ahub/ui';
+import { MISC_ICONS } from '@ahub/ui/src/icons';
 import { useOrder } from '@/features/orders/hooks/useOrders';
 import { OrderStatusBadge } from '@/features/orders/components/OrderStatusBadge';
 import { OrderTimeline } from '@/features/orders/components/OrderTimeline';
@@ -28,7 +29,7 @@ export default function OrderDetailScreen() {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$3" padding="$4">
-          <Text size="2xl">😔</Text>
+          <Icon icon={MISC_ICONS.warning} size="xl" color="muted" weight="duotone" />
           <Text weight="semibold">Pedido nao encontrado</Text>
           <Button onPress={() => router.back()} size="sm">
             Voltar

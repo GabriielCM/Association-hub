@@ -1,5 +1,6 @@
 import { XStack, YStack, View } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { Play } from '@ahub/ui/src/icons';
 
 function formatDuration(seconds?: number): string {
   if (!seconds) return '0:00';
@@ -25,7 +26,7 @@ export function AudioMessage({ duration, isOwn }: AudioMessageProps) {
         alignItems="center"
         justifyContent="center"
       >
-        <Text style={{ color: '#FFFFFF' }} size="sm" weight="bold">▶</Text>
+        <Icon icon={Play} size="sm" color="#FFFFFF" weight="fill" />
       </View>
       <YStack flex={1} gap="$0.5">
         <View

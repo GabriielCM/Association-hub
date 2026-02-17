@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet } from 'react-native';
 import { XStack } from 'tamagui';
 import { Text } from '@ahub/ui';
+import Microphone from 'phosphor-react-native/src/icons/Microphone';
 
 interface TypingIndicatorProps {
   typingUsers: { id: string; name: string }[];
@@ -97,9 +98,9 @@ function MicPulse() {
   }, [pulse]);
 
   return (
-    <Animated.Text style={{ opacity: pulse, fontSize: 12 }}>
-      🎤
-    </Animated.Text>
+    <Animated.View style={{ opacity: pulse }}>
+      <Microphone size={12} color="#8B5CF6" />
+    </Animated.View>
   );
 }
 

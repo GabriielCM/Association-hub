@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { XStack, YStack, View } from 'tamagui';
-import { Text, Card } from '@ahub/ui';
+import { Text, Card, Icon } from '@ahub/ui';
+import { EVENT_ICONS } from '@ahub/ui/src/icons';
 import type { EventDetail } from '@ahub/shared/types';
 
 interface EventInfoProps {
@@ -82,7 +83,7 @@ export function EventInfo({ event }: EventInfoProps) {
 
         {/* Date & Time */}
         <XStack gap="$3" alignItems="flex-start">
-          <Text style={{ fontSize: 20 }}>📅</Text>
+          <Icon icon={EVENT_ICONS.date} size="md" color="secondary" />
           <YStack flex={1}>
             <Text weight="semibold">{formatDate(event.startDate)}</Text>
             <Text color="secondary" size="sm">
@@ -93,7 +94,7 @@ export function EventInfo({ event }: EventInfoProps) {
 
         {/* Location */}
         <XStack gap="$3" alignItems="flex-start">
-          <Text style={{ fontSize: 20 }}>📍</Text>
+          <Icon icon={EVENT_ICONS.location} size="md" color="secondary" />
           <YStack flex={1}>
             <Text weight="semibold">{event.locationName}</Text>
             {event.locationAddress && (
@@ -106,7 +107,7 @@ export function EventInfo({ event }: EventInfoProps) {
 
         {/* Points */}
         <XStack gap="$3" alignItems="flex-start">
-          <Text style={{ fontSize: 20 }}>⭐</Text>
+          <Icon icon={EVENT_ICONS.rating} size="md" color="secondary" />
           <YStack flex={1}>
             <Text weight="semibold">
               {event.pointsTotal} pontos totais
@@ -122,7 +123,7 @@ export function EventInfo({ event }: EventInfoProps) {
         {/* Capacity */}
         {event.capacity && (
           <XStack gap="$3" alignItems="flex-start">
-            <Text style={{ fontSize: 20 }}>👥</Text>
+            <Icon icon={EVENT_ICONS.attendees} size="md" color="secondary" />
             <YStack flex={1}>
               <Text weight="semibold">
                 {event.confirmationsCount}/{event.capacity} confirmados
@@ -134,7 +135,7 @@ export function EventInfo({ event }: EventInfoProps) {
         {/* Badge */}
         {event.badge && (
           <XStack gap="$3" alignItems="flex-start">
-            <Text style={{ fontSize: 20 }}>🏆</Text>
+            <Icon icon={EVENT_ICONS.prize} size="md" color="secondary" />
             <YStack flex={1}>
               <Text weight="semibold">{event.badge.name}</Text>
               {event.badge.description && (
@@ -149,7 +150,7 @@ export function EventInfo({ event }: EventInfoProps) {
         {/* External Link */}
         {event.externalLink && (
           <XStack gap="$3" alignItems="flex-start">
-            <Text style={{ fontSize: 20 }}>🔗</Text>
+            <Icon icon={EVENT_ICONS.link} size="md" color="secondary" />
             <YStack flex={1}>
               <Text weight="semibold" color="accent">
                 Link externo

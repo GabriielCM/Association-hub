@@ -2,7 +2,8 @@ import { StyleSheet } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Text, Heading, Card, Button } from '@ahub/ui';
+import { Text, Heading, Card, Button, Icon } from '@ahub/ui';
+import { CheckCircle } from '@ahub/ui/src/icons';
 import { formatPoints, formatCurrency } from '@ahub/shared/utils';
 
 export default function ConfirmationScreen() {
@@ -31,7 +32,7 @@ export default function ConfirmationScreen() {
           alignItems="center"
           justifyContent="center"
         >
-          <Text size="2xl">✓</Text>
+          <Icon icon={CheckCircle} size={40} weight="fill" color="success" />
         </YStack>
 
         <YStack gap="$2" alignItems="center">

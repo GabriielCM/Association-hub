@@ -3,7 +3,8 @@ import { FlatList, StyleSheet, RefreshControl } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Text, Heading, Card, Spinner } from '@ahub/ui';
+import { Text, Heading, Card, Spinner, Icon } from '@ahub/ui';
+import { Fire, Storefront } from '@ahub/ui/src/icons';
 import { formatPoints } from '@ahub/shared/utils';
 import { useCachedBalance } from '@/stores/wallet.store';
 import { useCategories } from '@/features/store/hooks/useCategories';
@@ -109,9 +110,7 @@ export default function LojaScreen() {
                 <YStack paddingHorizontal="$4" paddingTop="$3">
                   <XStack justifyContent="space-between" alignItems="center">
                     <Heading level={5}>Promoções</Heading>
-                    <Text size="sm" color="accent">
-                      🔥
-                    </Text>
+                    <Icon icon={Fire} size="sm" color="error" />
                   </XStack>
                 </YStack>
               );
@@ -172,7 +171,7 @@ export default function LojaScreen() {
                     justifyContent="center"
                     paddingVertical="$6"
                   >
-                    <Text size="2xl">🛍️</Text>
+                    <Icon icon={Storefront} size="xl" color="muted" weight="duotone" />
                     <Text weight="semibold">Nenhum produto em destaque</Text>
                     <Text color="secondary" size="sm" align="center">
                       Explore as categorias para encontrar produtos

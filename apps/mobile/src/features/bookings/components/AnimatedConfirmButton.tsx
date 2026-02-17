@@ -15,6 +15,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { colors } from '@ahub/ui/themes';
 import { NativeViewFallback } from '@ahub/ui';
+import Check from 'phosphor-react-native/src/icons/Check';
 
 interface AnimatedConfirmButtonProps {
   price: number | null;
@@ -208,7 +209,7 @@ export function AnimatedConfirmButton({
 
           {/* Check mark */}
           <Animated.View style={[styles.checkContainer, checkStyle]}>
-            <Animated.Text style={styles.checkText}>✓</Animated.Text>
+            <Check size={24} color="#FFFFFF" weight="bold" />
           </Animated.View>
 
           {/* Success text */}

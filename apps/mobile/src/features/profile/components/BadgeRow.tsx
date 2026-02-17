@@ -1,6 +1,7 @@
 import { Pressable, View, StyleSheet } from 'react-native';
 import { XStack } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { Medal } from '@ahub/ui/src/icons';
 import type { ProfileBadge } from '@ahub/shared/types';
 
 interface BadgeRowProps {
@@ -22,9 +23,11 @@ export function BadgeRow({
       <XStack gap="$2" alignItems="center">
         {visible.map((badge) => (
           <View key={badge.id} style={styles.badgeIcon}>
-            <Text style={styles.badgeEmoji}>
-              {badge.iconUrl || '🏆'}
-            </Text>
+            {badge.iconUrl ? (
+              <Text style={styles.badgeEmoji}>{badge.iconUrl}</Text>
+            ) : (
+              <Icon icon={Medal} size="sm" color="primary" />
+            )}
           </View>
         ))}
         {remaining > 0 && (

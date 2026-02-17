@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./themes": "./src/themes/index.ts",
     "./components": "./src/components/index.ts",
+    "./src/icons": "./src/icons/index.ts",
     "./tamagui.config": "./tamagui.config.ts"
   },
   "scripts": {

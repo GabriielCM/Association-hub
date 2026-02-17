@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet, Image } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { router } from 'expo-router';
-import { Card, Text } from '@ahub/ui';
+import { Card, Text, Icon } from '@ahub/ui';
+import { Storefront, Star } from '@ahub/ui/src/icons';
 import { formatPoints, formatCurrency } from '@ahub/shared/utils';
 import { ProductTypeBadge } from './ProductTypeBadge';
 import { FavoriteButton } from './FavoriteButton';
@@ -39,7 +40,7 @@ export function ProductCard({ product, width = '47%' }: ProductCardProps) {
               />
             ) : (
               <View style={styles.imagePlaceholder}>
-                <Text size="2xl">🛍️</Text>
+                <Icon icon={Storefront} size="xl" color="muted" />
               </View>
             )}
 
@@ -75,7 +76,7 @@ export function ProductCard({ product, width = '47%' }: ProductCardProps) {
             {/* Rating */}
             {product.reviewCount > 0 && (
               <XStack gap="$1" alignItems="center">
-                <Text size="xs">⭐</Text>
+                <Icon icon={Star} size="sm" weight="fill" color="#F59E0B" />
                 <Text size="xs" color="secondary">
                   {product.averageRating?.toFixed(1)} ({product.reviewCount})
                 </Text>

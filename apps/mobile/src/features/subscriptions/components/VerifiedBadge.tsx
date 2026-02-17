@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { Text } from '@ahub/ui';
+import SealCheck from 'phosphor-react-native/src/icons/SealCheck';
 import { useBenefits } from '../hooks/useMySubscription';
 
 interface VerifiedBadgeProps {
@@ -18,28 +18,10 @@ export function VerifiedBadge({ size = 'sm', isVerified }: VerifiedBadgeProps) {
 
   return (
     <View
-      style={{
-        width: dimension,
-        height: dimension,
-        borderRadius: dimension / 2,
-        backgroundColor: '#FFD700',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
       accessibilityLabel="Membro verificado"
       accessibilityRole="image"
     >
-      <Text
-        style={{
-          fontSize: dimension * 0.6,
-          color: '#FFFFFF',
-          fontWeight: '700',
-          lineHeight: dimension,
-          textAlign: 'center',
-        }}
-      >
-        ✓
-      </Text>
+      <SealCheck size={dimension} color="#FFD700" weight="fill" />
     </View>
   );
 }

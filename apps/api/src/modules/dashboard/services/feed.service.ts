@@ -28,6 +28,11 @@ export class FeedService {
             id: true,
             name: true,
             avatarUrl: true,
+            subscriptions: {
+              where: { status: 'ACTIVE' },
+              select: { id: true },
+              take: 1,
+            },
           },
         },
         likes: {
@@ -114,12 +119,14 @@ export class FeedService {
 
   private formatPost(post: any, currentUserId: string): PostResponseDto {
     const liked = post.likes?.length > 0;
+    const isVerified = post.author.subscriptions?.length > 0;
 
     const author: PostAuthorDto = {
       id: post.author.id,
       name: post.author.name,
       avatar_url: post.author.avatarUrl || undefined,
-    };
+      ...(isVerified && { is_verified: true }),
+    } as PostAuthorDto;
 
     const content: PostContentDto = {
       image_url: post.imageUrl || undefined,

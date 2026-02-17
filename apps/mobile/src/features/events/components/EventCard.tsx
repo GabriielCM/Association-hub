@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Animated, Pressable, StyleSheet } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
 import { router } from 'expo-router';
-import { Card, Text, Badge } from '@ahub/ui';
+import { Card, Text, Badge, Icon } from '@ahub/ui';
+import { EVENT_ICONS } from '@ahub/ui/src/icons';
 import type { EventListItem } from '@ahub/shared/types';
 import { resolveUploadUrl } from '@/config/constants';
 
@@ -119,9 +120,12 @@ export function EventCard({ event }: EventCardProps) {
               alignItems="center"
               justifyContent="center"
             >
-              <Text style={{ fontSize: 32 }}>
-                {isOngoing ? '🔴' : '📅'}
-              </Text>
+              <Icon
+                icon={isOngoing ? EVENT_ICONS.live : EVENT_ICONS.date}
+                size="lg"
+                color={isOngoing ? 'error' : 'muted'}
+                weight="duotone"
+              />
             </View>
           )}
 
@@ -151,12 +155,18 @@ export function EventCard({ event }: EventCardProps) {
               <Text weight="bold" size="lg" numberOfLines={2}>
                 {event.title}
               </Text>
-              <Text color="secondary" size="sm">
-                📍 {event.locationName}
-              </Text>
-              <Text color="secondary" size="sm">
-                📅 {formatEventDate(event.startDate)}
-              </Text>
+              <XStack gap="$1" alignItems="center">
+                <Icon icon={EVENT_ICONS.location} size="sm" color="secondary" />
+                <Text color="secondary" size="sm">
+                  {event.locationName}
+                </Text>
+              </XStack>
+              <XStack gap="$1" alignItems="center">
+                <Icon icon={EVENT_ICONS.date} size="sm" color="secondary" />
+                <Text color="secondary" size="sm">
+                  {formatEventDate(event.startDate)}
+                </Text>
+              </XStack>
             </YStack>
             <YStack alignItems="flex-end" gap="$1">
               <Badge variant="success">+{event.pointsTotal} pts</Badge>

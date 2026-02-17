@@ -34,6 +34,10 @@ export type { SafeImageProps } from './SafeImage';
 export { ScreenHeader } from './ScreenHeader';
 export type { ScreenHeaderProps } from './ScreenHeader';
 
+export { Icon } from './Icon';
+export type { IconProps, IconColor, IconSize, PhosphorIcon } from './Icon';
+export type { IconWeight } from './Icon';
+
 export { Loading, Spinner, Skeleton, LoadingOverlay, FullPageLoading } from './Loading';
 export type {
   SpinnerProps,

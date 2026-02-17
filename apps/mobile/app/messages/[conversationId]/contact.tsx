@@ -1,7 +1,9 @@
 import { Alert } from 'react-native';
 import { ScrollView, StyleSheet } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Text, Avatar, Card, Button, ScreenHeader } from '@ahub/ui';
+import { Text, Avatar, Card, Button, ScreenHeader, Icon } from '@ahub/ui';
+import { SpeakerSlash, Bell, Warning } from '@ahub/ui/src/icons';
+import Prohibit from 'phosphor-react-native/src/icons/Prohibit';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/auth.store';
@@ -146,7 +148,7 @@ export default function ContactDetailScreen() {
             <Card variant="flat" pressable onPress={handleToggleMute}>
               <XStack justifyContent="space-between" alignItems="center">
                 <Text weight="medium">Silenciar conversa</Text>
-                <Text>{isMuted ? '🔇' : '🔔'}</Text>
+                <Icon icon={isMuted ? SpeakerSlash : Bell} size="md" color="secondary" />
               </XStack>
             </Card>
 
@@ -156,7 +158,7 @@ export default function ContactDetailScreen() {
                 <Text weight="medium" color="error">
                   Bloquear
                 </Text>
-                <Text>🚫</Text>
+                <Icon icon={Prohibit} size="md" color="error" />
               </XStack>
             </Card>
 
@@ -166,7 +168,7 @@ export default function ContactDetailScreen() {
                 <Text weight="medium" color="error">
                   Denunciar
                 </Text>
-                <Text>⚠️</Text>
+                <Icon icon={Warning} size="md" color="error" />
               </XStack>
             </Card>
           </YStack>

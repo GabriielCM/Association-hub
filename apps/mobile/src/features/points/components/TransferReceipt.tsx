@@ -1,6 +1,7 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Heading, Button, Avatar, Card } from '@ahub/ui';
+import { Text, Heading, Button, Avatar, Card, Icon } from '@ahub/ui';
+import { CheckCircle } from '@ahub/ui/src/icons';
 import { formatPoints } from '@ahub/shared/utils';
 import type { TransferResult } from '@ahub/shared/types';
 
@@ -38,7 +39,7 @@ export function TransferReceipt({ result, message, onClose }: TransferReceiptPro
     >
       <YStack gap="$4" alignItems="center">
         <View style={styles.checkCircle}>
-          <Text style={styles.checkIcon}>✓</Text>
+          <Icon icon={CheckCircle} size={28} color="#16A34A" weight="fill" />
         </View>
 
         <Heading level={3} align="center">

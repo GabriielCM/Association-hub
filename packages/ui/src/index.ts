@@ -4,6 +4,9 @@ export * from './themes';
 // Components
 export * from './components';
 
+// Icons
+export * from './icons';
+
 // Re-export Tamagui core utilities
 export {
   styled,

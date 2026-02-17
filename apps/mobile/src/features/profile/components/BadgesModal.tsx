@@ -2,7 +2,8 @@ import { useState, useCallback } from 'react';
 import { Modal, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Heading, Button } from '@ahub/ui';
+import { Text, Heading, Button, Icon } from '@ahub/ui';
+import { Medal } from '@ahub/ui/src/icons';
 import { BadgeCard } from './BadgeCard';
 import type { UserBadge } from '@ahub/shared/types';
 
@@ -94,7 +95,7 @@ export function BadgesModal({
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <YStack alignItems="center" paddingVertical="$8">
-                <Text size="lg">🏆</Text>
+                <Icon icon={Medal} size="lg" color="muted" weight="duotone" />
                 <Text color="secondary" align="center" marginTop="$2">
                   Você ainda não conquistou nenhum badge.
                 </Text>

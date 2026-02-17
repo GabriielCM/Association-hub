@@ -89,6 +89,7 @@ model User {
   reports              Report[]
   suspensions          UserSuspension[]
   dailyPostTrackers    DailyPostTracker[]
+  orders               Order[]
 
   @@map("users")
 }
@@ -1415,6 +1416,7 @@ model Order {
   id     String @id @default(cuid())
   code   String @unique // 6-char alphanumeric
   userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
 
   source     OrderSource
   sourceId   String      @map("source_id") // checkout_id or sale_id

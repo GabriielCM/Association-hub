@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Heading, Button, Spinner } from '@ahub/ui';
+import { Text, Heading, Button, Spinner, Icon } from '@ahub/ui';
+import { PersonSimpleRun } from '@ahub/ui/src/icons';
 import type { StravaStatus } from '@ahub/shared/types';
 
 interface StravaConnectedViewProps {
@@ -21,7 +22,7 @@ export function StravaConnectedView({
       {/* Status Header */}
       <YStack alignItems="center" gap="$2">
         <View style={styles.iconContainer}>
-          <Text style={{ fontSize: 40 }}>🏃</Text>
+          <Icon icon={PersonSimpleRun} size={40} color="primary" />
         </View>
         <Heading level={4}>{strava.athleteName ?? 'Atleta'}</Heading>
         <View style={styles.connectedBadge}>

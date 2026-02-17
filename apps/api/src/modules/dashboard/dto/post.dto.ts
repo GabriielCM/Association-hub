@@ -32,6 +32,9 @@ export class PostAuthorDto {
 
   @ApiPropertyOptional()
   avatar_url?: string;
+
+  @ApiPropertyOptional({ description: 'Se o autor tem assinatura ativa (badge verificado)' })
+  is_verified?: boolean;
 }
 
 export class PostContentDto {

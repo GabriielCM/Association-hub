@@ -1,14 +1,16 @@
 import { FlatList } from 'react-native';
 import { XStack, YStack } from 'tamagui';
 
-import { Text, Avatar, Card } from '@ahub/ui';
+import { Text, Avatar, Card, Icon } from '@ahub/ui';
+import { Trophy, Medal } from '@ahub/ui/src/icons';
+import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import { formatPoints } from '@ahub/shared/utils';
 import type { RankingEntry, RankingType } from '@ahub/shared/types';
 
-const POSITION_STYLES: Record<number, { emoji: string; color: string }> = {
-  1: { emoji: '🥇', color: '#FFD700' },
-  2: { emoji: '🥈', color: '#C0C0C0' },
-  3: { emoji: '🥉', color: '#CD7F32' },
+const POSITION_STYLES: Record<number, { icon: PhosphorIcon; color: string }> = {
+  1: { icon: Trophy, color: '#FFD700' },
+  2: { icon: Medal, color: '#C0C0C0' },
+  3: { icon: Medal, color: '#CD7F32' },
 };
 
 function formatValue(value: number, type: RankingType): string {
@@ -78,7 +80,7 @@ function RankingRow({ entry, type }: { entry: RankingEntry; type: RankingType })
     >
       <XStack width={36} justifyContent="center">
         {posStyle ? (
-          <Text size="lg">{posStyle.emoji}</Text>
+          <Icon icon={posStyle.icon} size="lg" color={posStyle.color} weight="fill" />
         ) : (
           <Text color="secondary" size="sm" weight="semibold" align="center">
             {entry.position}

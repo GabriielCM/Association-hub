@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Image } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Text, GlassCard } from '@ahub/ui';
+import { Text, GlassCard, Icon } from '@ahub/ui';
+import { Buildings } from '@ahub/ui/src/icons';
 import { resolveUploadUrl } from '@/config/constants';
 import { BookingStatusBadge } from './BookingStatusBadge';
 import { PriceDisplay } from './PriceDisplay';
@@ -54,7 +55,7 @@ export function BookingCard({ booking, onPress, onCancel }: BookingCardProps) {
                   />
                 ) : (
                   <View style={styles.imagePlaceholder}>
-                    <Text size="sm">🏠</Text>
+                    <Icon icon={Buildings} size="sm" color="primary" weight="duotone" />
                   </View>
                 )}
               </View>

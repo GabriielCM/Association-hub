@@ -1,7 +1,10 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
 import { YStack } from 'tamagui';
-import { Text, Button, Spinner } from '@ahub/ui';
+import { Text, Button, Spinner, Icon } from '@ahub/ui';
+import { Camera } from '@ahub/ui/src/icons';
+import Flashlight from 'phosphor-react-native/src/icons/Flashlight';
+import Lightbulb from 'phosphor-react-native/src/icons/Lightbulb';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import type { BarcodeScanningResult } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
@@ -49,7 +52,7 @@ export function QrScanner({ onScan, isProcessing }: QrScannerProps) {
   if (!permission.granted) {
     return (
       <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" gap="$4">
-        <Text style={{ fontSize: 48 }}>📷</Text>
+        <Icon icon={Camera} size={48} color="muted" weight="duotone" />
         <Text align="center">
           Permissão de câmera necessária para escanear QR Codes.
         </Text>
@@ -93,7 +96,7 @@ export function QrScanner({ onScan, isProcessing }: QrScannerProps) {
             onPress={toggleFlash}
             style={[styles.flashButton, flashEnabled && styles.flashActive]}
           >
-            <Text style={{ fontSize: 20 }}>{flashEnabled ? '🔦' : '💡'}</Text>
+            <Icon icon={flashEnabled ? Flashlight : Lightbulb} size="md" color="#FFFFFF" weight={flashEnabled ? 'fill' : 'regular'} />
           </Pressable>
         </>
       )}

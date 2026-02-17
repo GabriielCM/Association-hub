@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Image, StyleSheet } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Text, Heading, Badge } from '@ahub/ui';
+import { Heading, Badge, Icon } from '@ahub/ui';
+import { EVENT_ICONS } from '@ahub/ui/src/icons';
 import type { EventDetail } from '@ahub/shared/types';
 import { resolveUploadUrl } from '@/config/constants';
 
@@ -114,9 +115,12 @@ export function EventHeader({ event }: EventHeaderProps) {
           </>
         ) : (
           <View flex={1} alignItems="center" justifyContent="center">
-            <Text style={{ fontSize: 48 }}>
-              {isOngoing ? '🔴' : '📅'}
-            </Text>
+            <Icon
+              icon={isOngoing ? EVENT_ICONS.live : EVENT_ICONS.date}
+              size="xl"
+              color={isOngoing ? 'error' : 'muted'}
+              weight="duotone"
+            />
           </View>
         )}
       </View>

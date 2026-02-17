@@ -1,6 +1,9 @@
 import { Modal, ScrollView, Pressable, Linking, StyleSheet, View } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Heading, Button, Avatar, Spinner, Badge } from '@ahub/ui';
+import { Text, Heading, Button, Avatar, Spinner, Badge, Icon } from '@ahub/ui';
+import { Globe, ChatCircle, Camera } from '@ahub/ui/src/icons';
+import Phone from 'phosphor-react-native/src/icons/Phone';
+import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import { usePartnerDetails } from '../hooks/useBenefits';
 
 interface PartnerDetailSheetProps {
@@ -73,28 +76,28 @@ export function PartnerDetailSheet({ partnerId, visible, onClose }: PartnerDetai
                 <Text weight="semibold" size="lg">Contato</Text>
                 {partner.contact.phone && (
                   <ContactRow
-                    icon="📞"
+                    icon={Phone}
                     text={partner.contact.phone}
                     onPress={() => openUrl(`tel:${partner.contact.phone}`)}
                   />
                 )}
                 {partner.contact.website && (
                   <ContactRow
-                    icon="🌐"
+                    icon={Globe}
                     text={partner.contact.website}
                     onPress={() => openUrl(partner.contact.website!)}
                   />
                 )}
                 {partner.contact.instagram && (
                   <ContactRow
-                    icon="📸"
+                    icon={Camera}
                     text={`@${partner.contact.instagram}`}
                     onPress={() => openUrl(`https://instagram.com/${partner.contact.instagram}`)}
                   />
                 )}
                 {partner.contact.whatsapp && (
                   <ContactRow
-                    icon="💬"
+                    icon={ChatCircle}
                     text={partner.contact.whatsapp}
                     onPress={() => openUrl(`https://wa.me/${partner.contact.whatsapp}`)}
                   />
@@ -142,11 +145,11 @@ export function PartnerDetailSheet({ partnerId, visible, onClose }: PartnerDetai
   );
 }
 
-function ContactRow({ icon, text, onPress }: { icon: string; text: string; onPress: () => void }) {
+function ContactRow({ icon, text, onPress }: { icon: PhosphorIcon; text: string; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => pressed && { opacity: 0.6 }}>
       <XStack gap="$2" alignItems="center" paddingVertical="$1">
-        <Text style={{ fontSize: 16 }}>{icon}</Text>
+        <Icon icon={icon} size="sm" color="primary" />
         <Text color="primary" size="sm">{text}</Text>
       </XStack>
     </Pressable>

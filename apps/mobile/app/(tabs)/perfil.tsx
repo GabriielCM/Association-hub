@@ -4,7 +4,8 @@ import { router } from 'expo-router';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Text, Heading, Card } from '@ahub/ui';
+import { Text, Heading, Card, Icon } from '@ahub/ui';
+import { PROFILE_ICONS } from '@ahub/ui/src/icons';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import { ProfileHeader } from '@/features/profile/components/ProfileHeader';
@@ -41,13 +42,13 @@ export default function PerfilScreen() {
                 onPress={() => router.push('/messages')}
                 style={styles.settingsButton}
               >
-                <Text style={styles.settingsIcon}>💬</Text>
+                <Icon icon={PROFILE_ICONS.messages} size="lg" color="inherit" />
               </Pressable>
               <Pressable
                 onPress={() => router.push('/profile/settings')}
                 style={styles.settingsButton}
               >
-                <Text style={styles.settingsIcon}>⚙️</Text>
+                <Icon icon={PROFILE_ICONS.settings} size="lg" color="inherit" />
               </Pressable>
             </XStack>
           </XStack>

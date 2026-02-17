@@ -12,6 +12,9 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { YStack, XStack, View } from 'tamagui';
 import { Text, Avatar, Button, ScreenHeader } from '@ahub/ui';
+import Check from 'phosphor-react-native/src/icons/Check';
+import Camera from 'phosphor-react-native/src/icons/Camera';
+import X from 'phosphor-react-native/src/icons/X';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSearchUsers } from '@/features/points/hooks/useRecipientSearch';
@@ -152,9 +155,7 @@ export function CreateGroupScreen() {
               justifyContent="center"
             >
               {isSelected && (
-                <Text color="white" style={{ fontSize: 12 }} weight="bold">
-                  ✓
-                </Text>
+                <Check size={12} color="#FFFFFF" weight="bold" />
               )}
             </View>
           </XStack>
@@ -190,15 +191,19 @@ export function CreateGroupScreen() {
                       alignItems="center"
                       justifyContent="center"
                     >
-                      <Text style={{ fontSize: 28 }}>
-                        {isUploadingImage ? '...' : '📷'}
-                      </Text>
+                      {isUploadingImage ? (
+                        <Text style={{ fontSize: 28 }}>...</Text>
+                      ) : (
+                        <Camera size={28} color="#8B5CF6" />
+                      )}
                     </View>
                   )}
                   <View style={styles.cameraOverlay}>
-                    <Text style={{ fontSize: 14, color: '#fff' }}>
-                      {isUploadingImage ? '...' : '📷'}
-                    </Text>
+                    {isUploadingImage ? (
+                      <Text style={{ fontSize: 14, color: '#fff' }}>...</Text>
+                    ) : (
+                      <Camera size={14} color="#fff" />
+                    )}
                   </View>
                 </View>
                 <Text color="secondary" size="xs">
@@ -333,7 +338,7 @@ export function CreateGroupScreen() {
                   <Text color="white" size="xs" weight="semibold">
                     {user.name.split(' ')[0]}
                   </Text>
-                  <Text color="white" size="xs">✕</Text>
+                  <X size={12} color="#FFFFFF" />
                 </XStack>
               </Pressable>
             ))}

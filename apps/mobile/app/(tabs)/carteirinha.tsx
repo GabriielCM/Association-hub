@@ -4,7 +4,8 @@ import { router } from 'expo-router';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Text, Heading, Button, Spinner } from '@ahub/ui';
+import { Text, Heading, Button, Spinner, Icon } from '@ahub/ui';
+import { CreditCard } from '@ahub/ui/src/icons';
 import { useBrightness } from '@/hooks/useBrightness';
 import { useCard, useCardQrCode } from '@/features/card/hooks/useCard';
 import { useMySubscription } from '@/features/subscriptions/hooks/useMySubscription';
@@ -50,7 +51,7 @@ export default function CarteirinhaScreen() {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" gap="$4">
-          <Text style={{ fontSize: 48 }}>💳</Text>
+          <Icon icon={CreditCard} weight="duotone" size="xl" color="muted" />
           <Text color="secondary" align="center">
             Não foi possível carregar sua carteirinha.
           </Text>

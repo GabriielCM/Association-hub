@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { Modal, StyleSheet } from 'react-native';
 import { YStack } from 'tamagui';
-import { Text, Heading, Button } from '@ahub/ui';
+import { Text, Heading, Button, Icon } from '@ahub/ui';
+import { Trophy, Confetti, Medal } from '@ahub/ui/src/icons';
 import { useCheckinCelebration, useEventsStore } from '@/stores/events.store';
 
 export function CelebrationOverlay() {
@@ -39,9 +40,12 @@ export function CelebrationOverlay() {
           width="85%"
           maxWidth={340}
         >
-          <Text style={{ fontSize: 64 }}>
-            {celebration.badgeAwarded ? '🏆' : '🎉'}
-          </Text>
+          <Icon
+            icon={celebration.badgeAwarded ? Trophy : Confetti}
+            size={64}
+            color={celebration.badgeAwarded ? 'warning' : 'primary'}
+            weight="duotone"
+          />
 
           <Heading level={3}>Check-in realizado!</Heading>
 
@@ -61,7 +65,7 @@ export function CelebrationOverlay() {
               padding="$3"
               alignItems="center"
             >
-              <Text style={{ fontSize: 32 }}>🏅</Text>
+              <Icon icon={Medal} size="lg" color="warning" weight="fill" />
               <Text weight="bold" size="sm">
                 Badge conquistado!
               </Text>

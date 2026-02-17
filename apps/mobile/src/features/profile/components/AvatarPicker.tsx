@@ -1,6 +1,7 @@
 import { Pressable, View, StyleSheet, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Avatar, Text } from '@ahub/ui';
+import Camera from 'phosphor-react-native/src/icons/Camera';
 
 interface AvatarPickerProps {
   currentAvatarUrl?: string | undefined;
@@ -59,9 +60,11 @@ export function AvatarPicker({
           size="2xl"
         />
         <View style={styles.cameraOverlay}>
-          <Text style={styles.cameraIcon}>
-            {isUploading ? '...' : '📷'}
-          </Text>
+          {isUploading ? (
+            <Text style={styles.cameraIcon}>...</Text>
+          ) : (
+            <Camera size={16} color="#FFFFFF" />
+          )}
         </View>
       </View>
     </Pressable>

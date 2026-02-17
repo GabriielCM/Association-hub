@@ -2,7 +2,8 @@ import { ScrollView } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Button, Card, Spinner } from '@ahub/ui';
+import { Text, Button, Card, Spinner, Icon } from '@ahub/ui';
+import { MISC_ICONS } from '@ahub/ui/src/icons';
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import { ProfileHeader } from '@/features/profile/components/ProfileHeader';
 import { ProfileStats } from '@/features/profile/components/ProfileStats';
@@ -28,7 +29,7 @@ export default function UserProfileScreen() {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" gap="$4">
-          <Text style={{ fontSize: 40 }}>😕</Text>
+          <Icon icon={MISC_ICONS.warning} size="xl" color="muted" weight="duotone" />
           <Text color="secondary" align="center">
             {error?.message || 'Perfil não encontrado'}
           </Text>

@@ -5,3 +5,4 @@ export * from './posts.service';
 export * from './feed.service';
 export * from './comments.service';
 export * from './polls.service';
+export * from './admin-dashboard.service';

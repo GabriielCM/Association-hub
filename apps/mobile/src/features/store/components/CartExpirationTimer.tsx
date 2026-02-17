@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { XStack } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { Timer, Warning } from '@ahub/ui/src/icons';
 
 interface CartExpirationTimerProps {
   reservedUntil: string;
@@ -52,7 +53,7 @@ export function CartExpirationTimer({
       backgroundColor={isUrgent ? '#FEE2E2' : '#FEF3C7'}
       alignItems="center"
     >
-      <Text size="sm">{isUrgent ? '⚠️' : '⏱️'}</Text>
+      <Icon icon={isUrgent ? Warning : Timer} size="sm" color={isUrgent ? 'error' : 'warning'} />
       <Text size="sm" color={isUrgent ? 'error' : 'warning'}>
         Reserva expira em {timeStr}
       </Text>

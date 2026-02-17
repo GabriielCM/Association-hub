@@ -6,7 +6,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, Input, Text, Heading, Card } from '@ahub/ui';
+import { Button, Input, Text, Heading, Card, Icon } from '@ahub/ui';
+import CheckCircle from 'phosphor-react-native/src/icons/CheckCircle';
 import { resetPasswordSchema, type ResetPasswordInput } from '@ahub/shared/validation';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -48,7 +49,7 @@ export default function ForgotPasswordScreen() {
                 alignItems="center"
                 justifyContent="center"
               >
-                <Text size="2xl">✓</Text>
+                <Icon icon={CheckCircle} size="xl" color="success" weight="fill" />
               </View>
 
               <Heading level={3} align="center">

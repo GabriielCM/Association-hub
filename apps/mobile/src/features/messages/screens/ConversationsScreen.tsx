@@ -7,7 +7,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { ChatCircle } from '@ahub/ui/src/icons';
 import { router } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/auth.store';
@@ -116,7 +117,7 @@ export function ConversationsScreen() {
                 padding="$6"
                 gap="$2"
               >
-                <Text size="2xl">💬</Text>
+                <Icon icon={ChatCircle} size="xl" color="muted" weight="duotone" />
                 <Text color="secondary" size="sm" align="center">
                   {search
                     ? 'Nenhuma conversa encontrada'

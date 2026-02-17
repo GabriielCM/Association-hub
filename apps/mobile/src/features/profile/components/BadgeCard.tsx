@@ -1,6 +1,7 @@
 import { Pressable, View, StyleSheet } from 'react-native';
 import { YStack } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { Medal, Check } from '@ahub/ui/src/icons';
 import type { UserBadge } from '@ahub/shared/types';
 
 interface BadgeCardProps {
@@ -23,7 +24,7 @@ export function BadgeCard({ badge, isSelected, onPress }: BadgeCardProps) {
       ]}
     >
       <View style={styles.iconContainer}>
-        <Text style={styles.icon}>{badge.iconUrl || '🏆'}</Text>
+        <Icon icon={Medal} size="lg" color="primary" />
       </View>
       <YStack alignItems="center" gap="$0.5" flex={1}>
         <Text weight="medium" size="xs" align="center" numberOfLines={2}>
@@ -35,7 +36,7 @@ export function BadgeCard({ badge, isSelected, onPress }: BadgeCardProps) {
       </YStack>
       {isSelected && (
         <View style={styles.checkmark}>
-          <Text style={{ fontSize: 10, color: '#fff' }}>✓</Text>
+          <Check size={10} color="#fff" weight="bold" />
         </View>
       )}
     </Pressable>

@@ -20,6 +20,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { UploadService } from '../../../common/services/upload.service';
 import { StoriesService } from '../services/stories.service';
 import { StoryType } from '@prisma/client';
 import {
@@ -35,7 +36,10 @@ import {
 @UseGuards(JwtAuthGuard)
 @Controller('stories')
 export class StoriesController {
-  constructor(private readonly storiesService: StoriesService) {}
+  constructor(
+    private readonly storiesService: StoriesService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Listar stories disponíveis' })
@@ -83,8 +87,8 @@ export class StoriesController {
     @Request() req: any,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<StoryResponseDto> {
-    // TODO: Upload file to S3 and get URL
-    const mediaUrl = `/uploads/stories/${file.filename || 'temp'}`;
+    const uploaded = await this.uploadService.uploadStoryMedia(file);
+    const mediaUrl = uploaded.url;
     const isVideo = file.mimetype.startsWith('video/');
 
     return this.storiesService.createStory(

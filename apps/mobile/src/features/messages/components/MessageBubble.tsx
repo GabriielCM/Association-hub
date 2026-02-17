@@ -1,16 +1,18 @@
 import { useCallback } from 'react';
 import { Pressable } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
-import { Text, Avatar } from '@ahub/ui';
+import { Text, Avatar, Icon } from '@ahub/ui';
+import { Check, Checks, CircleNotch, Camera, Microphone } from '@ahub/ui/src/icons';
 import type { Message, MessageStatus } from '@ahub/shared/types';
+import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import { ImageMessage } from './ImageMessage';
 import { AudioMessage } from './AudioMessage';
 
-const STATUS_ICONS: Record<MessageStatus, string> = {
-  SENDING: '○',
-  SENT: '✓',
-  DELIVERED: '✓✓',
-  READ: '✓✓',
+const STATUS_ICON_MAP: Record<MessageStatus, { icon: PhosphorIcon; readColor?: string }> = {
+  SENDING: { icon: CircleNotch },
+  SENT: { icon: Check },
+  DELIVERED: { icon: Checks },
+  READ: { icon: Checks, readColor: '#60A5FA' },
 };
 
 const SENDER_COLORS = [
@@ -118,18 +120,40 @@ export function MessageBubble({
                 >
                   {message.replyTo.senderName}
                 </Text>
-                <Text
-                  size="xs"
-                  color={isOwn ? undefined : 'secondary'}
-                  style={isOwn ? { color: 'rgba(255,255,255,0.7)' } : undefined}
-                  numberOfLines={1}
-                >
-                  {message.replyTo.contentType === 'IMAGE'
-                    ? '📷 Foto'
-                    : message.replyTo.contentType === 'AUDIO'
-                      ? '🎤 Áudio'
-                      : message.replyTo.content}
-                </Text>
+                {message.replyTo.contentType === 'IMAGE' ? (
+                  <XStack alignItems="center" gap="$1">
+                    <Icon icon={Camera} size="sm" color={isOwn ? 'rgba(255,255,255,0.7)' : 'secondary'} />
+                    <Text
+                      size="xs"
+                      color={isOwn ? undefined : 'secondary'}
+                      style={isOwn ? { color: 'rgba(255,255,255,0.7)' } : undefined}
+                      numberOfLines={1}
+                    >
+                      Foto
+                    </Text>
+                  </XStack>
+                ) : message.replyTo.contentType === 'AUDIO' ? (
+                  <XStack alignItems="center" gap="$1">
+                    <Icon icon={Microphone} size="sm" color={isOwn ? 'rgba(255,255,255,0.7)' : 'secondary'} />
+                    <Text
+                      size="xs"
+                      color={isOwn ? undefined : 'secondary'}
+                      style={isOwn ? { color: 'rgba(255,255,255,0.7)' } : undefined}
+                      numberOfLines={1}
+                    >
+                      Áudio
+                    </Text>
+                  </XStack>
+                ) : (
+                  <Text
+                    size="xs"
+                    color={isOwn ? undefined : 'secondary'}
+                    style={isOwn ? { color: 'rgba(255,255,255,0.7)' } : undefined}
+                    numberOfLines={1}
+                  >
+                    {message.replyTo.content}
+                  </Text>
+                )}
               </View>
             </Pressable>
           )}
@@ -169,28 +193,21 @@ export function MessageBubble({
             >
               {formatTime(message.createdAt)}
             </Text>
-            {isOwn && (
-              <Text
-                size="xs"
-                color={
-                  message.status === 'READ'
-                    ? undefined
-                    : isOwn
-                      ? undefined
-                      : 'secondary'
-                }
-                style={{
-                  fontSize: 10,
-                  ...(message.status === 'READ'
-                    ? { color: '#60A5FA' }
-                    : isOwn
-                      ? { color: 'rgba(255,255,255,0.6)' }
-                      : {}),
-                }}
-              >
-                {STATUS_ICONS[message.status]}
-              </Text>
-            )}
+            {isOwn && (() => {
+              const statusConfig = STATUS_ICON_MAP[message.status];
+              const iconColor = statusConfig.readColor
+                ? statusConfig.readColor
+                : isOwn
+                  ? 'rgba(255,255,255,0.6)'
+                  : undefined;
+              return (
+                <Icon
+                  icon={statusConfig.icon}
+                  size={12}
+                  color={iconColor ?? 'secondary'}
+                />
+              );
+            })()}
           </XStack>
         </YStack>
       </Pressable>

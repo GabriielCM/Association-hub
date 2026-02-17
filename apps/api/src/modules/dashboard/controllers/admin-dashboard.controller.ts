@@ -21,6 +21,7 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { ModerationService } from '../services/moderation.service';
 import { PostsService } from '../services/posts.service';
+import { AdminDashboardService, AdminStatsResponse } from '../services/admin-dashboard.service';
 import { UserRole } from '@prisma/client';
 import {
   ReportsQueryDto,
@@ -39,7 +40,15 @@ export class AdminDashboardController {
   constructor(
     private readonly moderationService: ModerationService,
     private readonly postsService: PostsService,
+    private readonly adminDashboardService: AdminDashboardService,
   ) {}
+
+  @Get('dashboard/stats')
+  @ApiOperation({ summary: 'Obter métricas agregadas do dashboard admin' })
+  @ApiResponse({ status: 200, description: 'Estatísticas do dashboard' })
+  async getStats(@Request() req: any): Promise<AdminStatsResponse> {
+    return this.adminDashboardService.getStats(req.user.associationId);
+  }
 
   @Get('reports')
   @ApiOperation({ summary: 'Listar denúncias' })

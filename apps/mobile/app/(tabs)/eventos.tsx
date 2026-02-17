@@ -2,7 +2,8 @@ import { useState, useCallback } from 'react';
 import { FlatList, RefreshControl } from 'react-native';
 import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Heading, Card, Spinner } from '@ahub/ui';
+import { Text, Heading, Card, Spinner, Icon } from '@ahub/ui';
+import { Calendar } from '@ahub/ui/src/icons';
 import { useEvents } from '@/features/events/hooks/useEvents';
 import { EventCard } from '@/features/events/components/EventCard';
 import { EventFilters } from '@/features/events/components/EventFilters';
@@ -67,7 +68,7 @@ export default function EventosScreen() {
                 justifyContent="center"
                 paddingVertical="$6"
               >
-                <Text size="2xl">📅</Text>
+                <Icon icon={Calendar} size="xl" color="muted" weight="duotone" />
                 <Text weight="semibold">Nenhum evento encontrado</Text>
                 <Text color="secondary" size="sm" align="center">
                   {filter === 'upcoming'

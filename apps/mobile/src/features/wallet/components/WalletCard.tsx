@@ -1,8 +1,9 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Heading, Card } from '@ahub/ui';
+import { Text, Heading, Card, Icon } from '@ahub/ui';
 import { formatPoints } from '@ahub/shared/utils';
 import type { WalletDashboard } from '@ahub/shared/types';
+import { QrCode } from '@ahub/ui/src/icons';
 
 interface WalletCardProps {
   dashboard: WalletDashboard;
@@ -32,7 +33,7 @@ export function WalletCard({ dashboard, onQrPress }: WalletCardProps) {
               pressed && { opacity: 0.7 },
             ]}
           >
-            <Text style={{ fontSize: 20 }}>📱</Text>
+            <Icon icon={QrCode} size="md" color="#fff" />
             <Text style={styles.qrText}>Meu QR Code</Text>
           </Pressable>
         )}

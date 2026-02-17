@@ -1,7 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, Platform } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Text, GlassCard, SafeImage } from '@ahub/ui';
+import { Text, GlassCard, SafeImage, Icon } from '@ahub/ui';
+import { Buildings } from '@ahub/ui/src/icons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -67,7 +68,7 @@ export function SpaceCard({ space, onPress }: SpaceCardProps) {
               />
             ) : (
               <View style={styles.imagePlaceholder}>
-                <Text size="xl">🏠</Text>
+                <Icon icon={Buildings} size="xl" color="primary" weight="duotone" />
               </View>
             )}
             {space.status === 'MAINTENANCE' && (

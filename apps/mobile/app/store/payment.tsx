@@ -3,7 +3,8 @@ import { Alert } from 'react-native';
 import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Text, Heading, Button, Spinner } from '@ahub/ui';
+import { Text, Heading, Button, Spinner, Icon } from '@ahub/ui';
+import { MISC_ICONS } from '@ahub/ui/src/icons';
 import { formatPoints } from '@ahub/shared/utils';
 import { isStripeAvailable } from '@/providers/StripeProvider';
 import { useProcessCheckout } from '@/features/store/hooks/useCheckout';
@@ -319,7 +320,7 @@ export default function PaymentScreen() {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$4" padding="$6">
-          <Text size="2xl">😔</Text>
+          <Icon icon={MISC_ICONS.error} size="xl" color="error" weight="duotone" />
           <Heading level={4}>Erro no pagamento</Heading>
           <Text size="sm" color="secondary" align="center">
             {errorMessage || 'Ocorreu um erro inesperado'}

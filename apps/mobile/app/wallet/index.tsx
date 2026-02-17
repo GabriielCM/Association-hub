@@ -2,7 +2,8 @@ import { ScrollView, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Button, Spinner, ScreenHeader } from '@ahub/ui';
+import { Text, Button, Spinner, ScreenHeader, Icon } from '@ahub/ui';
+import { User, CreditCard } from '@ahub/ui/src/icons';
 import { useWalletDashboard } from '@/features/wallet/hooks/useWallet';
 import { WalletCard } from '@/features/wallet/components/WalletCard';
 import { QuickActions } from '@/features/wallet/components/QuickActions';
@@ -64,7 +65,7 @@ export default function WalletHomeScreen() {
                   <XStack gap="$3" flexWrap="wrap">
                     {dashboard.recentRecipients.slice(0, 4).map((r) => (
                       <YStack key={r.id} alignItems="center" gap={4}>
-                        <Text style={{ fontSize: 28 }}>👤</Text>
+                        <Icon icon={User} size="lg" color="primary" />
                         <Text size="xs" numberOfLines={1} style={{ maxWidth: 60 }}>
                           {r.name.split(' ')[0]}
                         </Text>
@@ -76,7 +77,7 @@ export default function WalletHomeScreen() {
             </>
           ) : (
             <YStack alignItems="center" paddingVertical="$8">
-              <Text style={{ fontSize: 40 }}>💳</Text>
+              <Icon icon={CreditCard} size="xl" color="muted" weight="duotone" />
               <Text color="secondary" align="center" marginTop="$2">
                 Não foi possível carregar a carteira.
               </Text>

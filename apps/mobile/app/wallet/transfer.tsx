@@ -3,7 +3,8 @@ import { Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Heading, Button, Spinner, ScreenHeader } from '@ahub/ui';
+import { Text, Heading, Button, Spinner, ScreenHeader, Icon } from '@ahub/ui';
+import { MISC_ICONS } from '@ahub/ui/src/icons';
 import { RecipientPicker } from '@/features/points/components/RecipientPicker';
 import { TransferForm } from '@/features/points/components/TransferForm';
 import { TransferReceipt } from '@/features/points/components/TransferReceipt';
@@ -100,7 +101,7 @@ export default function WalletTransferScreen() {
 
         {step === 'confirm' && recipient && (
           <YStack flex={1} gap="$4" justifyContent="center" alignItems="center">
-            <Text style={{ fontSize: 48 }}>✅</Text>
+            <Icon icon={MISC_ICONS.success} size="xl" color="success" weight="duotone" />
             <Heading level={4} align="center">
               Confirmar transferência
             </Heading>

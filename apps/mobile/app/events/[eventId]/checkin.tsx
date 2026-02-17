@@ -6,7 +6,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import type { BarcodeScanningResult } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { Text, Button, Spinner, ScreenHeader } from '@ahub/ui';
+import { Text, Button, Spinner, ScreenHeader, Icon } from '@ahub/ui';
+import { Camera } from '@ahub/ui/src/icons';
 import { useEvent } from '@/features/events/hooks/useEvents';
 import { useCheckin } from '@/features/events/hooks/useEventMutations';
 import { useEventsStore, useCheckinCelebration } from '@/stores/events.store';
@@ -123,7 +124,7 @@ export default function CheckInScreen() {
           padding="$4"
           gap="$4"
         >
-          <Text style={{ fontSize: 48 }}>📷</Text>
+          <Icon icon={Camera} size={48} color="muted" weight="duotone" />
           <Text align="center">
             Permissao de camera necessaria para escanear QR Codes.
           </Text>

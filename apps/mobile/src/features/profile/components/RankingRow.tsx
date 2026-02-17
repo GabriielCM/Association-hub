@@ -1,16 +1,18 @@
 import { View, StyleSheet } from 'react-native';
 import { XStack, YStack } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { Trophy, Calendar, PersonSimpleRun, ChartBar } from '@ahub/ui/src/icons';
+import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import type { UserRankingEntry } from '@ahub/shared/types';
 
 interface RankingRowProps {
   ranking: UserRankingEntry;
 }
 
-const typeIcons: Record<string, string> = {
-  points: '🏆',
-  events: '📅',
-  strava: '🏃',
+const typeIcons: Record<string, PhosphorIcon> = {
+  points: Trophy,
+  events: Calendar,
+  strava: PersonSimpleRun,
 };
 
 export function RankingRow({ ranking }: RankingRowProps) {
@@ -23,7 +25,7 @@ export function RankingRow({ ranking }: RankingRowProps) {
       gap="$3"
     >
       <View style={styles.iconContainer}>
-        <Text style={styles.icon}>{typeIcons[ranking.type] || '📊'}</Text>
+        <Icon icon={typeIcons[ranking.type] || ChartBar} size="md" color="primary" />
       </View>
 
       <YStack flex={1}>

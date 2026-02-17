@@ -1,5 +1,6 @@
 import { YStack, XStack } from 'tamagui';
-import { Text, Card } from '@ahub/ui';
+import { Text, Card, Icon } from '@ahub/ui';
+import { Star } from '@ahub/ui/src/icons';
 import type { ProductReview } from '@ahub/shared/types';
 
 interface ReviewStarsProps {
@@ -11,30 +12,17 @@ const sizeMap = { sm: 12, md: 16, lg: 20 };
 
 export function ReviewStars({ rating, size = 'md' }: ReviewStarsProps) {
   const fontSize = sizeMap[size];
-  const stars = [];
-
-  for (let i = 1; i <= 5; i++) {
-    if (i <= Math.floor(rating)) {
-      stars.push('★');
-    } else if (i - 0.5 <= rating) {
-      stars.push('★');
-    } else {
-      stars.push('☆');
-    }
-  }
 
   return (
     <XStack gap={2}>
-      {stars.map((star, index) => (
-        <Text
-          key={index}
-          style={{
-            fontSize,
-            color: star === '★' ? '#F59E0B' : '#D1D5DB',
-          }}
-        >
-          {star}
-        </Text>
+      {Array.from({ length: 5 }, (_, i) => (
+        <Icon
+          key={i}
+          icon={Star}
+          size={fontSize}
+          color={i < Math.round(rating) ? '#F59E0B' : '#D1D5DB'}
+          weight={i < Math.round(rating) ? 'fill' : 'regular'}
+        />
       ))}
     </XStack>
   );

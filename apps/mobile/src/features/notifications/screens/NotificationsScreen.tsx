@@ -1,7 +1,8 @@
 import { useState, useCallback, useMemo } from 'react';
 import { FlatList, RefreshControl, Pressable, StyleSheet } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { Gear, Bell } from '@ahub/ui/src/icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNotifications, useUnreadCount } from '../hooks/useNotifications';
@@ -192,7 +193,7 @@ export function NotificationsScreen() {
               </Text>
             </Pressable>
             <Pressable onPress={() => router.push('/notifications/settings')}>
-              <Text size="lg">⚙️</Text>
+              <Icon icon={Gear} size="lg" color="secondary" />
             </Pressable>
           </XStack>
         </XStack>
@@ -221,7 +222,7 @@ export function NotificationsScreen() {
                 padding="$6"
                 gap="$2"
               >
-                <Text size="2xl">🔔</Text>
+                <Icon icon={Bell} size="xl" color="muted" />
                 <Text color="secondary" size="sm" align="center">
                   {filter === 'ALL'
                     ? 'Nenhuma notificação ainda'

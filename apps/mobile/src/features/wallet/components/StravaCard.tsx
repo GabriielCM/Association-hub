@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Card } from '@ahub/ui';
+import { Text, Card, Icon } from '@ahub/ui';
+import { PersonSimpleRun } from '@ahub/ui/src/icons';
 import type { StravaStatus } from '@ahub/shared/types';
 
 interface StravaCardProps {
@@ -16,7 +17,7 @@ export function StravaCard({ strava, onConnect, onDetails }: StravaCardProps) {
         <Card variant="flat" style={styles.connectCard}>
           <XStack alignItems="center" gap="$3">
             <View style={styles.stravaIcon}>
-              <Text style={{ fontSize: 24 }}>🏃</Text>
+              <Icon icon={PersonSimpleRun} size="lg" color="primary" />
             </View>
             <YStack flex={1}>
               <Text weight="semibold">Conectar Strava</Text>
@@ -36,7 +37,7 @@ export function StravaCard({ strava, onConnect, onDetails }: StravaCardProps) {
       <Card variant="flat">
         <YStack gap="$2">
           <XStack alignItems="center" gap="$2">
-            <Text style={{ fontSize: 20 }}>🏃</Text>
+            <Icon icon={PersonSimpleRun} size="md" color="primary" />
             <Text weight="semibold" flex={1}>Strava</Text>
             <View style={styles.connectedBadge}>
               <Text style={styles.connectedText}>Conectado</Text>

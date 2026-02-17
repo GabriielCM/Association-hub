@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { FlatList, StyleSheet, Dimensions, ViewToken, Image } from 'react-native';
 import { XStack, View } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { Camera } from '@ahub/ui/src/icons';
 import type { ProductImage } from '@ahub/shared/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -30,7 +31,7 @@ export function ProductGallery({ images }: ProductGalleryProps) {
   if (images.length === 0) {
     return (
       <View style={styles.placeholder}>
-        <Text size="2xl">📷</Text>
+        <Icon icon={Camera} size="xl" color="muted" weight="duotone" />
         <Text color="secondary" size="sm">
           Sem imagens
         </Text>

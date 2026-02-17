@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Image, Pressable, Modal, Dimensions, StyleSheet } from 'react-native';
 import { View } from 'tamagui';
-import { Text } from '@ahub/ui';
+import X from 'phosphor-react-native/src/icons/X';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -57,9 +57,7 @@ export function ImageMessage({ mediaUrl }: ImageMessageProps) {
             resizeMode="contain"
           />
           <Pressable onPress={handleClose} style={styles.closeBtn}>
-            <Text style={{ color: '#FFFFFF' }} size="lg" weight="bold">
-              ✕
-            </Text>
+            <X size={20} color="#FFFFFF" weight="bold" />
           </Pressable>
         </Pressable>
       </Modal>

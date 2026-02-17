@@ -2,7 +2,8 @@ import { FlatList, View, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Spinner, ScreenHeader } from '@ahub/ui';
+import { Text, Spinner, ScreenHeader, Icon } from '@ahub/ui';
+import { Medal } from '@ahub/ui/src/icons';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useUserBadges } from '@/features/profile/hooks/useProfile';
 
@@ -65,7 +66,7 @@ export default function BadgesScreen() {
                   </View>
                 ) : (
                   <YStack alignItems="center" paddingVertical="$6">
-                    <Text style={{ fontSize: 40 }}>🏆</Text>
+                    <Icon icon={Medal} size={40} color="muted" weight="duotone" />
                     <Text color="secondary" align="center" marginTop="$2">
                       Participe de eventos e atividades para conquistar badges!
                     </Text>

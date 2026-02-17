@@ -1,17 +1,10 @@
 import { useState, useCallback } from 'react';
 import { Pressable } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
-import { Text } from '@ahub/ui';
-import type { NotificationGroupItem, NotificationCategory } from '@ahub/shared/types';
+import { Text, Icon } from '@ahub/ui';
+import { NOTIFICATION_ICONS } from '@ahub/ui/src/icons';
+import type { NotificationGroupItem } from '@ahub/shared/types';
 import { NotificationItem } from './NotificationItem';
-
-const CATEGORY_ICONS: Record<NotificationCategory, string> = {
-  SOCIAL: '💬',
-  EVENTS: '🎉',
-  POINTS: '⭐',
-  RESERVATIONS: '📅',
-  SYSTEM: '🔔',
-};
 
 function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);
@@ -67,7 +60,7 @@ export function NotificationGroup({
             alignItems="center"
             justifyContent="center"
           >
-            <Text size="lg">{CATEGORY_ICONS[group.category]}</Text>
+            <Icon icon={NOTIFICATION_ICONS[group.category as keyof typeof NOTIFICATION_ICONS] ?? NOTIFICATION_ICONS.SYSTEM} size="md" color="primary" />
           </View>
 
           {/* Content */}

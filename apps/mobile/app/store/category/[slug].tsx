@@ -3,7 +3,8 @@ import { FlatList, StyleSheet } from 'react-native';
 import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Text, Spinner, ScreenHeader } from '@ahub/ui';
+import { Text, Spinner, ScreenHeader, Icon } from '@ahub/ui';
+import MagnifyingGlass from 'phosphor-react-native/src/icons/MagnifyingGlass';
 import { useProducts } from '@/features/store/hooks/useProducts';
 import { useCategoryBySlug } from '@/features/store/hooks/useCategories';
 import { ProductCard } from '@/features/store/components/ProductCard';
@@ -53,7 +54,7 @@ export default function CategoryScreen() {
             justifyContent="center"
             gap="$3"
           >
-            <Text size="2xl">🔍</Text>
+            <Icon icon={MagnifyingGlass} size="xl" color="muted" weight="duotone" />
             <Text color="secondary">Nenhum produto nesta categoria</Text>
           </YStack>
         ) : (

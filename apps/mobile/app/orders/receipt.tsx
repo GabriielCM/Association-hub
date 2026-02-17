@@ -2,7 +2,9 @@ import { ScrollView, StyleSheet, Pressable, Share } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Text, Heading, Button, Spinner, Card } from '@ahub/ui';
+import { Text, Heading, Button, Spinner, Card, Icon } from '@ahub/ui';
+import { MapPin } from '@ahub/ui/src/icons';
+import { MISC_ICONS } from '@ahub/ui/src/icons';
 import { useOrderReceipt } from '@/features/orders/hooks/useOrders';
 
 export default function ReceiptScreen() {
@@ -52,7 +54,7 @@ export default function ReceiptScreen() {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$3" padding="$4">
-          <Text size="2xl">😔</Text>
+          <Icon icon={MISC_ICONS.warning} size="xl" color="muted" weight="duotone" />
           <Text weight="semibold">Comprovante nao encontrado</Text>
           <Button onPress={() => router.back()} size="sm">
             Voltar
@@ -183,7 +185,10 @@ export default function ReceiptScreen() {
                   <Text size="xs" color="secondary">
                     Local de retirada
                   </Text>
-                  <Text size="sm">📍 {receipt.pickupLocation}</Text>
+                  <XStack alignItems="center" gap="$1">
+                    <Icon icon={MapPin} size="sm" color="secondary" />
+                    <Text size="sm">{receipt.pickupLocation}</Text>
+                  </XStack>
                 </YStack>
               </>
             ) : null}

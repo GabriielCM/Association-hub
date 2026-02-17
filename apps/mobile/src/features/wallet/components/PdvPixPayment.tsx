@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Alert, Pressable } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Heading, Button, Spinner, Card } from '@ahub/ui';
+import { Text, Heading, Button, Spinner, Card, Icon } from '@ahub/ui';
+import { PixIcon } from '@ahub/ui/src/icons';
+import { DeviceMobile } from '@ahub/ui/src/icons';
 import {
   useInitiatePixPayment,
   usePixStatus,
@@ -111,7 +113,7 @@ export function PdvPixPayment({
     <YStack flex={1} gap="$4">
       {/* Header */}
       <YStack alignItems="center" gap="$1">
-        <Text style={{ fontSize: 40 }}>💳</Text>
+        <PixIcon size={40} />
         <Heading level={4}>Pagamento PIX</Heading>
         <Text color="secondary" size="sm">{pdvName}</Text>
       </YStack>
@@ -128,7 +130,7 @@ export function PdvPixPayment({
       {displayHasQr ? (
         <Card variant="flat">
           <YStack alignItems="center" gap="$3" padding="$4">
-            <Text style={{ fontSize: 48 }}>📺</Text>
+            <Icon icon={DeviceMobile} size="xl" color="primary" weight="duotone" />
             <Heading level={4} align="center">
               QR Code PIX no display
             </Heading>

@@ -55,6 +55,11 @@ export class PostsService {
             id: true,
             name: true,
             avatarUrl: true,
+            subscriptions: {
+              where: { status: 'ACTIVE' },
+              select: { id: true },
+              take: 1,
+            },
           },
         },
       },
@@ -358,11 +363,13 @@ export class PostsService {
 
   private formatPostResponse(post: any, currentUserId: string): PostResponseDto {
     const liked = post.likes?.length > 0;
+    const isVerified = post.author.subscriptions?.length > 0;
 
     const author: PostAuthorDto = {
       id: post.author.id,
       name: post.author.name,
       avatar_url: post.author.avatarUrl || undefined,
+      ...(isVerified && { is_verified: true }),
     };
 
     const content: PostContentDto = {

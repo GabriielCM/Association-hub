@@ -3,7 +3,8 @@ import { Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Button, Spinner, ScreenHeader } from '@ahub/ui';
+import { Text, Button, Spinner, ScreenHeader, Icon } from '@ahub/ui';
+import { XCircle } from '@ahub/ui/src/icons';
 import {
   useCheckoutDetails,
   usePdvPayment,
@@ -93,7 +94,7 @@ export default function PdvCheckoutScreen() {
           </YStack>
         ) : error ? (
           <YStack flex={1} justifyContent="center" alignItems="center" gap="$3">
-            <Text style={{ fontSize: 40 }}>❌</Text>
+            <Icon icon={XCircle} size="xl" color="error" weight="duotone" />
             <Text color="error" align="center">
               Checkout não encontrado ou expirado.
             </Text>

@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { PAYMENT_ICONS } from '@ahub/ui/src/icons';
+import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import { formatPoints, formatCurrency } from '@ahub/shared/utils';
 import type { OrderPaymentMethod } from '@ahub/shared/types';
 
@@ -16,11 +18,11 @@ interface PaymentOptionsProps {
 
 const METHOD_CONFIG: Record<
   string,
-  { label: string; icon: string; getDescription: (props: PaymentOptionsProps) => string }
+  { label: string; icon: PhosphorIcon; getDescription: (props: PaymentOptionsProps) => string }
 > = {
   POINTS: {
     label: 'Pagar com Pontos',
-    icon: '🪙',
+    icon: PAYMENT_ICONS.POINTS,
     getDescription: (props) =>
       props.canPayWithPoints
         ? `Debitar ${formatPoints(props.totalPoints)} pontos do seu saldo`
@@ -28,13 +30,13 @@ const METHOD_CONFIG: Record<
   },
   MONEY: {
     label: 'Pagar com Cartão',
-    icon: '💳',
+    icon: PAYMENT_ICONS.MONEY,
     getDescription: (props) =>
       `Pagar ${formatCurrency(props.totalMoney)} no cartão`,
   },
   MIXED: {
     label: 'Pagamento Misto',
-    icon: '🔀',
+    icon: PAYMENT_ICONS.MIXED,
     getDescription: () => 'Combinar pontos + cartão',
   },
 };
@@ -71,7 +73,7 @@ export function PaymentOptions(props: PaymentOptionsProps) {
                 {isSelected && <View style={styles.radioDot} />}
               </View>
 
-              <Text size="lg">{config.icon}</Text>
+              <Icon icon={config.icon} size="lg" color={isSelected ? 'primary' : 'secondary'} />
 
               <YStack flex={1}>
                 <Text

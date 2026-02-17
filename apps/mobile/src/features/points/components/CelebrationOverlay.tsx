@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import { Animated, Modal, Pressable, StyleSheet } from 'react-native';
 import { YStack } from 'tamagui';
 
-import { Text, Heading } from '@ahub/ui';
+import { Text, Heading, Icon } from '@ahub/ui';
+import { Confetti } from '@ahub/ui/src/icons';
 import { formatPoints } from '@ahub/shared/utils';
 import { useCelebration, usePointsStore } from '@/stores/points.store';
 
@@ -71,7 +72,7 @@ export function CelebrationOverlay() {
           ]}
         >
           <YStack alignItems="center" gap="$3">
-            <Text size="2xl">🎉</Text>
+            <Icon icon={Confetti} size="xl" color="primary" weight="duotone" />
             <Heading level={2} color="accent" align="center">
               +{formatPoints(celebration.points)} pts
             </Heading>

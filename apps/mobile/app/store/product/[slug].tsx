@@ -3,7 +3,9 @@ import { ScrollView, StyleSheet, Pressable } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Text, Heading, Card, Badge, Spinner, Button } from '@ahub/ui';
+import { Text, Heading, Card, Badge, Spinner, Button, Icon } from '@ahub/ui';
+import { Lock } from '@ahub/ui/src/icons';
+import { MISC_ICONS } from '@ahub/ui/src/icons';
 import { formatPoints, formatCurrency } from '@ahub/shared/utils';
 import { useProduct } from '@/features/store/hooks/useProduct';
 import { useProductReviews } from '@/features/store/hooks/useReviews';
@@ -36,7 +38,7 @@ export default function ProductDetailScreen() {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$3">
-          <Text size="2xl">😔</Text>
+          <Icon icon={MISC_ICONS.warning} size="xl" color="muted" weight="duotone" />
           <Text color="secondary">Produto não encontrado</Text>
           <Button onPress={() => router.back()} size="sm">
             Voltar
@@ -237,7 +239,7 @@ export default function ProductDetailScreen() {
           {product.userIsEligible === false && (
             <Card variant="flat">
               <XStack gap="$2" alignItems="center">
-                <Text size="base">🔒</Text>
+                <Icon icon={Lock} size="md" color="warning" />
                 <YStack flex={1}>
                   <Text size="sm" weight="semibold">
                     Produto exclusivo

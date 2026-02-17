@@ -1,6 +1,7 @@
 import { FlatList, Pressable, StyleSheet, Image } from 'react-native';
 import { YStack, View } from 'tamagui';
-import { Text, Card } from '@ahub/ui';
+import { Text, Card, Icon } from '@ahub/ui';
+import { Tag } from '@ahub/ui/src/icons';
 import type { StoreCategory } from '@ahub/shared/types';
 
 interface CategoryCarouselProps {
@@ -40,7 +41,7 @@ export function CategoryCarousel({
                 />
               ) : (
                 <View style={styles.imagePlaceholder}>
-                  <Text size="lg">🏷️</Text>
+                  <Icon icon={Tag} size="lg" color="muted" />
                 </View>
               )}
               <Text

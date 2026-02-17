@@ -2,7 +2,8 @@ import { FlatList } from 'react-native';
 import { router } from 'expo-router';
 import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Spinner, ScreenHeader } from '@ahub/ui';
+import { Text, Spinner, ScreenHeader, Icon } from '@ahub/ui';
+import { ClipboardText } from '@ahub/ui/src/icons';
 import { useCardHistory } from '@/features/card/hooks/useCard';
 import { CardHistoryItem } from '@/features/card/components/CardHistoryItem';
 import type { CardUsageLog } from '@ahub/shared/types';
@@ -49,7 +50,7 @@ export default function CardHistoryScreen() {
               </YStack>
             ) : (
               <YStack alignItems="center" paddingVertical="$8">
-                <Text style={{ fontSize: 40 }}>📋</Text>
+                <Icon icon={ClipboardText} size="xl" color="muted" />
                 <Text color="secondary" align="center" marginTop="$2">
                   Nenhum uso registrado ainda.
                 </Text>

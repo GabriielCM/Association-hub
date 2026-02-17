@@ -52,6 +52,14 @@ function RootLayoutContent() {
         <Stack.Screen name="wallet" options={{ headerShown: false }} />
         <Stack.Screen name="store" options={{ headerShown: false }} />
         <Stack.Screen name="orders" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="dashboard"
+          options={{
+            headerShown: false,
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+          }}
+        />
       </Stack>
     </>
   );

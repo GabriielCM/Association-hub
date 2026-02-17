@@ -3,7 +3,8 @@ import { ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Heading, Card, Badge, Button } from '@ahub/ui';
+import { Text, Heading, Card, Badge, Button, Icon } from '@ahub/ui';
+import { PROFILE_ICONS } from '@ahub/ui/src/icons';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useThemeContext } from '@/providers/ThemeProvider';
 import { useAuth } from '@/hooks/useAuth';
@@ -65,7 +66,7 @@ export default function SettingsScreen() {
                     {profile?.subscription || 'Gerencie seu plano'}
                   </Text>
                 </YStack>
-                <Text>⭐</Text>
+                <Icon icon={PROFILE_ICONS.subscription} size="lg" color="primary" />
               </XStack>
             </Card>
 
@@ -82,7 +83,7 @@ export default function SettingsScreen() {
                       : 'Escuro'}
                   </Text>
                 </YStack>
-                <Text>{theme === 'dark' ? '🌙' : '☀️'}</Text>
+                <Icon icon={theme === 'dark' ? PROFILE_ICONS.themeDark : PROFILE_ICONS.themeLight} size="lg" color="primary" />
               </XStack>
             </Card>
 
@@ -114,7 +115,7 @@ export default function SettingsScreen() {
                     Gerenciar preferências
                   </Text>
                 </YStack>
-                <Text>🔔</Text>
+                <Icon icon={PROFILE_ICONS.notifications} size="lg" color="primary" />
               </XStack>
             </Card>
 
@@ -129,21 +130,21 @@ export default function SettingsScreen() {
             <Card variant="flat" pressable>
               <XStack justifyContent="space-between" alignItems="center">
                 <Text weight="medium">Central de Ajuda</Text>
-                <Text>❓</Text>
+                <Icon icon={PROFILE_ICONS.help} size="lg" color="muted" />
               </XStack>
             </Card>
 
             <Card variant="flat" pressable>
               <XStack justifyContent="space-between" alignItems="center">
                 <Text weight="medium">Termos de Uso</Text>
-                <Text>📄</Text>
+                <Icon icon={PROFILE_ICONS.terms} size="lg" color="muted" />
               </XStack>
             </Card>
 
             <Card variant="flat" pressable>
               <XStack justifyContent="space-between" alignItems="center">
                 <Text weight="medium">Política de Privacidade</Text>
-                <Text>🔒</Text>
+                <Icon icon={PROFILE_ICONS.privacy} size="lg" color="muted" />
               </XStack>
             </Card>
           </YStack>

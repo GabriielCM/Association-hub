@@ -3,7 +3,8 @@ import { FlatList } from 'react-native';
 import { router } from 'expo-router';
 import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Spinner, ScreenHeader } from '@ahub/ui';
+import { Text, Spinner, ScreenHeader, Icon } from '@ahub/ui';
+import MagnifyingGlass from 'phosphor-react-native/src/icons/MagnifyingGlass';
 import { useBenefitsList, useCategories } from '@/features/card/hooks/useBenefits';
 import { PartnerCard } from '@/features/card/components/PartnerCard';
 import { PartnerFilters } from '@/features/card/components/PartnerFilters';
@@ -77,7 +78,7 @@ export default function BenefitsScreen() {
               </YStack>
             ) : (
               <YStack alignItems="center" paddingVertical="$8">
-                <Text style={{ fontSize: 40 }}>🔍</Text>
+                <Icon icon={MagnifyingGlass} size="xl" color="muted" weight="duotone" />
                 <Text color="secondary" align="center" marginTop="$2">
                   Nenhum parceiro encontrado.
                 </Text>

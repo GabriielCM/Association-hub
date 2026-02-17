@@ -32,7 +32,13 @@ export type SocketEvent =
   | 'typing.update'
   | 'recording.update'
   | 'presence.update'
-  | 'conversation.update';
+  | 'conversation.update'
+  // Dashboard / Feed events
+  | 'feed.post_new'
+  | 'feed.post_liked'
+  | 'feed.post_deleted'
+  | 'story.new'
+  | 'poll.vote_update';
 
 type EventCallback = (data: unknown) => void;
 const eventListeners: Map<SocketEvent, Set<EventCallback>> = new Map();
@@ -173,6 +179,27 @@ export async function initSocket(userId?: string, userName?: string): Promise<So
 
   socket.on('conversation.update', (data) => {
     notifyListeners('conversation.update', data);
+  });
+
+  // Dashboard / Feed events
+  socket.on('feed.post_new', (data) => {
+    notifyListeners('feed.post_new', data);
+  });
+
+  socket.on('feed.post_liked', (data) => {
+    notifyListeners('feed.post_liked', data);
+  });
+
+  socket.on('feed.post_deleted', (data) => {
+    notifyListeners('feed.post_deleted', data);
+  });
+
+  socket.on('story.new', (data) => {
+    notifyListeners('story.new', data);
+  });
+
+  socket.on('poll.vote_update', (data) => {
+    notifyListeners('poll.vote_update', data);
   });
 
   return socket;

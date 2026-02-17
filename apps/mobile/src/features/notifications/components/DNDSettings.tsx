@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { Pressable, Switch } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
-import { Text, Card } from '@ahub/ui';
+import { Text, Card, Icon } from '@ahub/ui';
+import { Moon } from '@ahub/ui/src/icons';
 import {
   useDndSettings,
   useUpdateDnd,
@@ -152,7 +153,7 @@ export function DNDSettings() {
                 borderRadius="$md"
                 backgroundColor="rgba(139, 92, 246, 0.1)"
               >
-                <Text size="sm">🌙</Text>
+                <Icon icon={Moon} size="sm" color="primary" />
                 <Text color="primary" size="xs" weight="semibold">
                   Não Perturbe está ativo agora
                 </Text>

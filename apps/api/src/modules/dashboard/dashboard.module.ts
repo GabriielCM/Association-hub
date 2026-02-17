@@ -13,6 +13,7 @@ import {
   FeedService,
   CommentsService,
   PollsService,
+  AdminDashboardService,
 } from './services';
 
 // Controllers
@@ -25,6 +26,12 @@ import {
   PollsController,
   AdminDashboardController,
 } from './controllers';
+
+// Common Services
+import { UploadService } from '../../common/services/upload.service';
+
+// Gateway
+import { DashboardGateway } from './dashboard.gateway';
 
 // Scheduler
 import { DashboardScheduler } from './schedulers/dashboard.scheduler';
@@ -53,6 +60,9 @@ import { DashboardScheduler } from './schedulers/dashboard.scheduler';
     FeedService,
     CommentsService,
     PollsService,
+    AdminDashboardService,
+    UploadService,
+    DashboardGateway,
     DashboardScheduler,
   ],
   exports: [
@@ -63,6 +73,7 @@ import { DashboardScheduler } from './schedulers/dashboard.scheduler';
     FeedService,
     CommentsService,
     PollsService,
+    DashboardGateway,
   ],
 })
 export class DashboardModule {}

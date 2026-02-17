@@ -1,7 +1,9 @@
 import { type ReactNode } from 'react';
 import { Pressable, type StyleProp, type ViewStyle } from 'react-native';
-import { XStack, YStack } from 'tamagui';
+import { XStack, YStack, useTheme } from 'tamagui';
 import { Text, Heading } from './Text';
+import { Icon } from './Icon';
+import CaretLeft from 'phosphor-react-native/src/icons/CaretLeft';
 
 export interface ScreenHeaderProps {
   title?: string;
@@ -29,6 +31,7 @@ export function ScreenHeader({
   style,
 }: ScreenHeaderProps) {
   const isOverlay = variant === 'overlay';
+  const theme = useTheme();
 
   return (
     <XStack
@@ -65,13 +68,12 @@ export function ScreenHeader({
             borderRadius: 22,
           }}
         >
-          <Text
+          <Icon
+            icon={CaretLeft}
             size="lg"
-            weight="semibold"
-            {...(isOverlay && { color: 'white' })}
-          >
-            ←
-          </Text>
+            color={isOverlay ? '#FFFFFF' : theme.color.val}
+            weight="bold"
+          />
         </Pressable>
       )}
 

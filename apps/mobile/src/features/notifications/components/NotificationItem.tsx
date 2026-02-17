@@ -1,18 +1,11 @@
 import { useCallback } from 'react';
 import { Pressable, Animated, StyleSheet } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { NOTIFICATION_ICONS } from '@ahub/ui/src/icons';
 import { Swipeable } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
-import type { Notification, NotificationCategory } from '@ahub/shared/types';
-
-const CATEGORY_ICONS: Record<NotificationCategory, string> = {
-  SOCIAL: '💬',
-  EVENTS: '🎉',
-  POINTS: '⭐',
-  RESERVATIONS: '📅',
-  SYSTEM: '🔔',
-};
+import type { Notification } from '@ahub/shared/types';
 
 function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);
@@ -124,7 +117,7 @@ export function NotificationItem({
             alignItems="center"
             justifyContent="center"
           >
-            <Text size="lg">{CATEGORY_ICONS[notification.category]}</Text>
+            <Icon icon={NOTIFICATION_ICONS[notification.category as keyof typeof NOTIFICATION_ICONS] ?? NOTIFICATION_ICONS.SYSTEM} size="md" color="primary" />
           </View>
 
           {/* Content */}

@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
 import { Pressable } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
-import { Text, Avatar } from '@ahub/ui';
+import { Text, Avatar, Icon } from '@ahub/ui';
+import { Camera, Microphone, SpeakerSlash } from '@ahub/ui/src/icons';
 import { router } from 'expo-router';
 import type { Conversation } from '@ahub/shared/types';
 import { GroupAvatar } from './GroupAvatar';
@@ -28,22 +29,24 @@ function formatTime(dateStr: string): string {
   });
 }
 
-function getPreview(conversation: Conversation): string {
-  if (!conversation.lastMessage) return 'Nenhuma mensagem';
+function getPreviewData(conversation: Conversation): {
+  prefix: string;
+  contentType: string;
+  text: string;
+} {
+  if (!conversation.lastMessage)
+    return { prefix: '', contentType: 'TEXT', text: 'Nenhuma mensagem' };
 
   const prefix =
     conversation.type === 'GROUP' && conversation.lastMessage.senderName
       ? `${conversation.lastMessage.senderName.split(' ')[0]}: `
       : '';
 
-  switch (conversation.lastMessage.contentType) {
-    case 'IMAGE':
-      return `${prefix}📷 Foto`;
-    case 'AUDIO':
-      return `${prefix}🎤 Áudio`;
-    default:
-      return `${prefix}${conversation.lastMessage.content}`;
-  }
+  return {
+    prefix,
+    contentType: conversation.lastMessage.contentType,
+    text: conversation.lastMessage.content,
+  };
 }
 
 function getDisplayName(conversation: Conversation, currentUserId?: string): string {
@@ -117,9 +120,10 @@ export function ConversationItem({
   const firstRecording = activeRecordingUsers[0];
   const recordingLabel = isRecording && firstRecording
     ? activeRecordingUsers.length === 1
-      ? `🎤 ${firstRecording.name.split(' ')[0]} está gravando áudio...`
-      : `🎤 ${firstRecording.name.split(' ')[0]} e mais ${activeRecordingUsers.length - 1} gravando áudio...`
+      ? `${firstRecording.name.split(' ')[0]} está gravando áudio...`
+      : `${firstRecording.name.split(' ')[0]} e mais ${activeRecordingUsers.length - 1} gravando áudio...`
     : null;
+  const showRecordingIcon = isRecording;
 
   // Typing preview
   const activeTypingUsers = typingUsers?.filter((u) => u.id !== currentUserId) ?? [];
@@ -183,7 +187,7 @@ export function ConversationItem({
                 {displayName}
               </Text>
               {conversation.isMuted && (
-                <Text color="secondary" size="xs">🔇</Text>
+                <Icon icon={SpeakerSlash} size="sm" color="secondary" />
               )}
             </XStack>
             <Text color="secondary" size="xs">
@@ -194,15 +198,57 @@ export function ConversationItem({
           </XStack>
 
           <XStack alignItems="center" justifyContent="space-between">
-            <Text
-              color={hasActivity ? 'primary' : 'secondary'}
-              size="xs"
-              numberOfLines={1}
+            <XStack
               flex={1}
+              alignItems="center"
+              gap="$0.5"
               style={hasActivity ? { fontStyle: 'italic' } : undefined}
             >
-              {activityLabel ?? getPreview(conversation)}
-            </Text>
+              {showRecordingIcon && (
+                <Icon icon={Microphone} size={12} color="primary" />
+              )}
+              {!hasActivity && (() => {
+                const preview = getPreviewData(conversation);
+                if (preview.contentType === 'IMAGE') {
+                  return (
+                    <>
+                      {preview.prefix ? (
+                        <Text color="secondary" size="xs" numberOfLines={1}>{preview.prefix}</Text>
+                      ) : null}
+                      <Icon icon={Camera} size={12} color="secondary" />
+                      <Text color="secondary" size="xs" numberOfLines={1}>Foto</Text>
+                    </>
+                  );
+                }
+                if (preview.contentType === 'AUDIO') {
+                  return (
+                    <>
+                      {preview.prefix ? (
+                        <Text color="secondary" size="xs" numberOfLines={1}>{preview.prefix}</Text>
+                      ) : null}
+                      <Icon icon={Microphone} size={12} color="secondary" />
+                      <Text color="secondary" size="xs" numberOfLines={1}>Áudio</Text>
+                    </>
+                  );
+                }
+                return (
+                  <Text color="secondary" size="xs" numberOfLines={1} flex={1}>
+                    {preview.prefix}{preview.text}
+                  </Text>
+                );
+              })()}
+              {hasActivity && (
+                <Text
+                  color="primary"
+                  size="xs"
+                  numberOfLines={1}
+                  flex={1}
+                  style={{ fontStyle: 'italic' }}
+                >
+                  {activityLabel}
+                </Text>
+              )}
+            </XStack>
 
             {conversation.unreadCount > 0 && (
               <View

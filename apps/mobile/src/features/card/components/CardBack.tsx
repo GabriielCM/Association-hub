@@ -1,6 +1,8 @@
 import { View, StyleSheet, Pressable, Linking } from 'react-native';
 import { YStack } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { Phone, Globe, MapPin, PaperPlaneTilt } from '@ahub/ui/src/icons';
+import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import type { MemberCard } from '@ahub/shared/types';
 
 interface CardBackProps {
@@ -39,28 +41,28 @@ export function CardBack({ card }: CardBackProps) {
 
         {association.phone && (
           <ContactItem
-            icon="📞"
+            icon={Phone}
             text={association.phone}
             onPress={() => openUrl(`tel:${association.phone}`)}
           />
         )}
         {association.email && (
           <ContactItem
-            icon="📧"
+            icon={PaperPlaneTilt}
             text={association.email}
             onPress={() => openUrl(`mailto:${association.email}`)}
           />
         )}
         {association.website && (
           <ContactItem
-            icon="🌐"
+            icon={Globe}
             text={association.website}
             onPress={() => openUrl(association.website!)}
           />
         )}
         {association.address && (
           <ContactItem
-            icon="📍"
+            icon={MapPin}
             text={association.address}
             onPress={() =>
               openUrl(
@@ -100,7 +102,7 @@ function ContactItem({
   text,
   onPress,
 }: {
-  icon: string;
+  icon: PhosphorIcon;
   text: string;
   onPress: () => void;
 }) {
@@ -112,7 +114,7 @@ function ContactItem({
         pressed && styles.contactPressed,
       ]}
     >
-      <Text style={styles.contactIcon}>{icon}</Text>
+      <Icon icon={icon} size="sm" color="#93C5FD" />
       <Text style={styles.contactText} numberOfLines={1}>
         {text}
       </Text>
@@ -174,9 +176,6 @@ const styles = StyleSheet.create({
   },
   contactPressed: {
     opacity: 0.6,
-  },
-  contactIcon: {
-    fontSize: 16,
   },
   contactText: {
     fontSize: 13,

@@ -1,6 +1,7 @@
 import { Pressable, View, StyleSheet } from 'react-native';
 import { XStack, YStack } from 'tamagui';
-import { Text, Avatar } from '@ahub/ui';
+import { Text, Avatar, Icon } from '@ahub/ui';
+import { Tag } from '@ahub/ui/src/icons';
 import type { PartnerListItem } from '@ahub/shared/types';
 
 interface PartnerCardProps {
@@ -46,9 +47,11 @@ export function PartnerCard({ partner, onPress }: PartnerCardProps) {
             {partner.benefit}
           </Text>
           <XStack alignItems="center" gap="$1" marginTop={2}>
-            <Text style={{ fontSize: 12 }}>
-              {partner.category.icon || '🏷️'}
-            </Text>
+            {partner.category.icon ? (
+              <Text style={{ fontSize: 12 }}>{partner.category.icon}</Text>
+            ) : (
+              <Icon icon={Tag} size={12} color="secondary" />
+            )}
             <Text color="secondary" size="xs">
               {partner.category.name}
             </Text>

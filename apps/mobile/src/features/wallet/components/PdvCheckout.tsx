@@ -1,6 +1,7 @@
 import { ScrollView, StyleSheet } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Heading, Button, Spinner, Card } from '@ahub/ui';
+import { Text, Heading, Button, Spinner, Card, Icon } from '@ahub/ui';
+import { Storefront } from '@ahub/ui/src/icons';
 import { formatPoints } from '@ahub/shared/utils';
 import type { PdvCheckoutDetails, PdvCheckoutItem } from '@ahub/shared/types';
 
@@ -26,7 +27,7 @@ export function PdvCheckout({
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 16 }} showsVerticalScrollIndicator={false}>
         {/* PDV Info */}
         <YStack gap={4} alignItems="center">
-          <Text style={{ fontSize: 32 }}>🏪</Text>
+          <Icon icon={Storefront} size={32} color="primary" weight="duotone" />
           <Heading level={4}>{pdv.name}</Heading>
           <Text color="secondary" size="sm">{pdv.location}</Text>
         </YStack>

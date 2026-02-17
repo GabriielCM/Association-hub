@@ -8,7 +8,8 @@ import {
   Animated,
 } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { Camera, Trash, Microphone, PaperPlaneRight, X } from '@ahub/ui/src/icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAudioRecording } from '../hooks/useAudioRecording';
 import type { Message, MessageContentType } from '@ahub/shared/types';
@@ -176,16 +177,24 @@ export function MessageInput({
             <Text color="primary" size="xs" weight="semibold">
               {replyTo.sender.name}
             </Text>
-            <Text color="secondary" size="xs" numberOfLines={1}>
-              {replyTo.contentType === 'IMAGE'
-                ? '📷 Foto'
-                : replyTo.contentType === 'AUDIO'
-                  ? '🎤 Áudio'
-                  : replyTo.content}
-            </Text>
+            {replyTo.contentType === 'IMAGE' ? (
+              <XStack alignItems="center" gap="$1">
+                <Icon icon={Camera} size="sm" color="secondary" />
+                <Text color="secondary" size="xs" numberOfLines={1}>Foto</Text>
+              </XStack>
+            ) : replyTo.contentType === 'AUDIO' ? (
+              <XStack alignItems="center" gap="$1">
+                <Icon icon={Microphone} size="sm" color="secondary" />
+                <Text color="secondary" size="xs" numberOfLines={1}>Áudio</Text>
+              </XStack>
+            ) : (
+              <Text color="secondary" size="xs" numberOfLines={1}>
+                {replyTo.content}
+              </Text>
+            )}
           </YStack>
           <Pressable onPress={onCancelReply}>
-            <Text color="secondary" size="sm">✕</Text>
+            <Icon icon={X} size="sm" color="secondary" />
           </Pressable>
         </XStack>
       )}
@@ -210,7 +219,7 @@ export function MessageInput({
                 alignItems="center"
                 justifyContent="center"
               >
-                <Text size="sm">🗑️</Text>
+                <Icon icon={Trash} size="sm" color="secondary" />
               </View>
             </Pressable>
 
@@ -232,9 +241,7 @@ export function MessageInput({
                 alignItems="center"
                 justifyContent="center"
               >
-                <Text style={{ color: '#FFFFFF' }} weight="bold" size="sm">
-                  ➤
-                </Text>
+                <Icon icon={PaperPlaneRight} size="sm" color="#FFFFFF" weight="fill" />
               </View>
             </Pressable>
           </>
@@ -243,7 +250,7 @@ export function MessageInput({
           <>
             {/* Camera / Image */}
             <Pressable onPress={handleImagePick} style={styles.iconBtn}>
-              <Text size="lg">📷</Text>
+              <Icon icon={Camera} size="lg" color="secondary" />
             </Pressable>
 
             {/* Text Input */}
@@ -281,9 +288,7 @@ export function MessageInput({
                   alignItems="center"
                   justifyContent="center"
                 >
-                  <Text style={{ color: '#FFFFFF' }} weight="bold" size="sm">
-                    ➤
-                  </Text>
+                  <Icon icon={PaperPlaneRight} size="sm" color="#FFFFFF" weight="fill" />
                 </View>
               </Pressable>
             ) : (
@@ -300,9 +305,7 @@ export function MessageInput({
                   alignItems="center"
                   justifyContent="center"
                 >
-                  <Text style={{ color: '#FFFFFF' }} size="sm">
-                    🎤
-                  </Text>
+                  <Icon icon={Microphone} size="sm" color="#FFFFFF" />
                 </View>
               </Pressable>
             )}

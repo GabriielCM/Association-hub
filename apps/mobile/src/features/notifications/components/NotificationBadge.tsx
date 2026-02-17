@@ -1,6 +1,7 @@
 import { Pressable } from 'react-native';
 import { View } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { Bell } from '@ahub/ui/src/icons';
 import { router } from 'expo-router';
 import { useNotificationStore } from '@/stores/notification.store';
 
@@ -24,7 +25,7 @@ export function NotificationBadge({ size = 24 }: NotificationBadgeProps) {
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
       <View width={size} height={size} alignItems="center" justifyContent="center">
-        <Text size="xl">🔔</Text>
+        <Icon icon={Bell} size={size} color="inherit" />
 
         {unreadCount > 0 && (
           <View

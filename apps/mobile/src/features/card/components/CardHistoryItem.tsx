@@ -1,17 +1,19 @@
 import { View, StyleSheet } from 'react-native';
 import { XStack, YStack } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { CARD_HISTORY_ICONS } from '@ahub/ui/src/icons';
+import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import type { CardUsageLog } from '@ahub/shared/types';
 
 interface CardHistoryItemProps {
   log: CardUsageLog;
 }
 
-const typeConfig: Record<string, { icon: string; label: string }> = {
-  CHECKIN: { icon: '🏢', label: 'Check-in' },
-  BENEFIT_USED: { icon: '✨', label: 'Benefício' },
-  EVENT_VALIDATION: { icon: '📅', label: 'Evento' },
-  QR_SCANNED: { icon: '📱', label: 'QR Escaneado' },
+const typeConfig: Record<string, { icon: PhosphorIcon; label: string }> = {
+  CHECKIN: { icon: CARD_HISTORY_ICONS.CHECKIN, label: 'Check-in' },
+  BENEFIT_USED: { icon: CARD_HISTORY_ICONS.BENEFIT_USED, label: 'Benefício' },
+  EVENT_VALIDATION: { icon: CARD_HISTORY_ICONS.EVENT_VALIDATION, label: 'Evento' },
+  QR_SCANNED: { icon: CARD_HISTORY_ICONS.QR_SCANNED, label: 'QR Escaneado' },
 };
 
 function formatDate(date: Date): string {
@@ -24,7 +26,7 @@ function formatDate(date: Date): string {
 }
 
 export function CardHistoryItem({ log }: CardHistoryItemProps) {
-  const config = typeConfig[log.type] || { icon: '📋', label: log.type };
+  const config = typeConfig[log.type] || { icon: CARD_HISTORY_ICONS.DEFAULT, label: log.type };
 
   return (
     <XStack
@@ -35,7 +37,7 @@ export function CardHistoryItem({ log }: CardHistoryItemProps) {
       borderBottomColor="$borderColor"
     >
       <View style={styles.iconContainer}>
-        <Text style={styles.icon}>{config.icon}</Text>
+        <Icon icon={config.icon} size="sm" color="primary" />
       </View>
 
       <YStack flex={1} gap={2}>
@@ -69,8 +71,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(139, 92, 246, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  icon: {
-    fontSize: 16,
   },
 });

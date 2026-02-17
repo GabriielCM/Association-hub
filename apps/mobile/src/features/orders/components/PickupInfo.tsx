@@ -1,5 +1,6 @@
-import { YStack } from 'tamagui';
-import { Text, Card } from '@ahub/ui';
+import { YStack, XStack } from 'tamagui';
+import { Text, Card, Icon } from '@ahub/ui';
+import { MapPin } from '@ahub/ui/src/icons';
 import QRCode from 'react-native-qrcode-svg';
 import type { OrderStatus } from '@ahub/shared/types';
 
@@ -35,9 +36,12 @@ export function PickupInfo({ pickupCode, pickupLocation, status }: PickupInfoPro
         )}
 
         {pickupLocation ? (
-          <Text size="sm" color="secondary" align="center">
-            📍 {pickupLocation}
-          </Text>
+          <XStack alignItems="center" gap="$1">
+            <Icon icon={MapPin} size="sm" color="secondary" />
+            <Text size="sm" color="secondary">
+              {pickupLocation}
+            </Text>
+          </XStack>
         ) : null}
       </YStack>
     </Card>

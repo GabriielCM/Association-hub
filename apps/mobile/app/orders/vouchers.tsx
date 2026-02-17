@@ -3,7 +3,8 @@ import { FlatList, StyleSheet, Pressable } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Text, Heading, Spinner } from '@ahub/ui';
+import { Text, Heading, Spinner, Icon } from '@ahub/ui';
+import { Ticket } from '@ahub/ui/src/icons';
 import { useMyVouchers, useOrderVouchers } from '@/features/orders/hooks/useOrders';
 import { VoucherCard } from '@/features/orders/components/VoucherCard';
 import type { Voucher } from '@ahub/shared/types';
@@ -86,7 +87,7 @@ export default function VouchersScreen() {
           gap="$3"
           padding="$4"
         >
-          <Text size="2xl">🎟️</Text>
+          <Icon icon={Ticket} size="xl" color="muted" />
           <Text weight="semibold">
             {tab === 'available' ? 'Nenhum voucher disponivel' : 'Nenhum voucher usado'}
           </Text>

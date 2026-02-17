@@ -204,6 +204,6 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    return payload;
+    return { ...payload, id: payload.sub };
   }
 }

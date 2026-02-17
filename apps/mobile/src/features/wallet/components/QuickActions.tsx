@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { XStack } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import type { PhosphorIcon } from '@ahub/ui';
+import { WALLET_ICONS } from '@ahub/ui/src/icons';
 
 interface QuickActionsProps {
   onTransfer: () => void;
@@ -11,9 +13,9 @@ interface QuickActionsProps {
 export function QuickActions({ onTransfer, onScanner, onHistory }: QuickActionsProps) {
   return (
     <XStack justifyContent="space-around" paddingVertical="$2">
-      <ActionButton icon="📤" label="Transferir" onPress={onTransfer} />
-      <ActionButton icon="📷" label="Scanner" onPress={onScanner} />
-      <ActionButton icon="📋" label="Histórico" onPress={onHistory} />
+      <ActionButton icon={WALLET_ICONS.transfer} label="Transferir" onPress={onTransfer} />
+      <ActionButton icon={WALLET_ICONS.scanner} label="Scanner" onPress={onScanner} />
+      <ActionButton icon={WALLET_ICONS.history} label="Histórico" onPress={onHistory} />
     </XStack>
   );
 }
@@ -23,7 +25,7 @@ function ActionButton({
   label,
   onPress,
 }: {
-  icon: string;
+  icon: PhosphorIcon;
   label: string;
   onPress: () => void;
 }) {
@@ -33,7 +35,7 @@ function ActionButton({
       style={({ pressed }) => [styles.button, pressed && { opacity: 0.7 }]}
     >
       <View style={styles.iconContainer}>
-        <Text style={{ fontSize: 24 }}>{icon}</Text>
+        <Icon icon={icon} size="lg" color="primary" />
       </View>
       <Text size="xs" weight="medium" align="center">
         {label}

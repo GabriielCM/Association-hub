@@ -1,6 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 import { YStack } from 'tamagui';
-import { Text, Heading, Button, Spinner } from '@ahub/ui';
+import { Text, Heading, Button, Spinner, Icon } from '@ahub/ui';
+import { PersonSimpleRun, Bicycle, PersonSimpleWalk, SwimmingPool } from '@ahub/ui/src/icons';
+import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 
 interface StravaConnectScreenProps {
   onConnect: () => void;
@@ -16,7 +18,7 @@ export function StravaConnectScreen({
       {/* Logo */}
       <YStack alignItems="center" gap="$2">
         <View style={styles.iconContainer}>
-          <Text style={{ fontSize: 48 }}>🏃</Text>
+          <Icon icon={PersonSimpleRun} size={48} color="primary" />
         </View>
         <Heading level={3} align="center">Conecte seu Strava</Heading>
         <Text color="secondary" align="center">
@@ -27,22 +29,22 @@ export function StravaConnectScreen({
       {/* Benefits */}
       <YStack gap="$3">
         <BenefitItem
-          icon="🏃"
+          icon={PersonSimpleRun}
           title="Corrida"
           description="Ganhe pontos por km percorrido"
         />
         <BenefitItem
-          icon="🚴"
+          icon={Bicycle}
           title="Ciclismo"
           description="Pedale e acumule pontos"
         />
         <BenefitItem
-          icon="🚶"
+          icon={PersonSimpleWalk}
           title="Caminhada"
           description="Cada passo conta"
         />
         <BenefitItem
-          icon="🏊"
+          icon={SwimmingPool}
           title="Natação"
           description="Nade e ganhe recompensas"
         />
@@ -72,13 +74,13 @@ function BenefitItem({
   title,
   description,
 }: {
-  icon: string;
+  icon: PhosphorIcon;
   title: string;
   description: string;
 }) {
   return (
     <View style={styles.benefitRow}>
-      <Text style={{ fontSize: 24 }}>{icon}</Text>
+      <Icon icon={icon} size="lg" color="primary" />
       <YStack flex={1}>
         <Text weight="semibold" size="sm">{title}</Text>
         <Text color="secondary" size="xs">{description}</Text>

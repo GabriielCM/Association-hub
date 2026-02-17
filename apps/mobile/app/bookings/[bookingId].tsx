@@ -3,7 +3,8 @@ import { ScrollView, StyleSheet, Pressable, Image } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Text, Spinner, GlassCard, ScreenHeader } from '@ahub/ui';
+import { Text, Spinner, GlassCard, ScreenHeader, Icon } from '@ahub/ui';
+import { Buildings } from '@ahub/ui/src/icons';
 import { resolveUploadUrl } from '@/config/constants';
 import { useBooking } from '@/features/bookings/hooks/useBookings';
 import { BookingStatusBadge } from '@/features/bookings/components/BookingStatusBadge';
@@ -96,7 +97,7 @@ export default function BookingDetailScreen() {
                   />
                 ) : (
                   <View style={styles.imagePlaceholder}>
-                    <Text size="xl">🏠</Text>
+                    <Icon icon={Buildings} size="xl" color="primary" weight="duotone" />
                   </View>
                 )}
               </View>

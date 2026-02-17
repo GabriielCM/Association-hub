@@ -3,7 +3,8 @@ import { FlatList, StyleSheet, Pressable } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Text, Heading, Spinner } from '@ahub/ui';
+import { Text, Heading, Spinner, Icon } from '@ahub/ui';
+import { Ticket, ClipboardText } from '@ahub/ui/src/icons';
 import { useOrders } from '@/features/orders/hooks/useOrders';
 import { OrderCard } from '@/features/orders/components/OrderCard';
 import { OrderFilters } from '@/features/orders/components/OrderFilters';
@@ -58,7 +59,7 @@ export default function OrdersListScreen() {
           onPress={() => router.push('/orders/vouchers' as any)}
           hitSlop={8}
         >
-          <Text size="lg">🎟️</Text>
+          <Icon icon={Ticket} size="lg" color="primary" />
         </Pressable>
       </XStack>
 
@@ -78,7 +79,7 @@ export default function OrdersListScreen() {
           gap="$3"
           padding="$4"
         >
-          <Text size="2xl">📋</Text>
+          <Icon icon={ClipboardText} size="xl" color="muted" />
           <Text weight="semibold">Nenhum pedido encontrado</Text>
           <Text color="secondary" size="sm" align="center">
             {filters.source || filters.status

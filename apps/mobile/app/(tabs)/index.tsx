@@ -1,190 +1,211 @@
-import { ScrollView, Pressable } from 'react-native';
+import { useCallback, useRef } from 'react';
+import { FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
-import { Text, Heading, Card, Avatar, Badge, Spinner } from '@ahub/ui';
+import { Text, Heading, Avatar, Spinner, Icon } from '@ahub/ui';
+import { Note } from '@ahub/ui/src/icons';
 import { useAuthContext } from '@/providers/AuthProvider';
-import { formatPoints } from '@ahub/shared/utils';
-import { useBalance } from '@/features/points/hooks/usePoints';
-import { usePointsHistory } from '@/features/points/hooks/usePointsHistory';
-import { TransactionItem } from '@/features/points/components/TransactionItem';
-import { CelebrationOverlay } from '@/features/points/components/CelebrationOverlay';
+import { useDashboardSummary, useFeed } from '@/features/dashboard/hooks/useDashboard';
+import { useDashboardWebSocket } from '@/features/dashboard/hooks/useDashboardWebSocket';
 import { usePointsSocket } from '@/features/points/hooks/usePointsSocket';
-import { NotificationBadge } from '@/features/notifications/components/NotificationBadge';
 import { useNotificationWebSocket } from '@/features/notifications/hooks/useNotificationWebSocket';
+import { CelebrationOverlay } from '@/features/points/components/CelebrationOverlay';
+import { NotificationBadge } from '@/features/notifications/components/NotificationBadge';
+
+import { PointsBalanceCard } from '@/features/dashboard/components/PointsBalanceCard';
+import { QuickAccessCarousel } from '@/features/dashboard/components/QuickAccessCarousel';
+import { StoriesRow } from '@/features/dashboard/components/StoriesRow';
+import { NewPostsBanner } from '@/features/dashboard/components/NewPostsBanner';
+import { FeedPostCard } from '@/features/dashboard/components/FeedPostCard';
+import { FeedPollCard } from '@/features/dashboard/components/FeedPollCard';
+import { FeedEventCard } from '@/features/dashboard/components/FeedEventCard';
+import { OfflineBanner } from '@/features/dashboard/components/OfflineBanner';
+import { OnboardingOverlay } from '@/features/dashboard/components/OnboardingOverlay';
+
+import type { FeedPost } from '@ahub/shared/types';
 
 export default function HomeScreen() {
   const { user } = useAuthContext();
   const router = useRouter();
-  const { data: balance, isLoading: balanceLoading } = useBalance();
-  const { data: historyData } = usePointsHistory({ limit: 3 });
+  const flatListRef = useRef<FlatList>(null);
+
+  const { data: summary, isLoading: summaryLoading } = useDashboardSummary();
+  const {
+    data: feedData,
+    isLoading: feedLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+    isRefetching,
+  } = useFeed();
 
   usePointsSocket();
   useNotificationWebSocket();
+  useDashboardWebSocket();
 
-  const recentTransactions = historyData?.pages?.[0]?.data ?? [];
-  const displayBalance = balance?.balance ?? 0;
+  const feedPosts = feedData?.pages.flatMap((page) => page.posts) ?? [];
+
+  const scrollToTop = useCallback(() => {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, []);
+
+  const handleCommentPress = useCallback(
+    (postId: string) => {
+      router.push(`/dashboard/comments?postId=${postId}` as any);
+    },
+    [router],
+  );
+
+  const renderFeedItem = useCallback(
+    ({ item }: { item: FeedPost }) => {
+      switch (item.type) {
+        case 'poll':
+          return <FeedPollCard post={item} />;
+        case 'event':
+          return <FeedEventCard post={item} />;
+        case 'photo':
+        default:
+          return (
+            <FeedPostCard post={item} onCommentPress={handleCommentPress} />
+          );
+      }
+    },
+    [handleCommentPress],
+  );
+
+  const ListHeader = useCallback(
+    () => (
+      <YStack padding="$4" gap="$4">
+        {/* Header with user greeting */}
+        <XStack alignItems="center" justifyContent="space-between">
+          <YStack>
+            <Text color="secondary" size="sm">
+              Bem-vindo,
+            </Text>
+            <Heading level={4}>{user?.name || 'Membro'}</Heading>
+          </YStack>
+          <XStack alignItems="center" gap="$3">
+            <NotificationBadge />
+            <Avatar
+              src={user?.avatarUrl}
+              name={user?.name}
+              size="lg"
+              status="online"
+              showStatus
+            />
+          </XStack>
+        </XStack>
+
+        {/* Points Card */}
+        <PointsBalanceCard user={summary?.user} isLoading={summaryLoading} />
+
+        {/* Quick Access Carousel */}
+        <QuickAccessCarousel />
+
+        {/* Stories Row */}
+        <StoriesRow />
+
+        {/* New Posts Banner */}
+        <NewPostsBanner onPress={scrollToTop} />
+
+        {/* Feed section header */}
+        <XStack alignItems="center" justifyContent="space-between">
+          <Text weight="semibold" size="lg">
+            Feed
+          </Text>
+          <Pressable
+            onPress={() => router.push('/dashboard/create-post' as any)}
+          >
+            <Text color="accent" size="sm" weight="semibold">
+              + Novo post
+            </Text>
+          </Pressable>
+        </XStack>
+      </YStack>
+    ),
+    [user, summary, summaryLoading, scrollToTop, router],
+  );
+
+  const ListFooter = useCallback(() => {
+    if (isFetchingNextPage) {
+      return (
+        <YStack padding="$4" alignItems="center">
+          <ActivityIndicator />
+        </YStack>
+      );
+    }
+    if (!hasNextPage && feedPosts.length > 0) {
+      return (
+        <YStack padding="$4" alignItems="center">
+          <Text color="secondary" size="sm">
+            Voce viu todos os posts
+          </Text>
+        </YStack>
+      );
+    }
+    return null;
+  }, [isFetchingNextPage, hasNextPage, feedPosts.length]);
+
+  const ListEmpty = useCallback(() => {
+    if (feedLoading) {
+      return (
+        <YStack padding="$8" alignItems="center" gap="$2">
+          <Spinner size="lg" />
+          <Text color="secondary" size="sm">
+            Carregando feed...
+          </Text>
+        </YStack>
+      );
+    }
+    return (
+      <YStack padding="$8" alignItems="center" gap="$2">
+        <Icon icon={Note} size="xl" color="muted" weight="duotone" />
+        <Text color="secondary" weight="semibold">
+          Nenhum post ainda
+        </Text>
+        <Text color="secondary" size="sm" style={{ textAlign: 'center' }}>
+          Seja o primeiro a compartilhar algo com a comunidade!
+        </Text>
+        <Pressable
+          onPress={() => router.push('/dashboard/create-post' as any)}
+        >
+          <Text color="accent" weight="semibold" size="sm">
+            Criar post
+          </Text>
+        </Pressable>
+      </YStack>
+    );
+  }, [feedLoading, router]);
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <ScrollView>
-        <YStack padding="$4" gap="$4">
-          {/* Header with user greeting */}
-          <XStack alignItems="center" justifyContent="space-between">
-            <YStack>
-              <Text color="secondary" size="sm">
-                Bem-vindo,
-              </Text>
-              <Heading level={4}>{user?.name || 'Membro'}</Heading>
-            </YStack>
-            <XStack alignItems="center" gap="$3">
-              <NotificationBadge />
-              <Avatar
-                src={user?.avatarUrl}
-                name={user?.name}
-                size="lg"
-                status="online"
-                showStatus
-              />
-            </XStack>
-          </XStack>
-
-          {/* Points Card */}
-          <Pressable onPress={() => router.push('/points')}>
-            <Card variant="elevated">
-              <XStack alignItems="center" justifyContent="space-between">
-                <YStack>
-                  <Text color="secondary" size="sm">
-                    Seus pontos
-                  </Text>
-                  {balanceLoading ? (
-                    <Spinner size="sm" />
-                  ) : (
-                    <Heading level={2} color="accent">
-                      {formatPoints(displayBalance)}
-                    </Heading>
-                  )}
-                </YStack>
-                <Badge variant="primary">Ver historico</Badge>
-              </XStack>
-            </Card>
-          </Pressable>
-
-          {/* Quick Actions */}
-          <YStack gap="$2">
-            <Text weight="semibold" size="lg">
-              Acesso rapido
-            </Text>
-            <XStack gap="$2" flexWrap="wrap">
-              <QuickActionCard
-                icon="📅"
-                title="Eventos"
-                subtitle="Proximos"
-                onPress={() => router.push('/(tabs)/eventos')}
-              />
-              <QuickActionCard
-                icon="💸"
-                title="Transferir"
-                subtitle="Enviar pontos"
-                onPress={() => router.push('/points/transfer')}
-              />
-              <QuickActionCard
-                icon="🏆"
-                title="Rankings"
-                subtitle="Top 10"
-                onPress={() => router.push('/points/rankings')}
-              />
-              <QuickActionCard
-                icon="💳"
-                title="Carteira"
-                subtitle="Saldo e QR"
-                onPress={() => router.push('/wallet')}
-              />
-              <QuickActionCard
-                icon="🏠"
-                title="Espaços"
-                subtitle="Reservar"
-                onPress={() => router.push('/spaces' as any)}
-              />
-              <QuickActionCard
-                icon="📋"
-                title="Reservas"
-                subtitle="Minhas"
-                onPress={() => router.push('/bookings' as any)}
-              />
-              <QuickActionCard
-                icon="⭐"
-                title="Assinaturas"
-                subtitle="Planos"
-                onPress={() => router.push('/subscriptions')}
-              />
-            </XStack>
-          </YStack>
-
-          {/* Recent Activity */}
-          <YStack gap="$2">
-            <XStack alignItems="center" justifyContent="space-between">
-              <Text weight="semibold" size="lg">
-                Atividade recente
-              </Text>
-              {recentTransactions.length > 0 && (
-                <Pressable onPress={() => router.push('/points')}>
-                  <Text color="accent" size="sm">Ver tudo</Text>
-                </Pressable>
-              )}
-            </XStack>
-            {recentTransactions.length > 0 ? (
-              <Card variant="flat">
-                {recentTransactions.map((tx) => (
-                  <TransactionItem
-                    key={tx.id}
-                    transaction={tx}
-                    onPress={() => router.push('/points')}
-                  />
-                ))}
-              </Card>
-            ) : (
-              <Card variant="flat">
-                <YStack gap="$2" alignItems="center" paddingVertical="$4">
-                  <Text color="secondary">Nenhuma atividade recente</Text>
-                  <Text color="secondary" size="sm">
-                    Participe de eventos para ganhar pontos!
-                  </Text>
-                </YStack>
-              </Card>
-            )}
-          </YStack>
-        </YStack>
-      </ScrollView>
+      <OfflineBanner />
+      <FlatList
+        ref={flatListRef}
+        data={feedPosts}
+        keyExtractor={(item) => item.id}
+        renderItem={renderFeedItem}
+        ListHeaderComponent={ListHeader}
+        ListFooterComponent={ListFooter}
+        ListEmptyComponent={ListEmpty}
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.5}
+        onRefresh={refetch}
+        refreshing={isRefetching}
+        contentContainerStyle={{ paddingBottom: 16 }}
+        ItemSeparatorComponent={() => <YStack height={12} />}
+        showsVerticalScrollIndicator={false}
+      />
 
       <CelebrationOverlay />
+      <OnboardingOverlay />
     </SafeAreaView>
-  );
-}
-
-function QuickActionCard({
-  icon,
-  title,
-  subtitle,
-  onPress,
-}: {
-  icon: string;
-  title: string;
-  subtitle: string;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} style={{ width: '47%', marginBottom: 8 }}>
-      <Card variant="elevated" size="sm">
-        <YStack gap="$1">
-          <Text size="2xl">{icon}</Text>
-          <Text weight="semibold">{title}</Text>
-          <Text color="secondary" size="xs">
-            {subtitle}
-          </Text>
-        </YStack>
-      </Card>
-    </Pressable>
   );
 }

@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { ORDER_STATUS_ICONS } from '@ahub/ui/src/icons';
 import type { OrderStatusHistoryEntry, OrderStatus } from '@ahub/shared/types';
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
@@ -9,14 +10,6 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   READY: '#7C3AED',
   COMPLETED: '#22C55E',
   CANCELLED: '#EF4444',
-};
-
-const STATUS_ICONS: Record<OrderStatus, string> = {
-  PENDING: '🕐',
-  CONFIRMED: '✓',
-  READY: '📦',
-  COMPLETED: '✅',
-  CANCELLED: '✕',
 };
 
 interface OrderTimelineProps {
@@ -58,9 +51,12 @@ export function OrderTimeline({ timeline, currentStatus }: OrderTimelineProps) {
             {/* Content */}
             <YStack flex={1} paddingBottom="$3">
               <XStack justifyContent="space-between" alignItems="center">
-                <Text weight={isCurrent ? 'bold' : 'medium'} size="sm">
-                  {STATUS_ICONS[entry.status]} {entry.label}
-                </Text>
+                <XStack alignItems="center" gap="$1">
+                  <Icon icon={ORDER_STATUS_ICONS[entry.status as keyof typeof ORDER_STATUS_ICONS] ?? ORDER_STATUS_ICONS.PENDING} size="sm" color={color} />
+                  <Text weight={isCurrent ? 'bold' : 'medium'} size="sm">
+                    {entry.label}
+                  </Text>
+                </XStack>
                 <Text size="xs" color="secondary">
                   {timeStr}
                 </Text>

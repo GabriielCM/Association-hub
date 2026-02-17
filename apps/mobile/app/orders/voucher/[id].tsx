@@ -2,7 +2,8 @@ import { StyleSheet, Pressable } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Text, Heading, Card, Badge } from '@ahub/ui';
+import { Text, Heading, Card, Badge, Icon } from '@ahub/ui';
+import { Ticket } from '@ahub/ui/src/icons';
 import QRCode from 'react-native-qrcode-svg';
 
 const VOUCHER_STATUS_CONFIG: Record<
@@ -67,7 +68,7 @@ export default function VoucherDetailScreen() {
                 backgroundColor="#F3F4F6"
                 borderRadius={8}
               >
-                <Text size="2xl">🎟️</Text>
+                <Icon icon={Ticket} size="xl" color="muted" />
               </YStack>
             )}
 

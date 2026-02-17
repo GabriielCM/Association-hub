@@ -1,10 +1,11 @@
 import { YStack } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { Camera } from '@ahub/ui/src/icons';
 
 export function PostsTab() {
   return (
     <YStack alignItems="center" paddingVertical="$8" gap="$3">
-      <Text style={{ fontSize: 48 }}>📷</Text>
+      <Icon icon={Camera} size={48} color="muted" weight="duotone" />
       <Text weight="semibold" size="lg">
         Nenhum post ainda
       </Text>

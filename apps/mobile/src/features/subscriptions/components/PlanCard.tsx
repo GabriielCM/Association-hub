@@ -1,7 +1,8 @@
 import { Pressable } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 
-import { Card, Text, Heading, Badge } from '@ahub/ui';
+import { Card, Text, Heading, Badge, Icon } from '@ahub/ui';
+import { Check } from '@ahub/ui/src/icons';
 import { formatCurrency } from '@ahub/shared/utils';
 import type { SubscriptionPlan } from '@ahub/shared/types';
 
@@ -70,7 +71,7 @@ export function PlanCard({ plan, isCurrent, onPress }: PlanCardProps) {
           <YStack gap="$1" marginTop="$1">
             {benefits.slice(0, 3).map((benefit, i) => (
               <XStack key={i} gap="$1" alignItems="center">
-                <Text color="success" size="sm">✓</Text>
+                <Icon icon={Check} size="sm" color="success" weight="bold" />
                 <Text size="sm">{benefit}</Text>
               </XStack>
             ))}

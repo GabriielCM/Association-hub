@@ -1,5 +1,6 @@
 import { YStack } from 'tamagui';
-import { Text, Spinner } from '@ahub/ui';
+import { Text, Spinner, Icon } from '@ahub/ui';
+import { ChartBar } from '@ahub/ui/src/icons';
 import { useUserRankings } from '@/features/profile/hooks/useProfile';
 import { RankingRow } from './RankingRow';
 
@@ -23,7 +24,7 @@ export function RankingsTab({ userId }: RankingsTabProps) {
   if (rankings.length === 0) {
     return (
       <YStack alignItems="center" paddingVertical="$8" gap="$3">
-        <Text style={{ fontSize: 48 }}>📊</Text>
+        <Icon icon={ChartBar} size={48} color="muted" weight="duotone" />
         <Text weight="semibold" size="lg">
           Nenhum ranking disponível
         </Text>

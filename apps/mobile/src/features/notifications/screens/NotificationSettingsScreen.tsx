@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
 import { ScrollView, Switch, Pressable, StyleSheet } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Card } from '@ahub/ui';
+import { Text, Card, Icon } from '@ahub/ui';
+import { NOTIFICATION_ICONS } from '@ahub/ui/src/icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -10,14 +11,6 @@ import {
 } from '../hooks/useNotificationSettings';
 import { DNDSettings } from '../components/DNDSettings';
 import type { NotificationCategory } from '@ahub/shared/types';
-
-const CATEGORY_ICONS: Record<NotificationCategory, string> = {
-  SOCIAL: '💬',
-  EVENTS: '🎉',
-  POINTS: '⭐',
-  RESERVATIONS: '📅',
-  SYSTEM: '🔔',
-};
 
 export function NotificationSettingsScreen() {
   const { data: settingsData } = useNotificationSettings();
@@ -82,9 +75,7 @@ export function NotificationSettingsScreen() {
               <Card key={cat.category} variant="flat">
                 <YStack gap="$2" padding="$3">
                   <XStack alignItems="center" gap="$2">
-                    <Text size="lg">
-                      {CATEGORY_ICONS[cat.category]}
-                    </Text>
+                    <Icon icon={NOTIFICATION_ICONS[cat.category as keyof typeof NOTIFICATION_ICONS] ?? NOTIFICATION_ICONS.SYSTEM} size="lg" color="primary" />
                     <YStack flex={1}>
                       <Text weight="semibold" size="sm">
                         {cat.label}

@@ -1,7 +1,8 @@
-import { Text } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Icon } from '@ahub/ui';
+import { TAB_ICONS } from '@ahub/ui/src/icons';
 
 export default function TabsLayout() {
   const theme = useTheme();
@@ -32,9 +33,8 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Início',
-          tabBarIcon: ({ color, size }) => (
-            // Placeholder - will use Phosphor icons
-            <TabIcon name="home" color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <Icon icon={TAB_ICONS.home} color={color} size="lg" weight={focused ? 'fill' : 'regular'} />
           ),
         }}
       />
@@ -42,8 +42,8 @@ export default function TabsLayout() {
         name="carteirinha"
         options={{
           title: 'Carteirinha',
-          tabBarIcon: ({ color, size }) => (
-            <TabIcon name="card" color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <Icon icon={TAB_ICONS.card} color={color} size="lg" weight={focused ? 'fill' : 'regular'} />
           ),
         }}
       />
@@ -51,8 +51,8 @@ export default function TabsLayout() {
         name="eventos"
         options={{
           title: 'Eventos',
-          tabBarIcon: ({ color, size }) => (
-            <TabIcon name="calendar" color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <Icon icon={TAB_ICONS.calendar} color={color} size="lg" weight={focused ? 'fill' : 'regular'} />
           ),
         }}
       />
@@ -60,8 +60,8 @@ export default function TabsLayout() {
         name="loja"
         options={{
           title: 'Loja',
-          tabBarIcon: ({ color, size }) => (
-            <TabIcon name="store" color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <Icon icon={TAB_ICONS.store} color={color} size="lg" weight={focused ? 'fill' : 'regular'} />
           ),
         }}
       />
@@ -69,35 +69,11 @@ export default function TabsLayout() {
         name="perfil"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color, size }) => (
-            <TabIcon name="user" color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <Icon icon={TAB_ICONS.user} color={color} size="lg" weight={focused ? 'fill' : 'regular'} />
           ),
         }}
       />
     </Tabs>
-  );
-}
-
-// Simple placeholder icon component
-// Will be replaced with Phosphor icons
-function TabIcon({
-  name,
-  color,
-  size,
-}: {
-  name: string;
-  color: string;
-  size: number;
-}) {
-  const iconMap: Record<string, string> = {
-    home: '🏠',
-    card: '💳',
-    calendar: '📅',
-    store: '🛍️',
-    user: '👤',
-  };
-
-  return (
-    <Text style={{ fontSize: size - 4, color }}>{iconMap[name] || '•'}</Text>
   );
 }

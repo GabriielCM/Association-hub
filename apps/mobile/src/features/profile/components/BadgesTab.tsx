@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Button, Spinner } from '@ahub/ui';
+import { Text, Button, Spinner, Icon } from '@ahub/ui';
+import { Medal } from '@ahub/ui/src/icons';
 import { useUserBadges } from '@/features/profile/hooks/useProfile';
 import { useUpdateBadgesDisplay } from '@/features/profile/hooks/useEditProfile';
 import { BadgeCard } from './BadgeCard';
@@ -40,7 +41,7 @@ export function BadgesTab({ userId, isMe }: BadgesTabProps) {
   if (badges.length === 0) {
     return (
       <YStack alignItems="center" paddingVertical="$8" gap="$3">
-        <Text style={{ fontSize: 48 }}>🏆</Text>
+        <Icon icon={Medal} size={48} color="muted" weight="duotone" />
         <Text weight="semibold" size="lg">
           Nenhum badge conquistado
         </Text>

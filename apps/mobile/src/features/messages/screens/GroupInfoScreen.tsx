@@ -3,6 +3,7 @@ import { ScrollView, Pressable, Alert, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { YStack, XStack, View } from 'tamagui';
 import { Text, Avatar, Card, ScreenHeader } from '@ahub/ui';
+import Camera from 'phosphor-react-native/src/icons/Camera';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/auth.store';
@@ -152,9 +153,11 @@ export function GroupInfoScreen() {
                 )}
                 {isAdmin && (
                   <View style={styles.cameraOverlay}>
-                    <Text style={{ fontSize: 14, color: '#fff' }}>
-                      {isUploadingImage ? '...' : '📷'}
-                    </Text>
+                    {isUploadingImage ? (
+                      <Text style={{ fontSize: 14, color: '#fff' }}>...</Text>
+                    ) : (
+                      <Camera size={14} color="#fff" />
+                    )}
                   </View>
                 )}
               </View>
