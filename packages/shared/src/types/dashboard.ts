@@ -11,6 +11,7 @@ export interface StoryUserListItem {
   avatar_url?: string;
   has_unseen: boolean;
   stories_count: number;
+  is_online?: boolean;
 }
 
 export interface StoryResponse {

@@ -1,4 +1,4 @@
-import { FlatList, Pressable } from 'react-native';
+import { FlatList, Pressable, Dimensions } from 'react-native';
 import { YStack } from 'tamagui';
 import { useRouter } from 'expo-router';
 
@@ -24,6 +24,11 @@ interface QuickAccessItem {
   badge?: number;
 }
 
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const HORIZONTAL_PADDING = 32; // $4 each side
+const ITEM_GAP = 12;
+const ITEM_WIDTH = (SCREEN_WIDTH - HORIZONTAL_PADDING * 2 - ITEM_GAP * 3) / 3.5;
+
 const QUICK_ACCESS_ITEMS: QuickAccessItem[] = [
   { icon: CreditCard, title: 'Carteirinha', route: '/card' },
   { icon: Wallet, title: 'Carteira', route: '/wallet' },
@@ -45,13 +50,13 @@ function QuickAccessItemCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={{ marginRight: 12 }}>
+    <Pressable onPress={onPress} style={{ marginRight: ITEM_GAP }}>
       <Card variant="elevated" size="sm">
         <YStack
           alignItems="center"
           justifyContent="center"
-          width={72}
-          height={72}
+          width={ITEM_WIDTH}
+          height={ITEM_WIDTH}
           gap="$1"
         >
           <Icon icon={item.icon} size="lg" color="primary" />

@@ -49,6 +49,11 @@ export const darkTheme = {
   overlay: colors.overlay,
   overlayLight: colors.overlayLight,
 
+  // Accent
+  accent: colors.primary,
+  accentHover: colors.primaryLight,
+  accentPress: colors.primaryLight,
+
   // Placeholders
   placeholderColor: colors.textTertiaryDark,
 } as const;

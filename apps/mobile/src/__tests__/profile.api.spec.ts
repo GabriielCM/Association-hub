@@ -39,6 +39,9 @@ const mockProfile: UserProfile = {
   avatarUrl: 'https://example.com/avatar.jpg',
   isVerified: true,
   isMe: true,
+  isOnline: true,
+  subscriptionColor: '#8B5CF6',
+  socialLinks: { instagram: 'joaosilva', facebook: 'joao.silva', x: 'joaosilva' },
   stats: { points: 1500, lifetimePoints: 5000 },
   badges: [
     { id: 'b1', name: 'Top 1', iconUrl: '🏆', earnedAt: new Date() },
@@ -61,6 +64,7 @@ const mockBadgesResponse: UserBadgesResponse = {
   ],
   total: 1,
   featured: 1,
+  lockedBadges: [],
 };
 
 const mockRankingsResponse: UserRankingsResponse = {

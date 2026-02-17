@@ -49,6 +49,11 @@ export const lightTheme = {
   overlay: colors.overlay,
   overlayLight: colors.overlayLight,
 
+  // Accent
+  accent: colors.primary,
+  accentHover: colors.primaryDark,
+  accentPress: colors.primaryDark,
+
   // Placeholders
   placeholderColor: colors.textTertiary,
 } as const;

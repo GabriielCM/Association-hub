@@ -1,19 +1,88 @@
-import { ScrollView } from 'react-native';
+import { useState, useCallback, useRef } from 'react';
+import {
+  RefreshControl,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+  type LayoutChangeEvent,
+} from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { YStack } from 'tamagui';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Button, Card, Spinner, Icon } from '@ahub/ui';
+import { YStack, XStack } from 'tamagui';
+import Animated from 'react-native-reanimated';
+import PagerView, { type PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
+import * as Haptics from 'expo-haptics';
+
+import { Text, Heading, Button, Spinner, Icon } from '@ahub/ui';
 import { MISC_ICONS } from '@ahub/ui/src/icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProfile } from '@/features/profile/hooks/useProfile';
-import { ProfileHeader } from '@/features/profile/components/ProfileHeader';
-import { ProfileStats } from '@/features/profile/components/ProfileStats';
+import { useProfileAnimations, COVER_HEIGHT } from '@/features/profile/hooks/useProfileAnimations';
+
+import { ProfileCover } from '@/features/profile/components/ProfileCover';
+import { CollapsedHeader } from '@/features/profile/components/CollapsedHeader';
+import { TieredAvatar } from '@/features/profile/components/TieredAvatar';
+import { VerifiedSealBadge } from '@/features/profile/components/VerifiedSealBadge';
+import { SocialLinksRow } from '@/features/profile/components/SocialLinksRow';
+import { GlassStatsRow } from '@/features/profile/components/GlassStatsRow';
 import { ProfileActions } from '@/features/profile/components/ProfileActions';
-import { ProfileTabs } from '@/features/profile/components/ProfileTabs';
+import { StickyGlassTabBar } from '@/features/profile/components/StickyGlassTabBar';
+import { PostsTab } from '@/features/profile/components/PostsTab';
+import { BadgesTab } from '@/features/profile/components/BadgesTab';
+import { RankingsTab } from '@/features/profile/components/RankingsTab';
+import { BadgeRow } from '@/features/profile/components/BadgeRow';
 
 export default function UserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
+  const { data: profile, isLoading, error, refetch } = useProfile(userId || '');
+  const { height: screenHeight } = useWindowDimensions();
 
-  const { data: profile, isLoading, error } = useProfile(userId || '');
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const pagerRef = useRef<PagerView>(null);
+
+  const {
+    scrollHandler,
+    coverAnimatedStyle,
+    profileInfoAnimatedStyle,
+    collapsedHeaderAnimatedStyle,
+    stickyTabBarAnimatedStyle,
+    tabBarY,
+    activeTabIndex,
+    setActiveTab: setAnimatedTab,
+    insets,
+  } = useProfileAnimations();
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
+
+  const handleTabPress = useCallback(
+    (index: number) => {
+      pagerRef.current?.setPage(index);
+      setActiveTab(index);
+      setAnimatedTab(index);
+    },
+    [setAnimatedTab],
+  );
+
+  const handlePageSelected = useCallback(
+    (e: PagerViewOnPageSelectedEvent) => {
+      const position = e.nativeEvent.position;
+      setActiveTab(position);
+      setAnimatedTab(position);
+      Haptics.selectionAsync();
+    },
+    [setAnimatedTab],
+  );
+
+  const handleTabBarLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      tabBarY.value = event.nativeEvent.layout.y;
+    },
+    [tabBarY],
+  );
 
   if (isLoading) {
     return (
@@ -41,35 +110,140 @@ export default function UserProfileScreen() {
     );
   }
 
+  const tabContentHeight = screenHeight * 0.6;
+
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
-      <ScrollView>
-        <YStack gap="$4">
-          {/* Back button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onPress={() => router.back()}
-            alignSelf="flex-start"
-            marginLeft="$4"
-            marginTop="$2"
-          >
-            ← Voltar
-          </Button>
+    <View style={styles.root}>
+      <Animated.ScrollView
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            progressViewOffset={COVER_HEIGHT}
+          />
+        }
+        contentContainerStyle={styles.scrollContent}
+      >
+        <ProfileCover
+          coverImageUrl={profile.coverImageUrl}
+          isMe={profile.isMe}
+          animatedStyle={coverAnimatedStyle}
+        />
 
-          {/* Profile Header */}
-          <Card variant="elevated" marginHorizontal="$4">
-            <ProfileHeader profile={profile} />
-            <ProfileStats profile={profile} />
-          </Card>
+        <View style={{ height: COVER_HEIGHT }} />
 
-          {/* Actions */}
-          <ProfileActions isMe={profile.isMe} userId={profile.id} />
+        <Animated.View style={[styles.profileInfo, profileInfoAnimatedStyle]}>
+          <TieredAvatar
+            avatarUrl={profile.avatarUrl}
+            name={profile.name}
+            subscriptionColor={profile.subscriptionColor}
+            isOnline={profile.isOnline}
+          />
 
-          {/* Tabs: Posts, Badges, Rankings */}
-          <ProfileTabs userId={profile.id} isMe={profile.isMe} />
-        </YStack>
-      </ScrollView>
-    </SafeAreaView>
+          <YStack alignItems="center" gap="$1" marginTop="$2">
+            <XStack alignItems="center" gap="$1.5">
+              <Heading level={4}>{profile.name}</Heading>
+              <VerifiedSealBadge isVerified={profile.isVerified} />
+            </XStack>
+
+            {profile.username && (
+              <Text color="secondary" size="sm">
+                @{profile.username}
+              </Text>
+            )}
+
+            {profile.bio && (
+              <Text
+                color="secondary"
+                size="sm"
+                align="center"
+                style={{ maxWidth: 280 }}
+                numberOfLines={3}
+              >
+                {profile.bio}
+              </Text>
+            )}
+          </YStack>
+
+          {profile.socialLinks && (
+            <SocialLinksRow socialLinks={profile.socialLinks} />
+          )}
+
+          {profile.badges.length > 0 && (
+            <BadgeRow badges={profile.badges} />
+          )}
+
+          <GlassStatsRow profile={profile} />
+
+          <ProfileActions
+            isMe={profile.isMe}
+            userId={profile.id}
+          />
+        </Animated.View>
+
+        <StickyGlassTabBar
+          activeTab={activeTab}
+          onTabPress={handleTabPress}
+          activeTabIndex={activeTabIndex}
+          onLayout={handleTabBarLayout}
+        />
+
+        <PagerView
+          ref={pagerRef}
+          style={{ minHeight: tabContentHeight }}
+          initialPage={0}
+          onPageSelected={handlePageSelected}
+          overdrag
+        >
+          <View key="posts" style={styles.tabPage}>
+            <PostsTab userId={profile.id} />
+          </View>
+          <View key="badges" style={styles.tabPage}>
+            <BadgesTab userId={profile.id} isMe={profile.isMe} />
+          </View>
+          <View key="rankings" style={styles.tabPage}>
+            <RankingsTab userId={profile.id} />
+          </View>
+        </PagerView>
+      </Animated.ScrollView>
+
+      <CollapsedHeader
+        name={profile.name}
+        avatarUrl={profile.avatarUrl}
+        animatedStyle={collapsedHeaderAnimatedStyle}
+        isMe={profile.isMe}
+      />
+
+      <StickyGlassTabBar
+        activeTab={activeTab}
+        onTabPress={handleTabPress}
+        activeTabIndex={activeTabIndex}
+        fixed
+        fixedStyle={stickyTabBarAnimatedStyle}
+        safeAreaTop={insets.top + 48}
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
+  profileInfo: {
+    marginTop: -60,
+    gap: 12,
+    paddingBottom: 16,
+  },
+  tabPage: {
+    flex: 1,
+    paddingHorizontal: 8,
+    paddingTop: 8,
+  },
+});

@@ -7,6 +7,7 @@ import { useUserBadges } from '@/features/profile/hooks/useProfile';
 import { useUpdateBadgesDisplay } from '@/features/profile/hooks/useEditProfile';
 import { BadgeCard } from './BadgeCard';
 import { BadgesModal } from './BadgesModal';
+import { LockedBadgeCard } from './LockedBadgeCard';
 
 interface BadgesTabProps {
   userId: string;
@@ -19,6 +20,7 @@ export function BadgesTab({ userId, isMe }: BadgesTabProps) {
   const [showModal, setShowModal] = useState(false);
 
   const badges = badgesData?.data || [];
+  const lockedBadges = badgesData?.lockedBadges || [];
 
   const handleSaveBadges = async (selectedIds: string[]) => {
     try {
@@ -72,6 +74,21 @@ export function BadgesTab({ userId, isMe }: BadgesTabProps) {
           </View>
         ))}
       </View>
+
+      {lockedBadges.length > 0 && (
+        <>
+          <Text color="secondary" size="sm" style={{ marginTop: 12 }}>
+            A conquistar
+          </Text>
+          <View style={styles.grid}>
+            {lockedBadges.map((badge) => (
+              <View key={badge.id} style={styles.badgeWrapper}>
+                <LockedBadgeCard badge={badge} />
+              </View>
+            ))}
+          </View>
+        </>
+      )}
 
       <BadgesModal
         visible={showModal}

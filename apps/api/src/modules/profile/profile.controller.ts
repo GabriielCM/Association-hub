@@ -139,6 +139,54 @@ export class ProfileController {
     return { success: true, data, message: 'Avatar atualizado com sucesso' };
   }
 
+  @Post('cover')
+  @ApiOperation({ summary: 'Upload de imagem de capa do perfil' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Imagem de capa (max 5MB, jpg/png)',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Capa atualizada com sucesso' })
+  @ApiResponse({ status: 400, description: 'Arquivo inválido' })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadCover(
+    @CurrentUser() user: JwtPayload,
+    @Req() req: Request,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const uploadsDir = join(process.cwd(), 'uploads', 'covers', user.sub);
+    if (!existsSync(uploadsDir)) {
+      mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const fileName = `${Date.now()}-${sanitizeFilename(file.originalname)}`;
+    const filePath = join(uploadsDir, fileName);
+    await writeFile(filePath, file.buffer);
+
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const coverImageUrl = `${protocol}://${host}/uploads/covers/${user.sub}/${fileName}`;
+
+    const data = await this.profileService.updateCover(user.sub, coverImageUrl);
+    return { success: true, data, message: 'Capa atualizada com sucesso' };
+  }
+
   @Put('badges/display')
   @ApiOperation({ summary: 'Selecionar badges para exibir no perfil (máx 3)' })
   @ApiResponse({ status: 200, description: 'Badges atualizados com sucesso' })

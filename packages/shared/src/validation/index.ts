@@ -53,6 +53,20 @@ export const updateProfileSchema = z.object({
 // PROFILE SCHEMAS
 // ===========================================
 
+export const socialLinksSchema = z.object({
+  instagram: z
+    .string()
+    .max(30, 'Username muito longo')
+    .regex(/^[a-zA-Z0-9._]*$/, 'Username inválido')
+    .optional(),
+  facebook: z.string().max(30, 'Username muito longo').optional(),
+  x: z
+    .string()
+    .max(30, 'Username muito longo')
+    .regex(/^[a-zA-Z0-9_]*$/, 'Username inválido')
+    .optional(),
+});
+
 export const updateProfileFullSchema = z.object({
   name: z
     .string()
@@ -67,6 +81,7 @@ export const updateProfileFullSchema = z.object({
     .optional(),
   bio: z.string().max(150, 'Bio muito longa').optional(),
   phone: z.string().optional(),
+  socialLinks: socialLinksSchema.optional(),
 });
 
 export const updateBadgesDisplaySchema = z.object({

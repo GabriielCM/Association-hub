@@ -1,36 +1,43 @@
-import { Alert } from 'react-native';
+import { Alert, Pressable, StyleSheet } from 'react-native';
 import { XStack } from 'tamagui';
 import { router } from 'expo-router';
 import { Button } from '@ahub/ui';
+import { PencilSimple, ShareNetwork } from 'phosphor-react-native';
 import { useCreateConversation } from '@/features/messages/hooks/useConversations';
+import * as Haptics from 'expo-haptics';
 
 interface ProfileActionsProps {
   isMe: boolean;
   userId: string;
+  onSharePress?: () => void;
 }
 
-export function ProfileActions({ isMe, userId }: ProfileActionsProps) {
+export function ProfileActions({ isMe, userId, onSharePress }: ProfileActionsProps) {
   const createConversation = useCreateConversation();
 
   if (isMe) {
     return (
-      <XStack gap="$2" paddingHorizontal="$4">
-        <Button
-          variant="outline"
-          size="md"
-          flex={1}
-          onPress={() => router.push('/profile/edit')}
+      <XStack gap="$3" justifyContent="center" paddingHorizontal="$4">
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push('/profile/edit');
+          }}
+          style={styles.iconButton}
         >
-          Editar perfil
-        </Button>
-        <Button
-          variant="outline"
-          size="md"
-          flex={1}
-          onPress={() => router.push('/profile/badges')}
-        >
-          Badges
-        </Button>
+          <PencilSimple size={20} color="#6B7280" weight="regular" />
+        </Pressable>
+        {onSharePress && (
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onSharePress();
+            }}
+            style={styles.iconButton}
+          >
+            <ShareNetwork size={20} color="#6B7280" weight="regular" />
+          </Pressable>
+        )}
       </XStack>
     );
   }
@@ -82,3 +89,15 @@ export function ProfileActions({ isMe, userId }: ProfileActionsProps) {
     </XStack>
   );
 }
+
+const styles = StyleSheet.create({
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

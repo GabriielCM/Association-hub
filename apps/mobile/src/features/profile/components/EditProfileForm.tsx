@@ -17,6 +17,7 @@ interface EditProfileFormProps {
     bio?: string | undefined;
     phone?: string | undefined;
     usernameChangedAt?: string | null | undefined;
+    socialLinks?: { instagram?: string | undefined; facebook?: string | undefined; x?: string | undefined } | undefined;
   };
   onSubmit: (data: UpdateProfileFullInput) => void;
   onAvatarOnlySave?: () => void;
@@ -38,7 +39,10 @@ export function EditProfileForm({
     formState: { errors, isDirty },
   } = useForm<UpdateProfileFullInput>({
     resolver: zodResolver(updateProfileFullSchema),
-    defaultValues: initialValues,
+    defaultValues: {
+      ...initialValues,
+      socialLinks: initialValues.socialLinks || {},
+    },
   });
 
   // Username cooldown (30 days)
@@ -202,6 +206,57 @@ export function EditProfileForm({
             />
           )}
         />
+      </YStack>
+
+      {/* Social Links */}
+      <YStack gap="$3">
+        <Text weight="medium" size="sm">
+          Redes Sociais
+        </Text>
+        <YStack gap="$2">
+          <Controller
+            control={control}
+            name="socialLinks.instagram"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                placeholder="@seu_instagram"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="socialLinks.facebook"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                placeholder="@seu_facebook"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="socialLinks.x"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                placeholder="@seu_x"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            )}
+          />
+        </YStack>
       </YStack>
 
       {/* Submit */}

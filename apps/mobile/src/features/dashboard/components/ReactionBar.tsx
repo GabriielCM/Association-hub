@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from 'react';
 import { Pressable } from 'react-native';
 import { XStack } from 'tamagui';
 
@@ -15,7 +16,7 @@ const REACTION_EMOJIS: Record<ReactionType, string> = {
 
 interface ReactionBarProps {
   reactions: CommentReactions;
-  myReaction?: ReactionType | null;
+  myReaction?: ReactionType | null | undefined;
   commentId: string;
 }
 
@@ -26,23 +27,63 @@ export function ReactionBar({
 }: ReactionBarProps) {
   const queryClient = useQueryClient();
 
-  const handleReaction = async (type: ReactionType) => {
-    if (myReaction === type) {
-      await removeReaction(commentId, type);
-    } else {
-      await addReaction(commentId, type);
-    }
-    queryClient.invalidateQueries({ queryKey: ['dashboard', 'comments'] });
-  };
+  // Optimistic local state
+  const [localReactions, setLocalReactions] = useState<CommentReactions>(reactions);
+  const [localMyReaction, setLocalMyReaction] = useState<ReactionType | null>(myReaction ?? null);
 
-  const hasAnyReaction = Object.values(reactions).some((count) => count > 0);
+  // Sync when server data changes
+  useEffect(() => {
+    setLocalReactions(reactions);
+    setLocalMyReaction(myReaction ?? null);
+  }, [reactions, myReaction]);
+
+  const handleReaction = useCallback(async (type: ReactionType) => {
+    const wasActive = localMyReaction === type;
+
+    // Optimistic update
+    if (wasActive) {
+      setLocalMyReaction(null);
+      setLocalReactions((prev) => ({
+        ...prev,
+        [type]: Math.max(0, (prev[type] || 0) - 1),
+      }));
+    } else {
+      // If switching from another reaction, decrement old one
+      if (localMyReaction) {
+        setLocalReactions((prev) => ({
+          ...prev,
+          [localMyReaction]: Math.max(0, (prev[localMyReaction] || 0) - 1),
+          [type]: (prev[type] || 0) + 1,
+        }));
+      } else {
+        setLocalReactions((prev) => ({
+          ...prev,
+          [type]: (prev[type] || 0) + 1,
+        }));
+      }
+      setLocalMyReaction(type);
+    }
+
+    try {
+      if (wasActive) {
+        await removeReaction(commentId);
+      } else {
+        await addReaction(commentId, { reaction: type });
+      }
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'comments'] });
+    } catch {
+      // Rollback on error
+      setLocalReactions(reactions);
+      setLocalMyReaction(myReaction ?? null);
+    }
+  }, [localMyReaction, commentId, reactions, myReaction, queryClient]);
 
   return (
     <XStack alignItems="center" gap="$1">
       {(Object.entries(REACTION_EMOJIS) as [ReactionType, string][]).map(
         ([type, emoji]) => {
-          const count = reactions[type] || 0;
-          const isActive = myReaction === type;
+          const count = localReactions[type] || 0;
+          const isActive = localMyReaction === type;
 
           if (count === 0 && !isActive) return null;
 
@@ -73,7 +114,7 @@ export function ReactionBar({
       )}
 
       {/* Quick add reaction */}
-      {!myReaction && (
+      {!localMyReaction && (
         <Pressable onPress={() => handleReaction('heart')}>
           <Text size="xs" color="secondary">
             ❤️

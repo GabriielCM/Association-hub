@@ -41,7 +41,7 @@ function StoryAvatar({
     <Pressable onPress={onPress} style={{ marginRight: 12 }}>
       <YStack alignItems="center" gap="$1">
         <YStack
-          borderWidth={2}
+          borderWidth={3}
           borderColor={item.has_unseen ? '$accent' : '$borderColor'}
           borderRadius={32}
           padding="$0.5"
@@ -50,6 +50,8 @@ function StoryAvatar({
             src={item.avatar_url}
             name={item.username}
             size="lg"
+            showStatus={item.is_online !== undefined}
+            status={item.is_online ? 'online' : 'offline'}
           />
         </YStack>
         <Text

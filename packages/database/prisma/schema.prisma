@@ -35,7 +35,11 @@ model User {
   username     String?    @unique // @username único para perfil
   bio          String?    // Bio do perfil (max 150 chars)
   avatarUrl    String?    @map("avatar_url")
+  coverImageUrl String?   @map("cover_image_url")
   phone        String?
+  socialInstagram String? @map("social_instagram")
+  socialFacebook  String? @map("social_facebook")
+  socialX         String? @map("social_x")
   role         UserRole   @default(USER)
   status       UserStatus @default(PENDING)
   isVerified   Boolean    @default(false) @map("is_verified")

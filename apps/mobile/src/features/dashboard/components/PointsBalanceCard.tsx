@@ -16,8 +16,8 @@ interface PointsBalanceCardProps {
 function MiniChart({ data }: { data: number[] }) {
   if (!data || data.length === 0) return null;
 
-  const width = 120;
-  const height = 40;
+  const width = 80;
+  const height = 30;
   const max = Math.max(...data, 1);
   const min = Math.min(...data, 0);
   const range = max - min || 1;
@@ -53,7 +53,7 @@ export function PointsBalanceCard({ user, isLoading }: PointsBalanceCardProps) {
   return (
     <Pressable onPress={() => router.push('/points')}>
       <Card variant="elevated">
-        <YStack gap="$3" padding="$1">
+        <YStack gap="$2">
           <XStack alignItems="center" justifyContent="space-between">
             <XStack alignItems="center" gap="$2">
               <Icon icon={Star} size="lg" color="warning" weight="fill" />
@@ -71,7 +71,7 @@ export function PointsBalanceCard({ user, isLoading }: PointsBalanceCardProps) {
               {isLoading ? (
                 <Spinner size="sm" />
               ) : (
-                <Heading level={2} color="accent">
+                <Heading level={3} color="accent">
                   {formatPoints(user?.points ?? 0)}
                 </Heading>
               )}

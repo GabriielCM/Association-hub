@@ -1,18 +1,31 @@
-import { memo, useState } from 'react';
-import { Pressable, Image, Dimensions } from 'react-native';
-import { YStack, XStack } from 'tamagui';
+import { memo, useState, useRef, useCallback } from 'react';
+import { Pressable, Image, Dimensions, View } from 'react-native';
+import { YStack, XStack, ZStack } from 'tamagui';
 import { useRouter } from 'expo-router';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withDelay,
+  runOnJS,
+} from 'react-native-reanimated';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 
 import { Text, Card, Avatar, Icon } from '@ahub/ui';
-import { Heart, ChatCircle } from '@ahub/ui/src/icons';
+import { Heart, ChatCircle, ShareNetwork } from '@ahub/ui/src/icons';
 import DotsThree from 'phosphor-react-native/src/icons/DotsThree';
 import SealCheck from 'phosphor-react-native/src/icons/SealCheck';
 import { useLikePost } from '../hooks/useFeedMutations';
 import { resolveUploadUrl } from '@/config/constants';
 import { PostOptionsMenu } from './PostOptionsMenu';
+import { ShareCard } from './ShareCard';
 import type { FeedPost } from '@ahub/shared/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const IMAGE_WIDTH = SCREEN_WIDTH - 48;
+const DOUBLE_TAP_DELAY = 300;
 
 function timeAgo(date: Date): string {
   const now = new Date();
@@ -40,13 +53,61 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
   const router = useRouter();
   const { mutate: toggleLike } = useLikePost();
   const [menuVisible, setMenuVisible] = useState(false);
+  const lastTapRef = useRef(0);
+  const shareCardRef = useRef<View>(null);
 
   const { author, content, created_at } = post;
   const isVerified = (author as any).is_verified;
 
+  // Double-tap heart animation
+  const heartScale = useSharedValue(0);
+  const heartOpacity = useSharedValue(0);
+
+  const heartAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heartScale.value }],
+    opacity: heartOpacity.value,
+  }));
+
+  const triggerLike = useCallback(() => {
+    if (!content.liked_by_me) {
+      toggleLike({ postId: post.id, liked: false });
+    }
+  }, [content.liked_by_me, post.id, toggleLike]);
+
+  const handleDoubleTap = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      // Double tap detected
+      runOnJS(triggerLike)();
+      heartScale.value = 0;
+      heartOpacity.value = 1;
+      heartScale.value = withSpring(1.1, { damping: 12, stiffness: 200 }, () => {
+        heartScale.value = withTiming(1, { duration: 80 });
+        heartOpacity.value = withDelay(100, withTiming(0, { duration: 200 }));
+      });
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+    }
+  }, [triggerLike, heartScale, heartOpacity]);
+
   const handleLike = () => {
     toggleLike({ postId: post.id, liked: content.liked_by_me });
   };
+
+  const handleShare = useCallback(async () => {
+    try {
+      const uri = await captureRef(shareCardRef, {
+        format: 'jpg',
+        quality: 0.9,
+      });
+      await Sharing.shareAsync(uri, { mimeType: 'image/jpeg' });
+    } catch {
+      // Fallback to text share
+      const { Share } = require('react-native');
+      Share.share({ message: content.description || 'Confira este post no A-hub!' });
+    }
+  }, [content.description]);
 
   return (
     <Card variant="flat">
@@ -80,17 +141,38 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
           </Pressable>
         </XStack>
 
-        {/* Image */}
+        {/* Image with double-tap like */}
         {content.image_url && (
-          <Image
-            source={{ uri: resolveUploadUrl(content.image_url)! }}
-            style={{
-              width: SCREEN_WIDTH - 48,
-              height: SCREEN_WIDTH - 48,
-              borderRadius: 8,
-            }}
-            resizeMode="cover"
-          />
+          <Pressable onPress={handleDoubleTap}>
+            <ZStack width={IMAGE_WIDTH} height={IMAGE_WIDTH}>
+              <Image
+                source={{ uri: resolveUploadUrl(content.image_url)! }}
+                style={{
+                  width: IMAGE_WIDTH,
+                  height: IMAGE_WIDTH,
+                  borderRadius: 8,
+                }}
+                resizeMode="cover"
+              />
+              <Animated.View
+                style={[
+                  {
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  },
+                  heartAnimatedStyle,
+                ]}
+                pointerEvents="none"
+              >
+                <Icon icon={Heart} size={80} color="#FFFFFF" weight="fill" />
+              </Animated.View>
+            </ZStack>
+          </Pressable>
         )}
 
         {/* Actions */}
@@ -112,6 +194,10 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
               </Text>
             </XStack>
           </Pressable>
+
+          <Pressable onPress={handleShare}>
+            <Icon icon={ShareNetwork} size="lg" color="secondary" />
+          </Pressable>
         </XStack>
 
         {/* Description */}
@@ -126,6 +212,14 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
         visible={menuVisible}
         post={post}
         onClose={() => setMenuVisible(false)}
+      />
+
+      {/* Off-screen share card for capture */}
+      <ShareCard
+        ref={shareCardRef}
+        imageUrl={resolveUploadUrl(content.image_url)}
+        description={content.description}
+        authorName={author.name}
       />
     </Card>
   );

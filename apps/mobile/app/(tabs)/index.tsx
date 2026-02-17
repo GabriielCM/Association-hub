@@ -1,11 +1,12 @@
 import { useCallback, useRef } from 'react';
-import { FlatList, Pressable, ActivityIndicator } from 'react-native';
+import { FlatList, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
-import { Text, Heading, Avatar, Spinner, Icon } from '@ahub/ui';
+import { Text, Heading, Avatar, Icon } from '@ahub/ui';
 import { Note } from '@ahub/ui/src/icons';
+import Plus from 'phosphor-react-native/src/icons/Plus';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useDashboardSummary, useFeed } from '@/features/dashboard/hooks/useDashboard';
 import { useDashboardWebSocket } from '@/features/dashboard/hooks/useDashboardWebSocket';
@@ -23,6 +24,12 @@ import { FeedPollCard } from '@/features/dashboard/components/FeedPollCard';
 import { FeedEventCard } from '@/features/dashboard/components/FeedEventCard';
 import { OfflineBanner } from '@/features/dashboard/components/OfflineBanner';
 import { OnboardingOverlay } from '@/features/dashboard/components/OnboardingOverlay';
+import {
+  SkeletonPointsCard,
+  SkeletonQuickAccess,
+  SkeletonStories,
+  SkeletonFeedPost,
+} from '@/features/dashboard/components/HomeSkeletons';
 
 import type { FeedPost } from '@ahub/shared/types';
 
@@ -79,54 +86,22 @@ export default function HomeScreen() {
   const ListHeader = useCallback(
     () => (
       <YStack padding="$4" gap="$4">
-        {/* Header with user greeting */}
-        <XStack alignItems="center" justifyContent="space-between">
-          <YStack>
-            <Text color="secondary" size="sm">
-              Bem-vindo,
-            </Text>
-            <Heading level={4}>{user?.name || 'Membro'}</Heading>
-          </YStack>
-          <XStack alignItems="center" gap="$3">
-            <NotificationBadge />
-            <Avatar
-              src={user?.avatarUrl}
-              name={user?.name}
-              size="lg"
-              status="online"
-              showStatus
-            />
-          </XStack>
-        </XStack>
-
         {/* Points Card */}
-        <PointsBalanceCard user={summary?.user} isLoading={summaryLoading} />
+        {summaryLoading ? <SkeletonPointsCard /> : (
+          <PointsBalanceCard user={summary?.user} isLoading={summaryLoading} />
+        )}
 
         {/* Quick Access Carousel */}
-        <QuickAccessCarousel />
+        {summaryLoading ? <SkeletonQuickAccess /> : <QuickAccessCarousel />}
 
         {/* Stories Row */}
-        <StoriesRow />
+        {summaryLoading ? <SkeletonStories /> : <StoriesRow />}
 
         {/* New Posts Banner */}
         <NewPostsBanner onPress={scrollToTop} />
-
-        {/* Feed section header */}
-        <XStack alignItems="center" justifyContent="space-between">
-          <Text weight="semibold" size="lg">
-            Feed
-          </Text>
-          <Pressable
-            onPress={() => router.push('/dashboard/create-post' as any)}
-          >
-            <Text color="accent" size="sm" weight="semibold">
-              + Novo post
-            </Text>
-          </Pressable>
-        </XStack>
       </YStack>
     ),
-    [user, summary, summaryLoading, scrollToTop, router],
+    [summary, summaryLoading, scrollToTop],
   );
 
   const ListFooter = useCallback(() => {
@@ -152,11 +127,10 @@ export default function HomeScreen() {
   const ListEmpty = useCallback(() => {
     if (feedLoading) {
       return (
-        <YStack padding="$8" alignItems="center" gap="$2">
-          <Spinner size="lg" />
-          <Text color="secondary" size="sm">
-            Carregando feed...
-          </Text>
+        <YStack padding="$4" gap={12}>
+          <SkeletonFeedPost />
+          <SkeletonFeedPost />
+          <SkeletonFeedPost />
         </YStack>
       );
     }
@@ -183,6 +157,35 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <OfflineBanner />
+
+      {/* Sticky Header */}
+      <XStack
+        alignItems="center"
+        justifyContent="space-between"
+        paddingHorizontal="$4"
+        paddingVertical="$2"
+        borderBottomWidth={1}
+        borderBottomColor="$borderColor"
+        backgroundColor="$background"
+      >
+        <YStack>
+          <Text color="secondary" size="sm">
+            Bem-vindo,
+          </Text>
+          <Heading level={4}>{user?.name || 'Membro'}</Heading>
+        </YStack>
+        <XStack alignItems="center" gap="$3">
+          <NotificationBadge />
+          <Avatar
+            src={user?.avatarUrl}
+            name={user?.name}
+            size="lg"
+            status="online"
+            showStatus
+          />
+        </XStack>
+      </XStack>
+
       <FlatList
         ref={flatListRef}
         data={feedPosts}
@@ -197,12 +200,42 @@ export default function HomeScreen() {
           }
         }}
         onEndReachedThreshold={0.5}
-        onRefresh={refetch}
-        refreshing={isRefetching}
-        contentContainerStyle={{ paddingBottom: 16 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor="#8B5CF6"
+            colors={['#8B5CF6']}
+            progressBackgroundColor="#FFFFFF"
+          />
+        }
+        contentContainerStyle={{ paddingBottom: 80 }}
         ItemSeparatorComponent={() => <YStack height={12} />}
         showsVerticalScrollIndicator={false}
       />
+
+      {/* FAB - New Post */}
+      <Pressable
+        onPress={() => router.push('/dashboard/create-post' as any)}
+        style={{
+          position: 'absolute',
+          bottom: 24,
+          right: 24,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: '#8B5CF6',
+          alignItems: 'center',
+          justifyContent: 'center',
+          elevation: 6,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.27,
+          shadowRadius: 4.65,
+        }}
+      >
+        <Icon icon={Plus} size="lg" color="#FFFFFF" weight="bold" />
+      </Pressable>
 
       <CelebrationOverlay />
       <OnboardingOverlay />

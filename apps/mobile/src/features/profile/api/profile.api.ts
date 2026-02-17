@@ -3,6 +3,7 @@ import { api } from '@/services/api/client';
 import type {
   UserProfile,
   UserBadgesResponse,
+  CoverUploadResult,
   UserRankingsResponse,
   UsernameCheckResponse,
   UpdateProfileResult,
@@ -27,6 +28,11 @@ export async function updateProfile(data: {
   username?: string | undefined;
   bio?: string | undefined;
   phone?: string | undefined;
+  socialLinks?: {
+    instagram?: string | undefined;
+    facebook?: string | undefined;
+    x?: string | undefined;
+  } | undefined;
 }): Promise<UpdateProfileResult> {
   return put<UpdateProfileResult>('/user/profile', data);
 }
@@ -44,6 +50,29 @@ export async function uploadAvatar(file: {
   } as unknown as Blob);
 
   const response = await api.post('/user/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    transformRequest: (data) => data,
+  });
+
+  if (!response.data.success) {
+    throw new Error(response.data.error?.message || 'Upload failed');
+  }
+  return response.data.data;
+}
+
+export async function uploadCover(file: {
+  uri: string;
+  name: string;
+  type: string;
+}): Promise<CoverUploadResult> {
+  const formData = new FormData();
+  formData.append('file', {
+    uri: file.uri,
+    name: file.name,
+    type: file.type,
+  } as unknown as Blob);
+
+  const response = await api.post('/user/cover', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
     transformRequest: (data) => data,
   });

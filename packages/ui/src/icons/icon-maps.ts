@@ -252,6 +252,7 @@ export const PROFILE_ICONS = {
   rankings: ChartBar,
   help: Question,
   subscription: Star,
+  back: CaretLeft,
 } as const satisfies Record<string, Icon>;
 
 // ─── WALLET / PDV ───────────────────────────────────

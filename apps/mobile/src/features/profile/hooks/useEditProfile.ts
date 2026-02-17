@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   updateProfile,
   uploadAvatar,
+  uploadCover,
   updateBadgesDisplay,
   checkUsername,
 } from '../api/profile.api';
@@ -10,6 +11,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import type {
   UpdateProfileResult,
   AvatarUploadResult,
+  CoverUploadResult,
   UpdateBadgesDisplayResult,
   UsernameCheckResponse,
 } from '@ahub/shared/types';
@@ -21,7 +23,13 @@ export function useUpdateProfile() {
   return useMutation<
     UpdateProfileResult,
     Error,
-    { name?: string | undefined; username?: string | undefined; bio?: string | undefined; phone?: string | undefined }
+    {
+      name?: string | undefined;
+      username?: string | undefined;
+      bio?: string | undefined;
+      phone?: string | undefined;
+      socialLinks?: { instagram?: string | undefined; facebook?: string | undefined; x?: string | undefined } | undefined;
+    }
   >({
     mutationFn: updateProfile,
     onSuccess: (data) => {
@@ -52,6 +60,23 @@ export function useUploadAvatar() {
     mutationFn: uploadAvatar,
     onSuccess: (data) => {
       updateUser({ avatarUrl: data.avatarUrl });
+      queryClient.invalidateQueries({ queryKey: profileKeys.all });
+    },
+  });
+}
+
+export function useUploadCover() {
+  const queryClient = useQueryClient();
+  const updateUser = useAuthStore((state) => state.updateUser);
+
+  return useMutation<
+    CoverUploadResult,
+    Error,
+    { uri: string; name: string; type: string }
+  >({
+    mutationFn: uploadCover,
+    onSuccess: (data) => {
+      updateUser({ coverImageUrl: data.coverImageUrl });
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },
   });

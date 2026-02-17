@@ -9,6 +9,7 @@ export interface User {
   username?: string | undefined;
   bio?: string | undefined;
   avatarUrl?: string | undefined;
+  coverImageUrl?: string | undefined;
   phone?: string | undefined;
   role: UserRole;
   status: UserStatus;
@@ -326,20 +327,30 @@ export interface AdminSubscriptionReport {
 // PROFILE TYPES
 // ===========================================
 
+export interface SocialLinks {
+  instagram?: string | undefined;
+  facebook?: string | undefined;
+  x?: string | undefined;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
   username?: string;
   bio?: string;
   avatarUrl?: string;
+  coverImageUrl?: string;
   isVerified: boolean;
   isMe: boolean;
+  isOnline: boolean;
   stats: {
     points: number;
     lifetimePoints: number;
   };
   badges: ProfileBadge[];
   subscription: string | null;
+  subscriptionColor: string | null;
+  socialLinks: SocialLinks;
   memberSince: Date;
 }
 
@@ -364,10 +375,23 @@ export interface UserBadge {
   isFeatured: boolean;
 }
 
+export interface LockedBadge {
+  id: string;
+  name: string;
+  iconUrl?: string;
+  description?: string;
+  criteria: {
+    type: string;
+    value: number;
+  };
+  progress?: number;
+}
+
 export interface UserBadgesResponse {
   data: UserBadge[];
   total: number;
   featured: number;
+  lockedBadges: LockedBadge[];
 }
 
 export interface UserRankingEntry {
@@ -402,6 +426,12 @@ export interface UpdateProfileResult {
 export interface AvatarUploadResult {
   id: string;
   avatarUrl: string;
+  updatedAt: Date;
+}
+
+export interface CoverUploadResult {
+  id: string;
+  coverImageUrl: string;
   updatedAt: Date;
 }
 

@@ -24,10 +24,15 @@ export class ProfileService {
         username: true,
         bio: true,
         avatarUrl: true,
+        coverImageUrl: true,
+        socialInstagram: true,
+        socialFacebook: true,
+        socialX: true,
         status: true,
         isVerified: true,
         createdAt: true,
         associationId: true,
+        lastLoginAt: true,
         points: {
           select: {
             balance: true,
@@ -40,6 +45,7 @@ export class ProfileService {
             plan: {
               select: {
                 name: true,
+                color: true,
                 verifiedBadge: true,
               },
             },
@@ -68,9 +74,13 @@ export class ProfileService {
       throw new NotFoundException('Usuário não encontrado');
     }
 
-    // Check if has active subscription with verified badge
-    const hasVerifiedBadge =
-      user.subscriptions.length > 0 && user.subscriptions[0].plan.verifiedBadge;
+    const activeSub = user.subscriptions.length > 0 ? user.subscriptions[0] : null;
+    const hasVerifiedBadge = activeSub?.plan.verifiedBadge ?? false;
+
+    // Consider user online if last login was within the last 5 minutes
+    const isOnline = user.lastLoginAt
+      ? Date.now() - user.lastLoginAt.getTime() < 5 * 60 * 1000
+      : false;
 
     return {
       id: user.id,
@@ -78,8 +88,10 @@ export class ProfileService {
       username: user.username,
       bio: user.bio,
       avatarUrl: user.avatarUrl,
+      coverImageUrl: user.coverImageUrl,
       isVerified: hasVerifiedBadge,
       isMe: userId === currentUserId,
+      isOnline,
       stats: {
         points: user.points?.balance || 0,
         lifetimePoints: user.points?.lifetimeEarned || 0,
@@ -91,7 +103,13 @@ export class ProfileService {
         description: ub.badge.description,
         earnedAt: ub.earnedAt,
       })),
-      subscription: user.subscriptions.length > 0 ? user.subscriptions[0].plan.name : null,
+      subscription: activeSub?.plan.name ?? null,
+      subscriptionColor: activeSub?.plan.color ?? null,
+      socialLinks: {
+        instagram: user.socialInstagram || undefined,
+        facebook: user.socialFacebook || undefined,
+        x: user.socialX || undefined,
+      },
       memberSince: user.createdAt,
     };
   }
@@ -125,6 +143,34 @@ export class ProfileService {
       orderBy: { earnedAt: 'desc' },
     });
 
+    const earnedIds = new Set(badges.map((b) => b.badge.id));
+
+    // Fetch all active badges the user hasn't earned yet
+    const allBadges = await this.prisma.badge.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+        iconUrl: true,
+        description: true,
+        criteriaType: true,
+        criteriaValue: true,
+      },
+    });
+
+    const lockedBadges = allBadges
+      .filter((b) => !earnedIds.has(b.id))
+      .map((b) => ({
+        id: b.id,
+        name: b.name,
+        iconUrl: b.iconUrl,
+        description: b.description,
+        criteria: {
+          type: b.criteriaType,
+          value: b.criteriaValue,
+        },
+      }));
+
     return {
       data: badges.map((ub) => ({
         id: ub.badge.id,
@@ -140,6 +186,7 @@ export class ProfileService {
       })),
       total: badges.length,
       featured: badges.filter((b) => b.isFeatured).length,
+      lockedBadges,
     };
   }
 
@@ -270,6 +317,15 @@ export class ProfileService {
         ...(dto.bio !== undefined && { bio: dto.bio }),
         ...(dto.phone !== undefined && { phone: dto.phone }),
         ...(usernameIsChanging && { usernameChangedAt: new Date() }),
+        ...(dto.socialLinks?.instagram !== undefined && {
+          socialInstagram: dto.socialLinks.instagram || null,
+        }),
+        ...(dto.socialLinks?.facebook !== undefined && {
+          socialFacebook: dto.socialLinks.facebook || null,
+        }),
+        ...(dto.socialLinks?.x !== undefined && {
+          socialX: dto.socialLinks.x || null,
+        }),
       },
       select: {
         id: true,
@@ -278,6 +334,10 @@ export class ProfileService {
         bio: true,
         phone: true,
         avatarUrl: true,
+        coverImageUrl: true,
+        socialInstagram: true,
+        socialFacebook: true,
+        socialX: true,
         usernameChangedAt: true,
         updatedAt: true,
       },
@@ -293,6 +353,20 @@ export class ProfileService {
       select: {
         id: true,
         avatarUrl: true,
+        updatedAt: true,
+      },
+    });
+
+    return user;
+  }
+
+  async updateCover(userId: string, coverImageUrl: string) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { coverImageUrl },
+      select: {
+        id: true,
+        coverImageUrl: true,
         updatedAt: true,
       },
     });
