@@ -14,6 +14,7 @@ import { YStack, XStack } from 'tamagui';
 import { Text, Avatar } from '@ahub/ui';
 import Trash from 'phosphor-react-native/src/icons/Trash';
 import X from 'phosphor-react-native/src/icons/X';
+import { resolveUploadUrl } from '@/config/constants';
 import { useUserStories } from '../hooks/useDashboard';
 import { useRecordStoryView, useDeleteStory } from '../hooks/useStoryMutations';
 import type { StoryResponse, StoryUserListItem } from '@ahub/shared/types';
@@ -184,7 +185,7 @@ export function StoryViewer({
         <XStack style={styles.header}>
           <XStack alignItems="center" gap="$2" flex={1}>
             <Avatar
-              src={userItem.avatar_url}
+              src={resolveUploadUrl(userItem.avatar_url) || undefined}
               name={userItem.username}
               size="sm"
             />
@@ -258,7 +259,7 @@ function StoryContent({ story }: { story: StoryResponse }) {
 
   return (
     <Image
-      source={{ uri: story.url }}
+      source={{ uri: resolveUploadUrl(story.url)! }}
       style={styles.storyContent}
       resizeMode="cover"
     />

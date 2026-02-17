@@ -15,6 +15,7 @@ import { Text, Avatar } from '@ahub/ui';
 import Trash from 'phosphor-react-native/src/icons/Trash';
 import X from 'phosphor-react-native/src/icons/X';
 import { useAuthContext } from '@/providers/AuthProvider';
+import { resolveUploadUrl } from '@/config/constants';
 import { useUserStories } from '@/features/dashboard/hooks/useDashboard';
 import {
   useRecordStoryView,
@@ -165,7 +166,7 @@ export default function StoryViewerScreen() {
       <XStack style={styles.header}>
         <XStack alignItems="center" gap="$2" flex={1}>
           <Avatar
-            src={avatarUrl}
+            src={resolveUploadUrl(avatarUrl) || undefined}
             name={username || ''}
             size="sm"
           />
@@ -239,7 +240,7 @@ function StoryContent({ story }: { story: StoryResponse }) {
 
   return (
     <Image
-      source={{ uri: story.url }}
+      source={{ uri: resolveUploadUrl(story.url)! }}
       style={styles.storyContent}
       resizeMode="cover"
     />

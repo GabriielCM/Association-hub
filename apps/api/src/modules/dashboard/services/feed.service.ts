@@ -65,6 +65,61 @@ export class FeedService {
     };
   }
 
+  async getUserPosts(
+    userId: string,
+    currentUserId: string,
+    offset = 0,
+    limit = 10,
+  ): Promise<{ posts: PostResponseDto[]; has_more: boolean }> {
+    const posts = await this.prisma.post.findMany({
+      where: {
+        authorId: userId,
+        deletedAt: null,
+        isHidden: false,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+            subscriptions: {
+              where: { status: 'ACTIVE' },
+              select: { id: true },
+              take: 1,
+            },
+          },
+        },
+        likes: {
+          where: { userId: currentUserId },
+          select: { id: true },
+        },
+        poll: {
+          include: {
+            options: {
+              orderBy: { order: 'asc' },
+            },
+            votes: {
+              where: { userId: currentUserId },
+              select: { optionId: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: offset,
+      take: limit + 1,
+    });
+
+    const hasMore = posts.length > limit;
+    const resultPosts = hasMore ? posts.slice(0, limit) : posts;
+
+    return {
+      posts: resultPosts.map((post) => this.formatPost(post, currentUserId)),
+      has_more: hasMore,
+    };
+  }
+
   async getPreview(
     associationId: string,
     limit = 3,

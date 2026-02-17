@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards, Request } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -22,12 +22,30 @@ export class FeedController {
   async getFeed(
     @Request() req: any,
     @Query() query: FeedQueryDto,
-  ): Promise<FeedResponseDto> {
-    return this.feedService.getFeed(
+  ) {
+    const data = await this.feedService.getFeed(
       req.user.associationId,
       req.user.id,
       query.offset || 0,
       query.limit || 10,
     );
+    return { success: true, data };
+  }
+
+  @Get('user/:userId')
+  @ApiOperation({ summary: 'Obter posts de um usuário' })
+  @ApiResponse({ status: 200, type: FeedResponseDto })
+  async getUserPosts(
+    @Request() req: any,
+    @Param('userId') userId: string,
+    @Query() query: FeedQueryDto,
+  ) {
+    const data = await this.feedService.getUserPosts(
+      userId,
+      req.user.id,
+      query.offset || 0,
+      query.limit || 10,
+    );
+    return { success: true, data };
   }
 }

@@ -97,6 +97,7 @@ export class PartnersService {
         id: partner.id,
         name: partner.name,
         logoUrl: partner.logoUrl,
+        bannerUrl: partner.bannerUrl,
         benefit: isEligible ? partner.benefit : 'Benefício exclusivo para assinantes',
         category: partner.category,
         isEligible,

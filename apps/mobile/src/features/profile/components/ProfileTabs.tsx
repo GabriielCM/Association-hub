@@ -55,7 +55,7 @@ export function ProfileTabs({ userId, isMe }: ProfileTabsProps) {
 
       {/* Tab Content */}
       <YStack paddingHorizontal="$2" minHeight={200}>
-        {activeTab === 'posts' && <PostsTab />}
+        {activeTab === 'posts' && <PostsTab userId={userId} />}
         {activeTab === 'badges' && <BadgesTab userId={userId} isMe={isMe} />}
         {activeTab === 'rankings' && <RankingsTab userId={userId} />}
       </YStack>

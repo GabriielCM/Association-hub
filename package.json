@@ -44,7 +44,8 @@
     "db:reset": "pnpm --filter @ahub/database migrate:reset",
     "db:seed": "pnpm --filter @ahub/database seed",
     "clean": "turbo run clean && rm -rf node_modules",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "node scripts/patch-expo-ngrok.js"
   },
   "devDependencies": {
     "@tamagui/babel-plugin": "2.0.0-rc.0",

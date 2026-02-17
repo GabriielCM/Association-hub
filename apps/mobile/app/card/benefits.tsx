@@ -1,30 +1,51 @@
 import { useState, useCallback, useMemo } from 'react';
-import { FlatList } from 'react-native';
+import {
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  View,
+  useColorScheme,
+} from 'react-native';
 import { router } from 'expo-router';
 import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Spinner, ScreenHeader, Icon } from '@ahub/ui';
-import MagnifyingGlass from 'phosphor-react-native/src/icons/MagnifyingGlass';
+import { Spinner } from '@ahub/ui';
 import { useBenefitsList, useCategories } from '@/features/card/hooks/useBenefits';
-import { PartnerCard } from '@/features/card/components/PartnerCard';
-import { PartnerFilters } from '@/features/card/components/PartnerFilters';
+import { useUserLocation, calculateDistance, formatDistance } from '@/features/card/hooks/useLocation';
+import { useBookmarksStore } from '@/stores/bookmarks.store';
+import { PartnerBigCard } from '@/features/card/components/PartnerBigCard';
+import { FeaturedCarousel } from '@/features/card/components/FeaturedCarousel';
+import { PartnerCardSkeleton } from '@/features/card/components/PartnerCardSkeleton';
+import { BenefitsEmptyState } from '@/features/card/components/BenefitsEmptyState';
+import { PartnerFilters, type SortMode } from '@/features/card/components/PartnerFilters';
+import { BenefitsMapView } from '@/features/card/components/BenefitsMapView';
 import type { PartnerListItem } from '@ahub/shared/types';
 
 export default function BenefitsScreen() {
+  const isDark = useColorScheme() === 'dark';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  const [sortBy, setSortBy] = useState<SortMode>('featured');
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const { location } = useUserLocation();
+
+  const toggleBookmark = useBookmarksStore((s) => s.toggleBookmark);
+  const bookmarkedIds = useBookmarksStore((s) => s.bookmarkedIds);
 
   const filters = useMemo(
     () => ({
       search: searchQuery || undefined,
       category: selectedCategory,
+      sortBy: sortBy === 'distance' ? ('name' as const) : sortBy === 'featured' ? ('recent' as const) : sortBy,
     }),
-    [searchQuery, selectedCategory]
+    [searchQuery, selectedCategory, sortBy],
   );
 
   const {
     data,
     isLoading,
+    isRefetching,
+    refetch,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -32,68 +53,201 @@ export default function BenefitsScreen() {
 
   const { data: categoriesData } = useCategories();
 
-  const partners = useMemo(
-    () => data?.pages.flatMap((page) => page.data) || [],
-    [data]
-  );
+  // Enrich partners with distance and apply client-side sorting
+  const partners = useMemo(() => {
+    const items = data?.pages.flatMap((page) => page.data) || [];
+
+    const withDistance = items.map((partner) => {
+      const partnerLat = (partner as unknown as { lat?: number }).lat;
+      const partnerLng = (partner as unknown as { lng?: number }).lng;
+      const dist =
+        location && partnerLat != null && partnerLng != null
+          ? calculateDistance(location.lat, location.lng, partnerLat, partnerLng)
+          : undefined;
+      return { ...partner, _distance: dist };
+    });
+
+    if (sortBy === 'distance') {
+      withDistance.sort((a, b) => {
+        if (a._distance == null && b._distance == null) return 0;
+        if (a._distance == null) return 1;
+        if (b._distance == null) return -1;
+        return a._distance - b._distance;
+      });
+    } else if (sortBy === 'featured') {
+      withDistance.sort((a, b) => {
+        // Featured first, then by popularity
+        if (a.isFeatured && !b.isFeatured) return -1;
+        if (!a.isFeatured && b.isFeatured) return 1;
+        return (b.popularity ?? 0) - (a.popularity ?? 0);
+      });
+    }
+
+    return withDistance;
+  }, [data, location, sortBy]);
+
+  // Featured partners for carousel
+  const featuredPartners = useMemo(() => {
+    const items = data?.pages.flatMap((page) => page.data) || [];
+    const featured = items.filter((p) => p.isFeatured);
+    if (featured.length > 0) return featured.slice(0, 8);
+    // Fallback: top 5 by popularity
+    return [...items]
+      .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+      .slice(0, 5);
+  }, [data]);
+
+  const hasActiveFilters = !!(searchQuery || selectedCategory);
 
   const handlePartnerPress = useCallback((partner: PartnerListItem) => {
     router.push(`/card/partner/${partner.id}`);
   }, []);
 
-  const renderPartner = ({ item }: { item: PartnerListItem }) => (
-    <PartnerCard partner={item} onPress={handlePartnerPress} />
+  const handleBookmark = useCallback(
+    (id: string) => toggleBookmark(id),
+    [toggleBookmark],
   );
 
-  return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
-      <ScreenHeader title="Benefícios" headingLevel={3} onBack={() => router.back()} />
-      <YStack flex={1} padding="$4" gap="$4">
-        {/* Filters */}
-        <PartnerFilters
-          categories={categoriesData?.data || []}
-          selectedCategory={selectedCategory}
-          searchQuery={searchQuery}
-          onCategoryChange={setSelectedCategory}
-          onSearchChange={setSearchQuery}
-        />
+  const handleClearFilters = useCallback(() => {
+    setSearchQuery('');
+    setSelectedCategory(undefined);
+  }, []);
 
-        {/* Partners List */}
-        <FlatList
-          data={partners}
-          renderItem={renderPartner}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ gap: 12 }}
-          showsVerticalScrollIndicator={false}
-          onEndReached={() => {
-            if (hasNextPage && !isFetchingNextPage) {
-              fetchNextPage();
-            }
-          }}
-          onEndReachedThreshold={0.3}
-          ListEmptyComponent={
-            isLoading ? (
-              <YStack alignItems="center" paddingVertical="$8">
-                <Spinner size="lg" />
-              </YStack>
-            ) : (
-              <YStack alignItems="center" paddingVertical="$8">
-                <Icon icon={MagnifyingGlass} size="xl" color="muted" weight="duotone" />
-                <Text color="secondary" align="center" marginTop="$2">
-                  Nenhum parceiro encontrado.
-                </Text>
-              </YStack>
-            )
-          }
-          ListFooterComponent={
-            isFetchingNextPage ? (
-              <YStack alignItems="center" paddingVertical="$4">
-                <Spinner />
-              </YStack>
-            ) : null
-          }
+  const handleMapToggle = useCallback(() => {
+    setViewMode((prev) => (prev === 'list' ? 'map' : 'list'));
+  }, []);
+
+  const renderPartner = ({ item }: { item: (typeof partners)[number] }) => (
+    <View style={styles.cardWrapper}>
+      <PartnerBigCard
+        partner={item}
+        onPress={handlePartnerPress}
+        onBookmark={handleBookmark}
+        isBookmarked={bookmarkedIds.includes(item.id)}
+        distance={item._distance != null ? formatDistance(item._distance) : undefined}
+      />
+    </View>
+  );
+
+  const renderHeader = () => {
+    if (isLoading) return null;
+    if (featuredPartners.length === 0) return null;
+    if (searchQuery) return null; // Hide carousel when searching
+    return (
+      <View style={styles.carouselWrapper}>
+        <FeaturedCarousel
+          partners={featuredPartners}
+          onPress={handlePartnerPress}
         />
+      </View>
+    );
+  };
+
+  const renderEmpty = () => {
+    if (isLoading) {
+      return (
+        <YStack gap={16} paddingTop={8}>
+          <PartnerCardSkeleton />
+          <PartnerCardSkeleton />
+          <PartnerCardSkeleton />
+        </YStack>
+      );
+    }
+    return (
+      <BenefitsEmptyState
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={handleClearFilters}
+      />
+    );
+  };
+
+  return (
+    <SafeAreaView
+      style={[styles.safeArea, isDark && styles.safeAreaDark]}
+      edges={['top']}
+    >
+      <YStack flex={1} paddingHorizontal={16}>
+        {/* Filters — sticky */}
+        <View style={styles.filtersWrap}>
+          <PartnerFilters
+            categories={categoriesData?.data || []}
+            selectedCategory={selectedCategory}
+            searchQuery={searchQuery}
+            sortBy={sortBy}
+            onCategoryChange={setSelectedCategory}
+            onSearchChange={setSearchQuery}
+            onSortChange={setSortBy}
+            onMapToggle={handleMapToggle}
+            isMapMode={viewMode === 'map'}
+          />
+        </View>
+
+        {/* Content: List or Map */}
+        {viewMode === 'map' ? (
+          <BenefitsMapView
+            partners={partners}
+            userLocation={location}
+            onPartnerPress={handlePartnerPress}
+          />
+        ) : (
+          <FlatList
+            data={partners}
+            renderItem={renderPartner}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListHeaderComponent={renderHeader}
+            ListEmptyComponent={renderEmpty}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefetching}
+                onRefresh={refetch}
+                tintColor="#8B5CF6"
+                colors={['#8B5CF6']}
+              />
+            }
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) {
+                fetchNextPage();
+              }
+            }}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <YStack alignItems="center" paddingVertical={16}>
+                  <Spinner />
+                </YStack>
+              ) : null
+            }
+          />
+        )}
       </YStack>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  safeAreaDark: {
+    backgroundColor: '#111',
+  },
+  filtersWrap: {
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  listContent: {
+    paddingBottom: 24,
+    gap: 16,
+  },
+  cardWrapper: {
+    paddingHorizontal: 0,
+  },
+  carouselWrapper: {
+    marginBottom: 4,
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
+  },
+});

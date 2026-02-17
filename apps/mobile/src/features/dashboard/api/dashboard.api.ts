@@ -71,6 +71,10 @@ export async function getFeed(params?: FeedQueryParams): Promise<FeedResponse> {
   return get<FeedResponse>('/feed', params);
 }
 
+export async function getUserPosts(userId: string, params?: FeedQueryParams): Promise<FeedResponse> {
+  return get<FeedResponse>(`/feed/user/${userId}`, params);
+}
+
 // ============================================
 // POSTS
 // ============================================
@@ -79,8 +83,8 @@ export async function createPost(formData: FormData): Promise<CreatePostResponse
   return postFormData<CreatePostResponse>('/posts', formData);
 }
 
-export async function getPost(postId: string): Promise<FeedPost> {
-  return get<FeedPost>(`/posts/${postId}`);
+export async function getPost(postId: string): Promise<{ post: FeedPost }> {
+  return get<{ post: FeedPost }>(`/posts/${postId}`);
 }
 
 export async function updatePost(postId: string, data: UpdatePostRequest): Promise<FeedPost> {

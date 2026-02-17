@@ -31,7 +31,7 @@ export class PostsService {
   async createPost(
     userId: string,
     associationId: string,
-    imageUrl: string,
+    imageUrl: string | null,
     description: string,
   ): Promise<CreatePostResponseDto> {
     // Check suspension

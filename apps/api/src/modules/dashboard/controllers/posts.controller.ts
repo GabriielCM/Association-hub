@@ -23,6 +23,7 @@ import {
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
+import { UploadService } from '../../../common/services/upload.service';
 import { PostsService } from '../services/posts.service';
 import { ModerationService } from '../services/moderation.service';
 import { UserRole, ReportTargetType } from '@prisma/client';
@@ -43,6 +44,7 @@ export class PostsController {
   constructor(
     private readonly postsService: PostsService,
     private readonly moderationService: ModerationService,
+    private readonly uploadService: UploadService,
   ) {}
 
   @Post()
@@ -55,7 +57,7 @@ export class PostsController {
         image: { type: 'string', format: 'binary' },
         description: { type: 'string', maxLength: 500 },
       },
-      required: ['image', 'description'],
+      required: ['description'],
     },
   })
   @ApiResponse({ status: 201, type: CreatePostResponseDto })
@@ -64,16 +66,20 @@ export class PostsController {
     @Request() req: any,
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: CreatePostDto,
-  ): Promise<CreatePostResponseDto> {
-    // TODO: Upload file to S3 and get URL
-    const imageUrl = `/uploads/posts/${file?.filename || 'temp'}`;
+  ) {
+    let imageUrl: string | null = null;
+    if (file) {
+      const uploaded = await this.uploadService.uploadPostImage(file);
+      imageUrl = uploaded.url;
+    }
 
-    return this.postsService.createPost(
+    const data = await this.postsService.createPost(
       req.user.id,
       req.user.associationId,
       imageUrl,
       dto.description,
     );
+    return { success: true, data };
   }
 
   @Get(':id')
@@ -82,9 +88,9 @@ export class PostsController {
   async getPost(
     @Request() req: any,
     @Param('id') postId: string,
-  ): Promise<{ post: PostResponseDto }> {
+  ) {
     const post = await this.postsService.getPost(postId, req.user.id);
-    return { post };
+    return { success: true, data: { post } };
   }
 
   @Put(':id')
@@ -94,13 +100,13 @@ export class PostsController {
     @Request() req: any,
     @Param('id') postId: string,
     @Body() dto: UpdatePostDto,
-  ): Promise<{ post: PostResponseDto }> {
+  ) {
     const post = await this.postsService.updatePost(
       postId,
       req.user.id,
       dto.description,
     );
-    return { post };
+    return { success: true, data: { post } };
   }
 
   @Delete(':id')

@@ -59,4 +59,5 @@ export const STORAGE_KEYS = {
   FEED_CACHE: 'dashboard:feed_cache',
   AUTH_TOKEN: 'auth:token',
   AUTH_REFRESH_TOKEN: 'auth:refresh_token',
+  BOOKMARKED_PARTNERS: 'benefits:bookmarked_partners',
 } as const;

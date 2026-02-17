@@ -1,18 +1,55 @@
-import { View, StyleSheet } from 'react-native';
-import { YStack } from 'tamagui';
-import { Text, Avatar } from '@ahub/ui';
-import { QrCodeDisplay } from './QrCodeDisplay';
+import { memo } from 'react';
+import { View, StyleSheet, useWindowDimensions, useColorScheme } from 'react-native';
+import { YStack, XStack } from 'tamagui';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Text, Avatar, Icon } from '@ahub/ui';
+import { Crown } from '@ahub/ui/src/icons';
+import { cardGradients } from '@ahub/ui/src/themes/tokens';
+import { QrCodeGlow } from './QrCodeGlow';
+import { CardPattern } from './CardPattern';
+import { CardShine } from './CardShine';
+import { CardGlassView } from './CardGlassView';
+import { useGyroscope } from '../hooks/useGyroscope';
 import type { MemberCard, CardQrCode } from '@ahub/shared/types';
 
 interface CardFrontProps {
   card: MemberCard;
   qrCode?: CardQrCode | null;
   subscription?: { planName: string } | null;
+  gyroscopeEnabled?: boolean;
 }
 
-export function CardFront({ card, qrCode, subscription }: CardFrontProps) {
+export const CardFront = memo(function CardFront({
+  card,
+  qrCode,
+  subscription,
+  gyroscopeEnabled = true,
+}: CardFrontProps) {
+  const { width } = useWindowDimensions();
+  const cardWidth = width - 48;
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const gradient = isDark ? cardGradients.dark.front : cardGradients.light.front;
+  const { rotateX, rotateY } = useGyroscope(gyroscopeEnabled);
+
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={[gradient.start, gradient.end]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
+      {/* Geometric pattern overlay */}
+      <CardPattern width={cardWidth} height={540} />
+
+      {/* Gyroscope-driven light reflection */}
+      <CardShine
+        rotateX={rotateX}
+        rotateY={rotateY}
+        width={cardWidth}
+        height={540}
+      />
+
       {/* Association Logo */}
       <View style={styles.logoContainer}>
         {card.association.logoUrl ? (
@@ -31,58 +68,73 @@ export function CardFront({ card, qrCode, subscription }: CardFrontProps) {
         <Text style={styles.associationName}>{card.association.name}</Text>
       </View>
 
-      {/* User Photo */}
+      {/* User Photo + Info */}
       <View style={styles.userSection}>
         <Avatar
           src={card.user.avatarUrl}
           name={card.user.name}
           size="xl"
         />
-        <YStack alignItems="center" gap={4} marginTop={8}>
+        <YStack alignItems="center" gap={8} marginTop={8}>
           <Text style={styles.userName} numberOfLines={1}>
             {card.user.name}
           </Text>
           <Text style={styles.cardNumber}>
             {card.cardNumber}
           </Text>
+
+          {/* Plan Badge — Glass with Crown icon */}
           {subscription && (
-            <View style={styles.planBadge}>
-              <Text style={styles.planBadgeText}>{subscription.planName}</Text>
-            </View>
+            <CardGlassView borderRadius={20} style={styles.planBadgeGlass}>
+              <XStack
+                alignItems="center"
+                gap={6}
+                paddingHorizontal={14}
+                paddingVertical={6}
+              >
+                <Icon icon={Crown} size="sm" color="#FCD34D" weight="fill" />
+                <Text style={styles.planBadgeText}>
+                  {subscription.planName}
+                </Text>
+              </XStack>
+            </CardGlassView>
           )}
         </YStack>
       </View>
 
-      {/* QR Code */}
+      {/* QR Code with glow pulse */}
       {qrCode && card.status === 'ACTIVE' ? (
-        <View style={styles.qrContainer}>
-          <QrCodeDisplay
-            data={JSON.stringify({ data: qrCode.qrCodeData, hash: qrCode.qrCodeHash })}
-            size={140}
-          />
-        </View>
-      ) : (
+        <QrCodeGlow
+          data={JSON.stringify({
+            data: qrCode.qrCodeData,
+            hash: qrCode.qrCodeHash,
+          })}
+          size={120}
+        />
+      ) : card.status !== 'ACTIVE' ? (
         <View style={styles.inactiveOverlay}>
           <Text style={styles.inactiveText}>CARTEIRINHA INATIVA</Text>
           {card.statusReason && (
             <Text style={styles.reasonText}>{card.statusReason}</Text>
           )}
         </View>
-      )}
+      ) : null}
 
-      {/* Flip hint */}
-      <Text style={styles.flipHint}>Toque para virar</Text>
-    </View>
+      {/* Flip hint — Glass */}
+      <CardGlassView borderRadius={10} style={styles.hintGlass}>
+        <Text style={styles.flipHint}>Toque ou deslize para virar</Text>
+      </CardGlassView>
+    </LinearGradient>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#8B5CF6',
     padding: 24,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    gap: 16,
   },
   logoContainer: {
     alignItems: 'center',
@@ -122,10 +174,14 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     letterSpacing: 1,
   },
-  qrContainer: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 12,
+  planBadgeGlass: {
+    marginTop: 8,
+  },
+  planBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FCD34D',
+    letterSpacing: 0.5,
   },
   inactiveOverlay: {
     backgroundColor: 'rgba(239, 68, 68, 0.9)',
@@ -144,21 +200,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(255,255,255,0.8)',
   },
-  planBadge: {
-    backgroundColor: 'rgba(251, 191, 36, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 8,
+  hintGlass: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
     marginTop: 4,
-  },
-  planBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FCD34D',
-    letterSpacing: 0.5,
   },
   flipHint: {
     fontSize: 11,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
   },
 });

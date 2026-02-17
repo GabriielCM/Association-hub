@@ -6,6 +6,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { QueryProvider, ThemeProvider, AuthProvider } from '@/providers';
@@ -75,6 +76,7 @@ export default function RootLayout() {
   }, []);
 
   return (
+    <KeyboardProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryProvider>
@@ -92,5 +94,6 @@ export default function RootLayout() {
         </QueryProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
+    </KeyboardProvider>
   );
 }

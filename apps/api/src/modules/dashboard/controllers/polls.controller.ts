@@ -36,14 +36,15 @@ export class PollsController {
   async createPoll(
     @Request() req: any,
     @Body() dto: CreatePollDto,
-  ): Promise<CreatePollResponseDto> {
-    return this.pollsService.createPoll(
+  ) {
+    const data = await this.pollsService.createPoll(
       req.user.id,
       req.user.associationId,
       dto.question,
       dto.options,
       dto.duration_days,
     );
+    return { success: true, data };
   }
 
   @Post(':id/vote')
@@ -69,8 +70,8 @@ export class PollsController {
   async getResults(
     @Request() req: any,
     @Param('id') pollId: string,
-  ): Promise<PollResultsResponseDto> {
+  ) {
     const results = await this.pollsService.getResults(pollId, req.user.id);
-    return { results };
+    return { success: true, data: { results } };
   }
 }

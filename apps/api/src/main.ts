@@ -5,6 +5,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -27,6 +28,9 @@ async function bootstrap() {
       : true,
     credentials: true,
   });
+
+  // Global exception filter — wraps errors in { success: false, error }
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   // Validation
   app.useGlobalPipes(

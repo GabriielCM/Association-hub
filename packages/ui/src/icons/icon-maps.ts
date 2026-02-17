@@ -87,6 +87,12 @@ import Link from 'phosphor-react-native/src/icons/Link';
 import Image from 'phosphor-react-native/src/icons/Image';
 import CircleNotch from 'phosphor-react-native/src/icons/CircleNotch';
 import X from 'phosphor-react-native/src/icons/X';
+import Crown from 'phosphor-react-native/src/icons/Crown';
+import ShareNetwork from 'phosphor-react-native/src/icons/ShareNetwork';
+import BookmarkSimple from 'phosphor-react-native/src/icons/BookmarkSimple';
+import ListBullets from 'phosphor-react-native/src/icons/ListBullets';
+import MapTrifold from 'phosphor-react-native/src/icons/MapTrifold';
+import MagnifyingGlass from 'phosphor-react-native/src/icons/MagnifyingGlass';
 
 // ─── TAB BAR ────────────────────────────────────────
 export const TAB_ICONS = {
@@ -179,6 +185,13 @@ export const MESSAGE_ICONS = {
 } as const satisfies Record<string, Icon>;
 
 // ─── CARD / CARTEIRINHA ─────────────────────────────
+export const CARD_ICONS = {
+  crown: Crown,
+  share: ShareNetwork,
+  sun: Sun,
+  qrCode: QrCode,
+} as const satisfies Record<string, Icon>;
+
 export const CARD_HISTORY_ICONS = {
   CHECKIN: Buildings,
   BENEFIT_USED: Sparkle,
@@ -370,4 +383,10 @@ export {
   Image,
   CircleNotch,
   X,
+  Crown,
+  ShareNetwork,
+  BookmarkSimple,
+  ListBullets,
+  MapTrifold,
+  MagnifyingGlass,
 };

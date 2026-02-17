@@ -15,61 +15,54 @@ export class CardService {
   // USER ENDPOINTS
   // ===========================================
 
+  private readonly cardUserInclude = {
+    user: {
+      include: {
+        association: {
+          select: {
+            id: true,
+            name: true,
+            logoUrl: true,
+            phone: true,
+            email: true,
+            website: true,
+            address: true,
+          },
+        },
+        subscriptions: {
+          where: { status: 'ACTIVE' as const },
+          take: 1,
+          select: {
+            id: true,
+            status: true,
+            plan: { select: { id: true, name: true } },
+          },
+        },
+      },
+    },
+  };
+
   async getCard(userId: string) {
     // Get or create card for user
     let card = await this.prisma.memberCard.findUnique({
       where: { userId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            avatarUrl: true,
-            memberId: true,
-            association: {
-              select: {
-                id: true,
-                name: true,
-                logoUrl: true,
-                phone: true,
-                email: true,
-                website: true,
-                address: true,
-              },
-            },
-          },
-        },
-      },
+      include: this.cardUserInclude,
     });
 
     if (!card) {
-      // Auto-create card for user
-      await this.createCardForUser(userId);
+      // Auto-create card for user (ignore race condition duplicate)
+      try {
+        await this.createCardForUser(userId);
+      } catch (error: any) {
+        if (error.code !== 'P2002') throw error;
+      }
       card = await this.prisma.memberCard.findUnique({
         where: { userId },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              avatarUrl: true,
-              memberId: true,
-              association: {
-                select: {
-                  id: true,
-                  name: true,
-                  logoUrl: true,
-                  phone: true,
-                  email: true,
-                  website: true,
-                  address: true,
-                },
-              },
-            },
-          },
-        },
+        include: this.cardUserInclude,
       });
     }
+
+    const sub = card!.user.subscriptions[0] ?? null;
 
     return {
       id: card!.id,
@@ -85,52 +78,96 @@ export class CardService {
         memberId: card!.user.memberId,
       },
       association: card!.user.association,
+      subscription: sub
+        ? { status: sub.status, planName: sub.plan.name }
+        : null,
     };
   }
 
   async getCardStatus(userId: string) {
     const card = await this.prisma.memberCard.findUnique({
       where: { userId },
-      select: {
-        status: true,
-        statusReason: true,
-        expiresAt: true,
+      include: {
+        user: {
+          include: {
+            subscriptions: {
+              take: 1,
+              orderBy: { createdAt: 'desc' },
+              select: { status: true },
+            },
+          },
+        },
       },
     });
 
     if (!card) {
       // Create card if not exists
       await this.createCardForUser(userId);
-      return { status: 'ACTIVE', statusReason: null, expiresAt: null };
+      return {
+        status: 'ACTIVE' as const,
+        statusReason: null,
+        expiresAt: null,
+        isSubscriber: false,
+      };
     }
 
-    return card;
+    const subStatus = card.user?.subscriptions[0]?.status;
+
+    return {
+      status: card.status,
+      statusReason: card.statusReason,
+      expiresAt: card.expiresAt,
+      isSubscriber: subStatus === 'ACTIVE',
+    };
   }
 
   async getQrCode(userId: string) {
     let card = await this.prisma.memberCard.findUnique({
       where: { userId },
-      select: {
-        id: true,
-        cardNumber: true,
-        qrCodeData: true,
-        qrCodeHash: true,
-        status: true,
+      include: {
+        user: {
+          include: {
+            subscriptions: {
+              take: 1,
+              orderBy: { createdAt: 'desc' },
+              select: { status: true },
+            },
+          },
+        },
       },
     });
 
     if (!card) {
-      card = await this.createCardForUser(userId);
+      const created = await this.createCardForUser(userId);
+      card = await this.prisma.memberCard.findUnique({
+        where: { id: created.id },
+        include: {
+          user: {
+            include: {
+              subscriptions: {
+                take: 1,
+                orderBy: { createdAt: 'desc' },
+                select: { status: true },
+              },
+            },
+          },
+        },
+      });
     }
 
-    if (card.status !== 'ACTIVE') {
+    if (card!.status !== 'ACTIVE') {
       throw new BadRequestException('Carteirinha inativa. Entre em contato com a associação.');
     }
 
+    const subStatus = card!.user?.subscriptions[0]?.status;
+    if (subStatus && subStatus !== 'ACTIVE') {
+      throw new BadRequestException('Sua assinatura está suspensa. Regularize para usar o QR Code.');
+    }
+
     return {
-      qrCodeData: card.qrCodeData,
-      qrCodeHash: card.qrCodeHash,
-      cardNumber: card.cardNumber,
+      qrCodeData: card!.qrCodeData,
+      qrCodeHash: card!.qrCodeHash,
+      cardNumber: card!.cardNumber,
     };
   }
 

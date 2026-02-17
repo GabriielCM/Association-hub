@@ -1,101 +1,396 @@
-import { ScrollView, Pressable, StyleSheet } from 'react-native';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import {
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  useColorScheme,
+} from 'react-native';
 import { XStack, YStack } from 'tamagui';
-import { Text, Input } from '@ahub/ui';
+import { Text, Icon } from '@ahub/ui';
+import { MagnifyingGlass, X, Tag } from '@ahub/ui/src/icons';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import type { PartnerCategory } from '@ahub/shared/types';
+
+export type SortMode = 'featured' | 'distance' | 'recent' | 'name';
+
+const SORT_OPTIONS: { key: SortMode; label: string }[] = [
+  { key: 'featured', label: 'Destaques' },
+  { key: 'distance', label: 'Perto' },
+  { key: 'recent', label: 'Novos' },
+  { key: 'name', label: 'A-Z' },
+];
 
 interface PartnerFiltersProps {
   categories: PartnerCategory[];
   selectedCategory?: string | undefined;
   searchQuery: string;
+  sortBy: SortMode;
   onCategoryChange: (category?: string) => void;
   onSearchChange: (query: string) => void;
+  onSortChange: (sort: SortMode) => void;
+  onMapToggle?: () => void;
+  isMapMode?: boolean;
 }
 
 export function PartnerFilters({
   categories,
   selectedCategory,
   searchQuery,
+  sortBy,
   onCategoryChange,
   onSearchChange,
+  onSortChange,
+  onMapToggle,
+  isMapMode = false,
 }: PartnerFiltersProps) {
-  return (
-    <YStack gap="$3">
-      {/* Search */}
-      <Input
-        placeholder="Buscar parceiros..."
-        value={searchQuery}
-        onChangeText={onSearchChange}
-        autoCapitalize="none"
-      />
+  const isDark = useColorScheme() === 'dark';
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const inputRef = useRef<TextInput>(null);
 
-      {/* Category Chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <XStack gap="$2" paddingRight="$2">
-          <CategoryChip
-            label="Todos"
-            isSelected={!selectedCategory}
-            onPress={() => onCategoryChange(undefined)}
-          />
-          {categories.map((cat) => (
-            <CategoryChip
-              key={cat.id}
-              label={`${cat.icon || ''} ${cat.name}`}
-              isSelected={selectedCategory === cat.id}
-              count={cat.partnersCount}
-              onPress={() => onCategoryChange(cat.id)}
-            />
-          ))}
+  // Animated search expansion
+  const searchWidth = useSharedValue(0);
+
+  const openSearch = useCallback(() => {
+    setIsSearchOpen(true);
+    searchWidth.value = withTiming(1, {
+      duration: 300,
+      easing: Easing.out(Easing.cubic),
+    });
+    setTimeout(() => inputRef.current?.focus(), 100);
+  }, [searchWidth]);
+
+  const closeSearch = useCallback(() => {
+    searchWidth.value = withTiming(0, {
+      duration: 250,
+      easing: Easing.in(Easing.cubic),
+    });
+    onSearchChange('');
+    setTimeout(() => setIsSearchOpen(false), 260);
+  }, [searchWidth, onSearchChange]);
+
+  const searchAnimStyle = useAnimatedStyle(() => ({
+    flex: searchWidth.value,
+    opacity: searchWidth.value,
+  }));
+
+  return (
+    <YStack gap={10}>
+      {/* Row 1: Title + Search + Map toggle */}
+      <XStack alignItems="center" justifyContent="space-between" height={40}>
+        {!isSearchOpen && (
+          <Text style={[styles.title, isDark && styles.titleDark]}>
+            Benefícios
+          </Text>
+        )}
+
+        <XStack alignItems="center" gap={8} flex={isSearchOpen ? 1 : undefined}>
+          {isSearchOpen && (
+            <Animated.View style={[styles.searchContainer, searchAnimStyle]}>
+              <View style={[styles.searchInputWrap, isDark && styles.searchInputWrapDark]}>
+                <Icon icon={MagnifyingGlass} size={16} color="#9CA3AF" />
+                <TextInput
+                  ref={inputRef}
+                  value={searchQuery}
+                  onChangeText={onSearchChange}
+                  placeholder="Buscar parceiros..."
+                  placeholderTextColor="#9CA3AF"
+                  style={[styles.searchInput, isDark && styles.searchInputDark]}
+                  autoCapitalize="none"
+                  returnKeyType="search"
+                />
+                <Pressable onPress={closeSearch} hitSlop={8}>
+                  <Icon icon={X} size={16} color="#9CA3AF" />
+                </Pressable>
+              </View>
+            </Animated.View>
+          )}
+
+          {!isSearchOpen && (
+            <Pressable onPress={openSearch} style={styles.iconBtn} hitSlop={8}>
+              <Icon icon={MagnifyingGlass} size={20} color={isDark ? '#D1D5DB' : '#6B7280'} />
+            </Pressable>
+          )}
+
+          {onMapToggle && !isSearchOpen && (
+            <Pressable onPress={onMapToggle} style={styles.iconBtn} hitSlop={8}>
+              <Text style={[styles.mapIcon, isMapMode && styles.mapIconActive]}>
+                {isMapMode ? '☰' : '🗺️'}
+              </Text>
+            </Pressable>
+          )}
         </XStack>
+      </XStack>
+
+      {/* Row 2: Category Chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipsContainer}
+      >
+        <CategoryChip
+          label="Todos"
+          isSelected={!selectedCategory}
+          onPress={() => onCategoryChange(undefined)}
+          isDark={isDark}
+        />
+        {categories.map((cat) => (
+          <CategoryChip
+            key={cat.id}
+            icon={cat.icon}
+            label={cat.name}
+            isSelected={selectedCategory === cat.slug}
+            onPress={() => onCategoryChange(cat.slug)}
+            isDark={isDark}
+          />
+        ))}
       </ScrollView>
+
+      {/* Row 3: Segmented Control */}
+      <SegmentedControl
+        options={SORT_OPTIONS}
+        selected={sortBy}
+        onSelect={onSortChange}
+        isDark={isDark}
+      />
     </YStack>
   );
 }
 
+// ─── Category Chip ───────────────────────────────────────────────
+
 function CategoryChip({
+  icon,
   label,
   isSelected,
-  count,
   onPress,
+  isDark,
 }: {
+  icon?: string;
   label: string;
   isSelected: boolean;
-  count?: number | undefined;
   onPress: () => void;
+  isDark: boolean;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.chip, isSelected && styles.chipSelected]}
+      style={[
+        styles.chip,
+        isDark && styles.chipDark,
+        isSelected && styles.chipSelected,
+      ]}
     >
+      {icon ? (
+        <Text style={styles.chipIcon}>{icon}</Text>
+      ) : (
+        <Icon icon={Tag} size={14} color={isSelected ? '#fff' : '#8B5CF6'} />
+      )}
       <Text
-        style={[styles.chipText, isSelected && styles.chipTextSelected]}
+        style={[
+          styles.chipText,
+          isDark && styles.chipTextDark,
+          isSelected && styles.chipTextSelected,
+        ]}
       >
         {label}
-        {count !== undefined ? ` (${count})` : ''}
       </Text>
     </Pressable>
   );
 }
 
+// ─── Segmented Control ───────────────────────────────────────────
+
+function SegmentedControl({
+  options,
+  selected,
+  onSelect,
+  isDark,
+}: {
+  options: { key: SortMode; label: string }[];
+  selected: SortMode;
+  onSelect: (key: SortMode) => void;
+  isDark: boolean;
+}) {
+  const selectedIndex = options.findIndex((o) => o.key === selected);
+  const pillPosition = useSharedValue(selectedIndex);
+
+  useEffect(() => {
+    pillPosition.value = withTiming(selectedIndex, {
+      duration: 250,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [selectedIndex, pillPosition]);
+
+  const pillStyle = useAnimatedStyle(() => ({
+    left: `${(pillPosition.value / options.length) * 100}%` as unknown as number,
+    width: `${100 / options.length}%` as unknown as number,
+  }));
+
+  return (
+    <View style={[styles.segmentContainer, isDark && styles.segmentContainerDark]}>
+      <Animated.View style={[styles.segmentPill, isDark && styles.segmentPillDark, pillStyle]} />
+      {options.map((opt) => (
+        <Pressable
+          key={opt.key}
+          style={styles.segmentOption}
+          onPress={() => onSelect(opt.key)}
+        >
+          <Text
+            style={[
+              styles.segmentText,
+              isDark && styles.segmentTextDark,
+              selected === opt.key && styles.segmentTextActive,
+              selected === opt.key && isDark && styles.segmentTextActiveDark,
+            ]}
+          >
+            {opt.label}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+// ─── Styles ──────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  titleDark: {
+    color: '#F3F4F6',
+  },
+
+  // Search
+  iconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    overflow: 'hidden',
+  },
+  searchInputWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 40,
+    gap: 8,
+  },
+  searchInputWrapDark: {
+    backgroundColor: '#374151',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1F2937',
+    padding: 0,
+  },
+  searchInputDark: {
+    color: '#F3F4F6',
+  },
+  mapIcon: {
+    fontSize: 18,
+  },
+  mapIconActive: {
+    opacity: 0.6,
+  },
+
+  // Chips
+  chipsContainer: {
+    gap: 8,
+    paddingRight: 8,
+  },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: 'rgba(139, 92, 246, 0.08)',
-    borderWidth: 1,
-    borderColor: 'transparent',
+  },
+  chipDark: {
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
   },
   chipSelected: {
     backgroundColor: '#8B5CF6',
-    borderColor: '#8B5CF6',
+  },
+  chipIcon: {
+    fontSize: 14,
   },
   chipText: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#6B7280',
+  },
+  chipTextDark: {
+    color: '#D1D5DB',
   },
   chipTextSelected: {
     color: '#fff',
+  },
+
+  // Segmented Control
+  segmentContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    padding: 3,
+    position: 'relative',
+  },
+  segmentContainerDark: {
+    backgroundColor: '#1F2937',
+  },
+  segmentPill: {
+    position: 'absolute',
+    top: 3,
+    bottom: 3,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  segmentPillDark: {
+    backgroundColor: '#374151',
+  },
+  segmentOption: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    zIndex: 1,
+  },
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#9CA3AF',
+  },
+  segmentTextDark: {
+    color: '#6B7280',
+  },
+  segmentTextActive: {
+    color: '#1F2937',
+  },
+  segmentTextActiveDark: {
+    color: '#F3F4F6',
   },
 });

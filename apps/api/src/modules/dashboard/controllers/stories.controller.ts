@@ -44,12 +44,12 @@ export class StoriesController {
   @Get()
   @ApiOperation({ summary: 'Listar stories disponíveis' })
   @ApiResponse({ status: 200, type: StoriesListResponseDto })
-  async listStories(@Request() req: any): Promise<StoriesListResponseDto> {
+  async listStories(@Request() req: any) {
     const stories = await this.storiesService.listStories(
       req.user.id,
       req.user.associationId,
     );
-    return { stories };
+    return { success: true, data: { stories } };
   }
 
   @Post()
@@ -58,8 +58,8 @@ export class StoriesController {
   async createTextStory(
     @Request() req: any,
     @Body() dto: CreateTextStoryDto,
-  ): Promise<StoryResponseDto> {
-    return this.storiesService.createStory(
+  ) {
+    const data = await this.storiesService.createStory(
       req.user.id,
       req.user.associationId,
       {
@@ -68,6 +68,7 @@ export class StoriesController {
         backgroundColor: dto.background_color,
       },
     );
+    return { success: true, data };
   }
 
   @Post('media')
@@ -86,12 +87,12 @@ export class StoriesController {
   async createMediaStory(
     @Request() req: any,
     @UploadedFile() file: Express.Multer.File,
-  ): Promise<StoryResponseDto> {
+  ) {
     const uploaded = await this.uploadService.uploadStoryMedia(file);
     const mediaUrl = uploaded.url;
     const isVideo = file.mimetype.startsWith('video/');
 
-    return this.storiesService.createStory(
+    const data = await this.storiesService.createStory(
       req.user.id,
       req.user.associationId,
       {
@@ -99,6 +100,7 @@ export class StoriesController {
         mediaUrl,
       },
     );
+    return { success: true, data };
   }
 
   @Get(':user_id')
@@ -107,12 +109,12 @@ export class StoriesController {
   async getUserStories(
     @Request() req: any,
     @Param('user_id') targetUserId: string,
-  ): Promise<UserStoriesResponseDto> {
+  ) {
     const stories = await this.storiesService.getUserStories(
       targetUserId,
       req.user.id,
     );
-    return { stories };
+    return { success: true, data: { stories } };
   }
 
   @Post(':id/view')
@@ -132,8 +134,9 @@ export class StoriesController {
   async getViews(
     @Request() req: any,
     @Param('id') storyId: string,
-  ): Promise<StoryViewsResponseDto> {
-    return this.storiesService.getViews(storyId, req.user.id);
+  ) {
+    const data = await this.storiesService.getViews(storyId, req.user.id);
+    return { success: true, data };
   }
 
   @Delete(':id')

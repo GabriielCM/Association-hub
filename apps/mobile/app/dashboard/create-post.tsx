@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Alert,
   Pressable,
   StyleSheet,
   TextInput,
@@ -58,6 +59,11 @@ export default function CreatePostScreen() {
 
     createPost.mutate(formData, {
       onSuccess: () => router.back(),
+      onError: (error) => {
+        const msg =
+          (error as any)?.response?.data?.error?.message || error.message;
+        Alert.alert('Erro ao publicar', msg || 'Tente novamente.');
+      },
     });
   };
 

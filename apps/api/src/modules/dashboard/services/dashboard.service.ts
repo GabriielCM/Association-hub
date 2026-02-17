@@ -98,12 +98,12 @@ export class DashboardService {
     const rows = await this.prisma.$queryRaw<
       Array<{ day: Date; total: bigint | null }>
     >`
-      SELECT DATE("createdAt") as day, SUM(amount) as total
-      FROM "PointTransaction"
-      WHERE "userId" = ${userId}
-        AND "createdAt" >= ${sevenDaysAgo}
+      SELECT DATE("created_at") as day, SUM(amount) as total
+      FROM "point_transactions"
+      WHERE "user_id" = ${userId}
+        AND "created_at" >= ${sevenDaysAgo}
         AND amount > 0
-      GROUP BY DATE("createdAt")
+      GROUP BY DATE("created_at")
       ORDER BY day ASC
     `;
 

@@ -1,12 +1,15 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Pressable, Image, Dimensions } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { useRouter } from 'expo-router';
 
 import { Text, Card, Avatar, Icon } from '@ahub/ui';
 import { Heart, ChatCircle } from '@ahub/ui/src/icons';
+import DotsThree from 'phosphor-react-native/src/icons/DotsThree';
 import SealCheck from 'phosphor-react-native/src/icons/SealCheck';
 import { useLikePost } from '../hooks/useFeedMutations';
+import { resolveUploadUrl } from '@/config/constants';
+import { PostOptionsMenu } from './PostOptionsMenu';
 import type { FeedPost } from '@ahub/shared/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -36,6 +39,7 @@ interface FeedPostCardProps {
 export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }: FeedPostCardProps) {
   const router = useRouter();
   const { mutate: toggleLike } = useLikePost();
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const { author, content, created_at } = post;
   const isVerified = (author as any).is_verified;
@@ -54,7 +58,7 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
           >
             <XStack alignItems="center" gap="$2">
               <Avatar
-                src={author.avatar_url}
+                src={resolveUploadUrl(author.avatar_url) || undefined}
                 name={author.name}
                 size="sm"
               />
@@ -71,12 +75,15 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
               </YStack>
             </XStack>
           </Pressable>
+          <Pressable onPress={() => setMenuVisible(true)} hitSlop={8}>
+            <Icon icon={DotsThree} size="lg" color="secondary" weight="bold" />
+          </Pressable>
         </XStack>
 
         {/* Image */}
         {content.image_url && (
           <Image
-            source={{ uri: content.image_url }}
+            source={{ uri: resolveUploadUrl(content.image_url)! }}
             style={{
               width: SCREEN_WIDTH - 48,
               height: SCREEN_WIDTH - 48,
@@ -114,6 +121,12 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
           </Text>
         )}
       </YStack>
+
+      <PostOptionsMenu
+        visible={menuVisible}
+        post={post}
+        onClose={() => setMenuVisible(false)}
+      />
     </Card>
   );
 });

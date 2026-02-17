@@ -41,13 +41,14 @@ export class CommentsController {
     @Request() req: any,
     @Param('postId') postId: string,
     @Query() query: CommentsQueryDto,
-  ): Promise<CommentsListResponseDto> {
-    return this.commentsService.getComments(
+  ) {
+    const data = await this.commentsService.getComments(
       postId,
       req.user.id,
       query.offset || 0,
       query.limit || 20,
     );
+    return { success: true, data };
   }
 
   @Post('posts/:postId/comments')
@@ -57,7 +58,7 @@ export class CommentsController {
     @Request() req: any,
     @Param('postId') postId: string,
     @Body() dto: CreateCommentDto,
-  ): Promise<{ comment: CommentResponseDto }> {
+  ) {
     const comment = await this.commentsService.createComment(
       postId,
       req.user.id,
@@ -65,7 +66,7 @@ export class CommentsController {
       dto.text,
       dto.parent_id,
     );
-    return { comment };
+    return { success: true, data: { comment } };
   }
 
   @Delete('comments/:id')

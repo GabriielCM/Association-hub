@@ -493,10 +493,13 @@ export interface PartnerListItem {
   id: string;
   name: string;
   logoUrl?: string;
+  bannerUrl?: string;
   benefit: string;
   category: PartnerCategory;
   isEligible: boolean;
   isNew: boolean;
+  isFeatured?: boolean;
+  popularity?: number;
   city?: string;
   state?: string;
 }
@@ -535,7 +538,7 @@ export interface BenefitsFilter {
   perPage?: number;
   search?: string | undefined;
   category?: string | undefined;
-  sortBy?: 'name' | 'recent';
+  sortBy?: 'name' | 'recent' | 'featured' | 'distance';
 }
 
 export interface BenefitsListResponse {

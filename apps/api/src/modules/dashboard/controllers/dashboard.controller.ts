@@ -23,10 +23,11 @@ export class DashboardController {
     description: 'Resumo do dashboard',
     type: DashboardSummaryResponseDto,
   })
-  async getSummary(@Request() req: any): Promise<DashboardSummaryResponseDto> {
-    return this.dashboardService.getSummary(
+  async getSummary(@Request() req: any) {
+    const data = await this.dashboardService.getSummary(
       req.user.id,
       req.user.associationId,
     );
+    return { success: true, data };
   }
 }

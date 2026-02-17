@@ -1,4 +1,4 @@
-import { Modal, Pressable, StyleSheet } from 'react-native';
+import { Alert, Modal, Pressable, StyleSheet } from 'react-native';
 import { YStack } from 'tamagui';
 
 import { Text } from '@ahub/ui';
@@ -10,7 +10,8 @@ interface PostOptionsMenuProps {
   visible: boolean;
   post: FeedPost | null;
   onClose: () => void;
-  onReport: (postId: string) => void;
+  onReport?: (postId: string) => void;
+  onDeleteSuccess?: () => void;
 }
 
 export function PostOptionsMenu({
@@ -18,6 +19,7 @@ export function PostOptionsMenu({
   post,
   onClose,
   onReport,
+  onDeleteSuccess,
 }: PostOptionsMenuProps) {
   const { user } = useAuthContext();
   const deletePost = useDeletePost();
@@ -27,14 +29,28 @@ export function PostOptionsMenu({
   const isOwn = user?.id === post.author.id;
 
   const handleDelete = () => {
-    deletePost.mutate(post.id, {
-      onSuccess: () => onClose(),
-    });
+    onClose();
+    Alert.alert(
+      'Excluir post?',
+      'Esta acao nao pode ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: () => {
+            deletePost.mutate(post.id, {
+              onSuccess: () => onDeleteSuccess?.(),
+            });
+          },
+        },
+      ],
+    );
   };
 
   const handleReport = () => {
     onClose();
-    onReport(post.id);
+    onReport?.(post.id);
   };
 
   return (

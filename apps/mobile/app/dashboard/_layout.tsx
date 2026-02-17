@@ -17,6 +17,10 @@ export default function DashboardLayout() {
         options={{ animation: 'fade', presentation: 'fullScreenModal' }}
       />
       <Stack.Screen name="comments" />
+      <Stack.Screen
+        name="post/[id]"
+        options={{ presentation: 'card', animation: 'slide_from_right' }}
+      />
     </Stack>
   );
 }

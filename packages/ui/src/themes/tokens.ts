@@ -187,6 +187,27 @@ export const iconSizes = {
   xl: 32,
 } as const;
 
+// Card-specific gradient pairs (front/back, light/dark)
+export const cardGradients = {
+  light: {
+    front: { start: '#8B5CF6', end: '#312E81' },
+    back: { start: '#312E81', end: '#8B5CF6' },
+  },
+  dark: {
+    front: { start: '#6D28D9', end: '#1E1B4B' },
+    back: { start: '#1E1B4B', end: '#6D28D9' },
+  },
+} as const;
+
+// Card glass element opacities
+export const cardGlass = {
+  qrContainer: 'rgba(255, 255, 255, 0.15)',
+  planBadge: 'rgba(255, 255, 255, 0.12)',
+  hintText: 'rgba(255, 255, 255, 0.08)',
+  contactCard: 'rgba(255, 255, 255, 0.10)',
+  borderColor: 'rgba(255, 255, 255, 0.20)',
+} as const;
+
 // Glassmorphism tokens
 export const glass = {
   // Blur intensities

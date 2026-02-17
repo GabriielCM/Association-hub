@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Alert,
   Modal,
   Pressable,
   StyleSheet,
@@ -70,6 +71,11 @@ export function CreatePostSheet({ visible, onClose }: CreatePostSheetProps) {
 
     createPost.mutate(formData, {
       onSuccess: () => handleClose(),
+      onError: (error) => {
+        const msg =
+          (error as any)?.response?.data?.error?.message || error.message;
+        Alert.alert('Erro ao publicar', msg || 'Tente novamente.');
+      },
     });
   };
 

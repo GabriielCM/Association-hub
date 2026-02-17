@@ -8,7 +8,12 @@ export default function CardLayout() {
       }}
     >
       <Stack.Screen name="benefits" />
-      <Stack.Screen name="partner/[partnerId]" />
+      <Stack.Screen
+        name="partner/[partnerId]"
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
       <Stack.Screen name="history" />
     </Stack>
   );
