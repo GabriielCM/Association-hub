@@ -13,13 +13,13 @@ import * as ImagePicker from 'expo-image-picker';
 
 import { Text, Icon } from '@ahub/ui';
 import { Camera } from '@ahub/ui/src/icons';
-import { colors } from '@ahub/ui/themes';
 import ImageSquare from 'phosphor-react-native/src/icons/ImageSquare';
 import PencilSimple from 'phosphor-react-native/src/icons/PencilSimple';
 import {
   useCreateTextStory,
   useCreateMediaStory,
 } from '../hooks/useStoryMutations';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 
 const BG_COLORS = [
   '#6366F1',
@@ -41,6 +41,7 @@ interface StoryCreatorProps {
 
 export function StoryCreator({ visible, onClose }: StoryCreatorProps) {
   const router = useRouter();
+  const dt = useDashboardTheme();
   const [mode, setMode] = useState<'choose' | 'text'>('choose');
   const [text, setText] = useState('');
   const [bgColor, setBgColor] = useState(BG_COLORS[0]);
@@ -124,15 +125,15 @@ export function StoryCreator({ visible, onClose }: StoryCreatorProps) {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <Pressable style={styles.overlay} onPress={handleClose}>
+      <Pressable style={[styles.overlay, { backgroundColor: dt.overlayBg }]} onPress={handleClose}>
         <Pressable
-          style={styles.sheet}
+          style={[styles.sheet, { backgroundColor: dt.sheetBg }]}
           onPress={(e) => e.stopPropagation()}
         >
           {mode === 'choose' ? (
             <YStack gap="$4" padding="$4">
               <YStack gap="$1" alignItems="center">
-                <Text weight="bold" size="lg">
+                <Text weight="bold" size="lg" style={{ color: dt.textPrimary }}>
                   Criar Story
                 </Text>
                 <Text size="xs" color="secondary">
@@ -142,14 +143,14 @@ export function StoryCreator({ visible, onClose }: StoryCreatorProps) {
 
               <YStack gap="$3">
                 <Pressable
-                  style={styles.optionBtn}
+                  style={[styles.optionBtn, { borderColor: dt.borderColor }]}
                   onPress={handleCamera}
                   disabled={isPending}
                 >
                   <XStack alignItems="center" gap="$3">
                     <Icon icon={Camera} size="xl" color="primary" />
                     <YStack>
-                      <Text weight="semibold">Camera</Text>
+                      <Text weight="semibold" style={{ color: dt.textPrimary }}>Camera</Text>
                       <Text size="xs" color="secondary">
                         Tire uma foto agora
                       </Text>
@@ -158,14 +159,14 @@ export function StoryCreator({ visible, onClose }: StoryCreatorProps) {
                 </Pressable>
 
                 <Pressable
-                  style={styles.optionBtn}
+                  style={[styles.optionBtn, { borderColor: dt.borderColor }]}
                   onPress={handlePickImage}
                   disabled={isPending}
                 >
                   <XStack alignItems="center" gap="$3">
                     <Icon icon={ImageSquare} size="xl" color="primary" />
                     <YStack>
-                      <Text weight="semibold">Galeria</Text>
+                      <Text weight="semibold" style={{ color: dt.textPrimary }}>Galeria</Text>
                       <Text size="xs" color="secondary">
                         Escolha da galeria
                       </Text>
@@ -174,14 +175,14 @@ export function StoryCreator({ visible, onClose }: StoryCreatorProps) {
                 </Pressable>
 
                 <Pressable
-                  style={styles.optionBtn}
+                  style={[styles.optionBtn, { borderColor: dt.borderColor }]}
                   onPress={() => setMode('text')}
                   disabled={isPending}
                 >
                   <XStack alignItems="center" gap="$3">
                     <Icon icon={PencilSimple} size="xl" color="primary" />
                     <YStack>
-                      <Text weight="semibold">Texto</Text>
+                      <Text weight="semibold" style={{ color: dt.textPrimary }}>Texto</Text>
                       <Text size="xs" color="secondary">
                         Crie um story de texto
                       </Text>
@@ -192,7 +193,7 @@ export function StoryCreator({ visible, onClose }: StoryCreatorProps) {
 
               {isPending && (
                 <YStack alignItems="center" padding="$2">
-                  <ActivityIndicator />
+                  <ActivityIndicator color={dt.textSecondary} />
                   <Text size="xs" color="secondary">
                     Enviando...
                   </Text>
@@ -217,7 +218,7 @@ export function StoryCreator({ visible, onClose }: StoryCreatorProps) {
                     ← Voltar
                   </Text>
                 </Pressable>
-                <Text weight="bold" size="lg">
+                <Text weight="bold" size="lg" style={{ color: dt.textPrimary }}>
                   Story de Texto
                 </Text>
                 <View style={{ width: 50 }} />
@@ -248,7 +249,7 @@ export function StoryCreator({ visible, onClose }: StoryCreatorProps) {
                     style={[
                       styles.colorCircle,
                       { backgroundColor: color },
-                      bgColor === color && styles.colorCircleActive,
+                      bgColor === color && [styles.colorCircleActive, { borderColor: dt.isDark ? 'rgba(255,255,255,0.8)' : '#FFFFFF' }],
                     ]}
                   />
                 ))}
@@ -262,9 +263,10 @@ export function StoryCreator({ visible, onClose }: StoryCreatorProps) {
                     t.length <= MAX_TEXT_LENGTH && setText(t)
                   }
                   placeholder="Digite seu texto..."
+                  placeholderTextColor={dt.inputPlaceholder}
                   multiline
                   numberOfLines={3}
-                  style={styles.input}
+                  style={[styles.input, { borderColor: dt.inputBorder, backgroundColor: dt.inputBg, color: dt.inputText }]}
                   maxLength={MAX_TEXT_LENGTH}
                 />
                 <Text size="xs" color="secondary" style={{ textAlign: 'right' }}>
@@ -276,16 +278,17 @@ export function StoryCreator({ visible, onClose }: StoryCreatorProps) {
                 onPress={handleCreateTextStory}
                 style={[
                   styles.publishBtn,
+                  { backgroundColor: dt.accent },
                   (!text.trim() || isPending) && styles.publishBtnDisabled,
                 ]}
                 disabled={!text.trim() || isPending}
               >
                 {isPending ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={dt.sendBtnText} />
                 ) : (
                   <Text
                     weight="semibold"
-                    style={{ color: '#FFFFFF' }}
+                    style={{ color: dt.sendBtnText }}
                   >
                     Publicar Story
                   </Text>
@@ -302,11 +305,9 @@ export function StoryCreator({ visible, onClose }: StoryCreatorProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -314,7 +315,6 @@ const styles = StyleSheet.create({
   optionBtn: {
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 12,
   },
   cancelBtn: {
@@ -328,7 +328,6 @@ const styles = StyleSheet.create({
   },
   colorCircleActive: {
     borderWidth: 3,
-    borderColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -337,7 +336,6 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
@@ -345,7 +343,6 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   publishBtn: {
-    backgroundColor: colors.accentDark,
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',

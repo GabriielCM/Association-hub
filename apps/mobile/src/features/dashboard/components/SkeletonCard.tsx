@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
@@ -24,6 +25,7 @@ export function SkeletonBlock({
   borderRadius = 8,
   style,
 }: SkeletonBlockProps) {
+  const dt = useDashboardTheme();
   const translateX = useSharedValue(-200);
 
   useEffect(() => {
@@ -45,14 +47,14 @@ export function SkeletonBlock({
           width,
           height,
           borderRadius,
-          backgroundColor: '#E5E7EB',
+          backgroundColor: dt.skeletonBg,
           overflow: 'hidden',
         },
         style,
       ]}
     >
       <AnimatedLinearGradient
-        colors={['transparent', 'rgba(255,255,255,0.5)', 'transparent']}
+        colors={[...dt.skeletonShimmer]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={[StyleSheet.absoluteFill, { width: 200 }, animatedStyle]}

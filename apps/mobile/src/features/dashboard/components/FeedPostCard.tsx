@@ -21,6 +21,7 @@ import { useLikePost } from '../hooks/useFeedMutations';
 import { resolveUploadUrl } from '@/config/constants';
 import { PostOptionsMenu } from './PostOptionsMenu';
 import { ShareCard } from './ShareCard';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import type { FeedPost } from '@ahub/shared/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -52,6 +53,7 @@ interface FeedPostCardProps {
 export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }: FeedPostCardProps) {
   const router = useRouter();
   const { mutate: toggleLike } = useLikePost();
+  const dt = useDashboardTheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const lastTapRef = useRef(0);
   const shareCardRef = useRef<View>(null);
@@ -110,7 +112,7 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
   }, [content.description]);
 
   return (
-    <Card variant="flat">
+    <Card variant="flat" {...(dt.cardBg ? { backgroundColor: dt.cardBg, borderWidth: 1, borderColor: dt.cardBorder, shadowOpacity: 0 } : {})}>
       <YStack gap="$3">
         {/* Author header */}
         <XStack alignItems="center" justifyContent="space-between">
@@ -125,19 +127,19 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
               />
               <YStack>
                 <XStack alignItems="center" gap="$1">
-                  <Text weight="semibold" size="sm">
+                  <Text weight="semibold" size="sm" style={{ color: dt.textPrimary }}>
                     {author.name}
                   </Text>
                   {isVerified && <Icon icon={SealCheck} size="sm" color="#FFD700" weight="fill" />}
                 </XStack>
-                <Text color="secondary" size="xs">
+                <Text size="xs" style={{ color: dt.textSecondary }}>
                   {timeAgo(created_at)}
                 </Text>
               </YStack>
             </XStack>
           </Pressable>
           <Pressable onPress={() => setMenuVisible(true)} hitSlop={8}>
-            <Icon icon={DotsThree} size="lg" color="secondary" weight="bold" />
+            <Icon icon={DotsThree} size="lg" color={dt.textSecondary} weight="bold" />
           </Pressable>
         </XStack>
 
@@ -179,8 +181,8 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
         <XStack gap="$4">
           <Pressable onPress={handleLike}>
             <XStack alignItems="center" gap="$1">
-              <Icon icon={Heart} size="lg" color={content.liked_by_me ? 'error' : 'muted'} weight={content.liked_by_me ? 'fill' : 'regular'} />
-              <Text size="sm" color="secondary">
+              <Icon icon={Heart} size="lg" color={content.liked_by_me ? 'error' : dt.textSecondary} weight={content.liked_by_me ? 'fill' : 'regular'} />
+              <Text size="sm" style={{ color: dt.textSecondary }}>
                 {content.likes_count}
               </Text>
             </XStack>
@@ -188,21 +190,21 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
 
           <Pressable onPress={() => onCommentPress?.(post.id)}>
             <XStack alignItems="center" gap="$1">
-              <Icon icon={ChatCircle} size="lg" color="secondary" />
-              <Text size="sm" color="secondary">
+              <Icon icon={ChatCircle} size="lg" color={dt.textSecondary} />
+              <Text size="sm" style={{ color: dt.textSecondary }}>
                 {content.comments_count}
               </Text>
             </XStack>
           </Pressable>
 
           <Pressable onPress={handleShare}>
-            <Icon icon={ShareNetwork} size="lg" color="secondary" />
+            <Icon icon={ShareNetwork} size="lg" color={dt.textSecondary} />
           </Pressable>
         </XStack>
 
         {/* Description */}
         {content.description && (
-          <Text size="sm" numberOfLines={3}>
+          <Text size="sm" numberOfLines={3} style={{ color: dt.textPrimary }}>
             {content.description}
           </Text>
         )}

@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Text, Card, Badge, Icon } from '@ahub/ui';
 import { Heart, ChatCircle, Calendar, MapPin, Confetti } from '@ahub/ui/src/icons';
 import Shield from 'phosphor-react-native/src/icons/Shield';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import type { FeedPost } from '@ahub/shared/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -31,6 +32,7 @@ interface FeedEventCardProps {
 
 export const FeedEventCard = memo(function FeedEventCard({ post }: FeedEventCardProps) {
   const router = useRouter();
+  const dt = useDashboardTheme();
 
   const { content, created_at } = post;
   const eventData = (content as any).event;
@@ -43,12 +45,12 @@ export const FeedEventCard = memo(function FeedEventCard({ post }: FeedEventCard
         }
       }}
     >
-      <Card variant="flat">
+      <Card variant="flat" {...(dt.cardBg ? { backgroundColor: dt.cardBg, borderWidth: 1, borderColor: dt.cardBorder, shadowOpacity: 0 } : {})}>
         <YStack gap="$3">
           {/* Admin badge header */}
           <XStack alignItems="center" gap="$2">
             <Badge variant="primary"><Icon icon={Shield} size="sm" color="primary" weight="fill" /> ADMINISTRACAO</Badge>
-            <Text color="secondary" size="xs">
+            <Text size="xs" style={{ color: dt.textSecondary }}>
               {timeAgo(created_at)}
             </Text>
           </XStack>
@@ -70,27 +72,27 @@ export const FeedEventCard = memo(function FeedEventCard({ post }: FeedEventCard
           <YStack gap="$1">
             {eventData?.title && (
               <XStack gap="$1" alignItems="center">
-                <Icon icon={Confetti} size="md" color="primary" />
-                <Text weight="bold" size="lg">{eventData.title}</Text>
+                <Icon icon={Confetti} size="md" color={dt.accent} />
+                <Text weight="bold" size="lg" style={{ color: dt.textPrimary }}>{eventData.title}</Text>
               </XStack>
             )}
             {eventData?.date && (
               <XStack gap="$1" alignItems="center">
-                <Icon icon={Calendar} size="sm" color="secondary" />
-                <Text size="sm" color="secondary">{eventData.date}</Text>
+                <Icon icon={Calendar} size="sm" color={dt.textSecondary} />
+                <Text size="sm" style={{ color: dt.textSecondary }}>{eventData.date}</Text>
               </XStack>
             )}
             {eventData?.location && (
               <XStack gap="$1" alignItems="center">
-                <Icon icon={MapPin} size="sm" color="secondary" />
-                <Text size="sm" color="secondary">{eventData.location}</Text>
+                <Icon icon={MapPin} size="sm" color={dt.textSecondary} />
+                <Text size="sm" style={{ color: dt.textSecondary }}>{eventData.location}</Text>
               </XStack>
             )}
           </YStack>
 
           {/* Description */}
           {content.description && (
-            <Text size="sm" numberOfLines={3}>
+            <Text size="sm" numberOfLines={3} style={{ color: dt.textPrimary }}>
               {content.description}
             </Text>
           )}
@@ -99,13 +101,13 @@ export const FeedEventCard = memo(function FeedEventCard({ post }: FeedEventCard
           <XStack gap="$4">
             <XStack alignItems="center" gap="$1">
               <Icon icon={Heart} size="lg" color="error" weight="fill" />
-              <Text size="sm" color="secondary">
+              <Text size="sm" style={{ color: dt.textSecondary }}>
                 {content.likes_count}
               </Text>
             </XStack>
             <XStack alignItems="center" gap="$1">
-              <Icon icon={ChatCircle} size="lg" color="secondary" />
-              <Text size="sm" color="secondary">
+              <Icon icon={ChatCircle} size="lg" color={dt.textSecondary} />
+              <Text size="sm" style={{ color: dt.textSecondary }}>
                 {content.comments_count}
               </Text>
             </XStack>

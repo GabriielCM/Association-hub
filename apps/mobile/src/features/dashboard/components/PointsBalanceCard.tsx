@@ -6,6 +6,7 @@ import Svg, { Polyline } from 'react-native-svg';
 import { Text, Heading, Card, Spinner, Icon } from '@ahub/ui';
 import { Star, ArrowUpRight, ArrowDownLeft } from '@ahub/ui/src/icons';
 import { formatPoints } from '@ahub/shared/utils';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import type { UserSummary } from '@ahub/shared/types';
 
 interface PointsBalanceCardProps {
@@ -46,22 +47,26 @@ function MiniChart({ data }: { data: number[] }) {
 
 export function PointsBalanceCard({ user, isLoading }: PointsBalanceCardProps) {
   const router = useRouter();
+  const dt = useDashboardTheme();
 
   const pointsToday = user?.points_today ?? 0;
   const isPositive = pointsToday >= 0;
 
   return (
     <Pressable onPress={() => router.push('/points')}>
-      <Card variant="elevated">
+      <Card
+        variant="elevated"
+        {...(dt.cardBg ? { backgroundColor: dt.cardBg, borderWidth: 1, borderColor: dt.cardBorder, shadowOpacity: 0 } : {})}
+      >
         <YStack gap="$2">
           <XStack alignItems="center" justifyContent="space-between">
             <XStack alignItems="center" gap="$2">
               <Icon icon={Star} size="lg" color="warning" weight="fill" />
-              <Text color="secondary" weight="semibold">
+              <Text weight="semibold" style={{ color: dt.textSecondary }}>
                 Seus Pontos
               </Text>
             </XStack>
-            <Text color="secondary" size="sm">
+            <Text size="sm" style={{ color: dt.textSecondary }}>
               →
             </Text>
           </XStack>
@@ -71,14 +76,14 @@ export function PointsBalanceCard({ user, isLoading }: PointsBalanceCardProps) {
               {isLoading ? (
                 <Spinner size="sm" />
               ) : (
-                <Heading level={3} color="accent">
+                <Heading level={3} style={{ color: dt.accent }}>
                   {formatPoints(user?.points ?? 0)}
                 </Heading>
               )}
               {!isLoading && (
                 <XStack alignItems="center" gap="$1">
                   <Icon icon={isPositive ? ArrowUpRight : ArrowDownLeft} size="sm" color={isPositive ? 'success' : 'error'} />
-                  <Text size="sm" color={isPositive ? 'success' : 'error'}>
+                  <Text size="sm" style={{ color: isPositive ? '#22C55E' : '#EF4444' }}>
                     {isPositive ? '+' : ''}{pointsToday} hoje
                   </Text>
                 </XStack>
@@ -87,7 +92,7 @@ export function PointsBalanceCard({ user, isLoading }: PointsBalanceCardProps) {
 
             {!isLoading && user?.points_chart && (
               <YStack>
-                <Text color="secondary" size="xs">
+                <Text size="xs" style={{ color: dt.textSecondary }}>
                   Ultimos 7 dias
                 </Text>
                 <MiniChart data={user.points_chart} />

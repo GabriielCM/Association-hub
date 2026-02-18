@@ -12,9 +12,9 @@ import {
 import { YStack, XStack } from 'tamagui';
 
 import { Text, Icon } from '@ahub/ui';
-import { colors } from '@ahub/ui/themes';
 import X from 'phosphor-react-native/src/icons/X';
 import { useCreatePoll } from '../hooks/useFeedMutations';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 4;
@@ -25,6 +25,7 @@ interface PollCreatorProps {
 }
 
 export function PollCreator({ visible, onClose }: PollCreatorProps) {
+  const dt = useDashboardTheme();
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [durationDays, setDurationDays] = useState(1);
@@ -79,13 +80,13 @@ export function PollCreator({ visible, onClose }: PollCreatorProps) {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <Pressable style={styles.overlay} onPress={handleClose}>
+      <Pressable style={[styles.overlay, { backgroundColor: dt.overlayBg }]} onPress={handleClose}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={{ justifyContent: 'flex-end' }}
         >
           <Pressable
-            style={styles.sheet}
+            style={[styles.sheet, { backgroundColor: dt.sheetBg }]}
             onPress={(e) => e.stopPropagation()}
           >
             <ScrollView keyboardShouldPersistTaps="handled">
@@ -99,7 +100,7 @@ export function PollCreator({ visible, onClose }: PollCreatorProps) {
                       Cancelar
                     </Text>
                   </Pressable>
-                  <Text weight="bold" size="lg">
+                  <Text weight="bold" size="lg" style={{ color: dt.textPrimary }}>
                     Nova Enquete
                   </Text>
                   <Pressable
@@ -107,7 +108,7 @@ export function PollCreator({ visible, onClose }: PollCreatorProps) {
                     disabled={!isValid || createPoll.isPending}
                   >
                     {createPoll.isPending ? (
-                      <ActivityIndicator size="small" />
+                      <ActivityIndicator size="small" color={dt.textSecondary} />
                     ) : (
                       <Text
                         color={isValid ? 'accent' : 'secondary'}
@@ -122,21 +123,22 @@ export function PollCreator({ visible, onClose }: PollCreatorProps) {
 
                 {/* Question */}
                 <YStack gap="$1">
-                  <Text weight="semibold" size="sm">
+                  <Text weight="semibold" size="sm" style={{ color: dt.textPrimary }}>
                     Pergunta
                   </Text>
                   <TextInput
                     value={question}
                     onChangeText={setQuestion}
                     placeholder="Faca uma pergunta..."
-                    style={styles.input}
+                    placeholderTextColor={dt.inputPlaceholder}
+                    style={[styles.input, { borderColor: dt.inputBorder, backgroundColor: dt.inputBg, color: dt.inputText }]}
                     maxLength={200}
                   />
                 </YStack>
 
                 {/* Options */}
                 <YStack gap="$2">
-                  <Text weight="semibold" size="sm">
+                  <Text weight="semibold" size="sm" style={{ color: dt.textPrimary }}>
                     Opcoes
                   </Text>
                   {options.map((option, index) => (
@@ -145,7 +147,8 @@ export function PollCreator({ visible, onClose }: PollCreatorProps) {
                         value={option}
                         onChangeText={(v) => handleOptionChange(index, v)}
                         placeholder={`Opcao ${index + 1}`}
-                        style={[styles.input, { flex: 1 }]}
+                        placeholderTextColor={dt.inputPlaceholder}
+                        style={[styles.input, { flex: 1, borderColor: dt.inputBorder, backgroundColor: dt.inputBg, color: dt.inputText }]}
                         maxLength={100}
                       />
                       {options.length > MIN_OPTIONS && (
@@ -172,7 +175,7 @@ export function PollCreator({ visible, onClose }: PollCreatorProps) {
 
                 {/* Duration */}
                 <YStack gap="$1">
-                  <Text weight="semibold" size="sm">
+                  <Text weight="semibold" size="sm" style={{ color: dt.textPrimary }}>
                     Duracao
                   </Text>
                   <XStack gap="$2">
@@ -182,12 +185,14 @@ export function PollCreator({ visible, onClose }: PollCreatorProps) {
                         onPress={() => setDurationDays(days)}
                         style={[
                           styles.durationBtn,
-                          durationDays === days && styles.durationBtnActive,
+                          { borderColor: dt.chipBorder },
+                          durationDays === days && { backgroundColor: dt.chipActiveBg, borderColor: dt.chipActiveBorder },
                         ]}
                       >
                         <Text
                           size="sm"
                           color={durationDays === days ? 'white' : undefined}
+                          {...(durationDays !== days ? { style: { color: dt.textPrimary } } : {})}
                         >
                           {days} {days === 1 ? 'dia' : 'dias'}
                         </Text>
@@ -207,11 +212,9 @@ export function PollCreator({ visible, onClose }: PollCreatorProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -219,7 +222,6 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
@@ -232,11 +234,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 20,
-  },
-  durationBtnActive: {
-    backgroundColor: colors.accentDark,
-    borderColor: colors.accentDark,
   },
 });

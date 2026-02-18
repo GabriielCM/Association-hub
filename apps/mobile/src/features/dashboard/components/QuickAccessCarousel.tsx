@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 
 import { Text, Card, Icon } from '@ahub/ui';
 import type { PhosphorIcon } from '@ahub/ui';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import {
   CreditCard,
   Wallet,
@@ -49,9 +50,15 @@ function QuickAccessItemCard({
   item: QuickAccessItem;
   onPress: () => void;
 }) {
+  const dt = useDashboardTheme();
+
   return (
     <Pressable onPress={onPress} style={{ marginRight: ITEM_GAP }}>
-      <Card variant="elevated" size="sm">
+      <Card
+        variant="elevated"
+        size="sm"
+        {...(dt.cardBg ? { backgroundColor: dt.cardBg, borderWidth: 1, borderColor: dt.cardBorder, shadowOpacity: 0 } : {})}
+      >
         <YStack
           alignItems="center"
           justifyContent="center"
@@ -59,8 +66,8 @@ function QuickAccessItemCard({
           height={ITEM_WIDTH}
           gap="$1"
         >
-          <Icon icon={item.icon} size="lg" color="primary" />
-          <Text size="xs" color="secondary" numberOfLines={1}>
+          <Icon icon={item.icon} size="lg" color={dt.iconColor ?? 'primary'} />
+          <Text size="xs" numberOfLines={1} style={{ color: dt.textSecondary }}>
             {item.title}
           </Text>
         </YStack>
@@ -71,10 +78,11 @@ function QuickAccessItemCard({
 
 export function QuickAccessCarousel() {
   const router = useRouter();
+  const dt = useDashboardTheme();
 
   return (
     <YStack gap="$2">
-      <Text weight="semibold" size="lg">
+      <Text weight="semibold" size="lg" style={{ color: dt.textPrimary }}>
         Acesso rapido
       </Text>
       <FlatList

@@ -4,9 +4,12 @@ import { useRouter } from 'expo-router';
 
 import { Text, Avatar } from '@ahub/ui';
 import { useStories } from '../hooks/useDashboard';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import type { StoryUserListItem } from '@ahub/shared/types';
 
 function AddStoryButton({ onPress }: { onPress: () => void }) {
+  const dt = useDashboardTheme();
+
   return (
     <Pressable onPress={onPress} style={{ marginRight: 12 }}>
       <YStack alignItems="center" gap="$1">
@@ -14,7 +17,7 @@ function AddStoryButton({ onPress }: { onPress: () => void }) {
           width={60}
           height={60}
           borderRadius={30}
-          backgroundColor="$accent"
+          backgroundColor={dt.accent}
           alignItems="center"
           justifyContent="center"
         >
@@ -22,7 +25,7 @@ function AddStoryButton({ onPress }: { onPress: () => void }) {
             +
           </Text>
         </YStack>
-        <Text size="xs" color="secondary" numberOfLines={1}>
+        <Text size="xs" numberOfLines={1} style={{ color: dt.textSecondary }}>
           Seu story
         </Text>
       </YStack>
@@ -37,13 +40,15 @@ function StoryAvatar({
   item: StoryUserListItem;
   onPress: () => void;
 }) {
+  const dt = useDashboardTheme();
+
   return (
     <Pressable onPress={onPress} style={{ marginRight: 12 }}>
       <YStack alignItems="center" gap="$1">
         <YStack
-          borderWidth={3}
-          borderColor={item.has_unseen ? '$accent' : '$borderColor'}
-          borderRadius={32}
+          borderWidth={item.has_unseen ? 3 : 2}
+          borderColor={item.has_unseen ? dt.storyRing : dt.borderColor}
+          borderRadius={33}
           padding="$0.5"
         >
           <Avatar
@@ -56,9 +61,8 @@ function StoryAvatar({
         </YStack>
         <Text
           size="xs"
-          color="secondary"
           numberOfLines={1}
-          style={{ maxWidth: 60, textAlign: 'center' }}
+          style={{ maxWidth: 66, textAlign: 'center', color: dt.textSecondary }}
         >
           {item.username}
         </Text>

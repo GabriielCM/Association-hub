@@ -9,8 +9,8 @@ import {
 import { YStack, XStack } from 'tamagui';
 
 import { Text } from '@ahub/ui';
-import { colors } from '@ahub/ui/themes';
 import { useReportPost } from '../hooks/useFeedMutations';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import type { ReportReason } from '@ahub/shared/types';
 
 const REPORT_REASONS: { value: ReportReason; label: string }[] = [
@@ -28,6 +28,7 @@ interface ReportModalProps {
 }
 
 export function ReportModal({ visible, postId, onClose }: ReportModalProps) {
+  const dt = useDashboardTheme();
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [description, setDescription] = useState('');
   const reportPost = useReportPost();
@@ -59,14 +60,14 @@ export function ReportModal({ visible, postId, onClose }: ReportModalProps) {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <Pressable style={styles.overlay} onPress={handleClose}>
+      <Pressable style={[styles.overlay, { backgroundColor: dt.overlayBg }]} onPress={handleClose}>
         <Pressable
-          style={styles.sheet}
+          style={[styles.sheet, { backgroundColor: dt.sheetBg }]}
           onPress={(e) => e.stopPropagation()}
         >
           <YStack gap="$4" padding="$4">
             <YStack gap="$1" alignItems="center">
-              <Text weight="bold" size="lg">
+              <Text weight="bold" size="lg" style={{ color: dt.textPrimary }}>
                 Denunciar Post
               </Text>
               <Text size="xs" color="secondary">
@@ -82,12 +83,14 @@ export function ReportModal({ visible, postId, onClose }: ReportModalProps) {
                   onPress={() => setReason(item.value)}
                   style={[
                     styles.reasonBtn,
-                    reason === item.value && styles.reasonBtnActive,
+                    { borderColor: dt.borderColor },
+                    reason === item.value && { borderColor: dt.accent, backgroundColor: dt.accentBg },
                   ]}
                 >
                   <Text
                     size="sm"
                     weight={reason === item.value ? 'semibold' : undefined}
+                    style={{ color: dt.textPrimary }}
                   >
                     {item.label}
                   </Text>
@@ -101,9 +104,10 @@ export function ReportModal({ visible, postId, onClose }: ReportModalProps) {
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Descreva o problema..."
+                placeholderTextColor={dt.inputPlaceholder}
                 multiline
                 numberOfLines={3}
-                style={styles.input}
+                style={[styles.input, { borderColor: dt.inputBorder, backgroundColor: dt.inputBg, color: dt.inputText }]}
                 maxLength={500}
               />
             )}
@@ -112,16 +116,16 @@ export function ReportModal({ visible, postId, onClose }: ReportModalProps) {
             <XStack gap="$3">
               <Pressable
                 onPress={handleClose}
-                style={[styles.btn, styles.cancelBtn]}
+                style={[styles.btn, { backgroundColor: dt.cancelBtnBg }]}
                 disabled={reportPost.isPending}
               >
-                <Text size="sm">Cancelar</Text>
+                <Text size="sm" style={{ color: dt.textPrimary }}>Cancelar</Text>
               </Pressable>
               <Pressable
                 onPress={handleSubmit}
                 style={[
                   styles.btn,
-                  styles.submitBtn,
+                  { backgroundColor: dt.errorBg },
                   (!reason || reportPost.isPending) && { opacity: 0.5 },
                 ]}
                 disabled={!reason || reportPost.isPending}
@@ -149,11 +153,9 @@ export function ReportModal({ visible, postId, onClose }: ReportModalProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -161,16 +163,10 @@ const styles = StyleSheet.create({
   reasonBtn: {
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 10,
-  },
-  reasonBtnActive: {
-    borderColor: colors.accentDark,
-    backgroundColor: `${colors.accentDark}10`,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
@@ -182,11 +178,5 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
-  },
-  cancelBtn: {
-    backgroundColor: 'rgba(156, 163, 175, 0.15)',
-  },
-  submitBtn: {
-    backgroundColor: colors.errorDark,
   },
 });

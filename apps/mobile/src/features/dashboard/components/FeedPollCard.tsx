@@ -8,6 +8,7 @@ import SealCheck from 'phosphor-react-native/src/icons/SealCheck';
 import CheckSquare from 'phosphor-react-native/src/icons/CheckSquare';
 import Square from 'phosphor-react-native/src/icons/Square';
 import { useVotePoll } from '../hooks/useFeedMutations';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import type { FeedPost } from '@ahub/shared/types';
 
 function timeAgo(date: Date): string {
@@ -31,6 +32,7 @@ interface FeedPollCardProps {
 
 export const FeedPollCard = memo(function FeedPollCard({ post }: FeedPollCardProps) {
   const { mutate: vote } = useVotePoll();
+  const dt = useDashboardTheme();
 
   const { author, created_at, content } = post;
   const poll = (content as any).poll;
@@ -50,7 +52,7 @@ export const FeedPollCard = memo(function FeedPollCard({ post }: FeedPollCardPro
   };
 
   return (
-    <Card variant="flat">
+    <Card variant="flat" {...(dt.cardBg ? { backgroundColor: dt.cardBg, borderWidth: 1, borderColor: dt.cardBorder, shadowOpacity: 0 } : {})}>
       <YStack gap="$3">
         {/* Author header */}
         <XStack alignItems="center" gap="$2">
@@ -61,12 +63,12 @@ export const FeedPollCard = memo(function FeedPollCard({ post }: FeedPollCardPro
           />
           <YStack>
             <XStack alignItems="center" gap="$1">
-              <Text weight="semibold" size="sm">
+              <Text weight="semibold" size="sm" style={{ color: dt.textPrimary }}>
                 {author.name}
               </Text>
               {isVerified && <Icon icon={SealCheck} size="sm" color="#FFD700" weight="fill" />}
             </XStack>
-            <Text color="secondary" size="xs">
+            <Text size="xs" style={{ color: dt.textSecondary }}>
               {timeAgo(created_at)}
             </Text>
           </YStack>
@@ -74,8 +76,8 @@ export const FeedPollCard = memo(function FeedPollCard({ post }: FeedPollCardPro
 
         {/* Question */}
         <XStack alignItems="center" gap="$2">
-          <Icon icon={ChartBar} size="lg" color="primary" />
-          <Text weight="semibold">{poll.question}</Text>
+          <Icon icon={ChartBar} size="lg" color={dt.accent} />
+          <Text weight="semibold" style={{ color: dt.textPrimary }}>{poll.question}</Text>
         </XStack>
 
         {/* Options */}
@@ -122,11 +124,11 @@ export const FeedPollCard = memo(function FeedPollCard({ post }: FeedPollCardPro
                     justifyContent="space-between"
                   >
                     <XStack alignItems="center" gap="$2">
-                      {isSelected ? <Icon icon={CheckSquare} size="sm" color="primary" weight="fill" /> : <Icon icon={Square} size="sm" color="secondary" />}
-                      <Text size="sm">{option.text}</Text>
+                      {isSelected ? <Icon icon={CheckSquare} size="sm" color={dt.accent} weight="fill" /> : <Icon icon={Square} size="sm" color={dt.textSecondary} />}
+                      <Text size="sm" style={{ color: dt.textPrimary }}>{option.text}</Text>
                     </XStack>
                     {hasVoted && (
-                      <Text size="sm" color="secondary">
+                      <Text size="sm" style={{ color: dt.textSecondary }}>
                         {percentage}%
                       </Text>
                     )}
@@ -139,16 +141,16 @@ export const FeedPollCard = memo(function FeedPollCard({ post }: FeedPollCardPro
 
         {/* Footer */}
         <XStack alignItems="center" gap="$2">
-          <Text size="xs" color="secondary">
+          <Text size="xs" style={{ color: dt.textSecondary }}>
             {totalVotes} {totalVotes === 1 ? 'voto' : 'votos'}
           </Text>
           {poll.ends_at && !poll.ended && (
-            <Text size="xs" color="secondary">
+            <Text size="xs" style={{ color: dt.textSecondary }}>
               • Encerra em breve
             </Text>
           )}
           {poll.ended && (
-            <Text size="xs" color="secondary">
+            <Text size="xs" style={{ color: dt.textSecondary }}>
               • Enquete encerrada
             </Text>
           )}

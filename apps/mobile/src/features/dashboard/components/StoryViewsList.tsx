@@ -2,6 +2,7 @@ import { FlatList, Modal, Pressable, StyleSheet } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 
 import { Text, Avatar } from '@ahub/ui';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import type { StoryView } from '@ahub/shared/types';
 
 interface StoryViewsListProps {
@@ -17,16 +18,18 @@ export function StoryViewsList({
   totalViews,
   onClose,
 }: StoryViewsListProps) {
+  const dt = useDashboardTheme();
+
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable style={[styles.overlay, { backgroundColor: dt.overlayBg }]} onPress={onClose}>
         <Pressable
-          style={styles.sheet}
+          style={[styles.sheet, { backgroundColor: dt.sheetBg }]}
           onPress={(e) => e.stopPropagation()}
         >
           <YStack gap="$3" padding="$4" maxHeight="70%">
             <XStack alignItems="center" justifyContent="space-between">
-              <Text weight="bold" size="lg">
+              <Text weight="bold" size="lg" style={{ color: dt.textPrimary }}>
                 Visualizacoes
               </Text>
               <Text size="sm" color="secondary">
@@ -84,11 +87,9 @@ function formatViewTime(date: Date): string {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',

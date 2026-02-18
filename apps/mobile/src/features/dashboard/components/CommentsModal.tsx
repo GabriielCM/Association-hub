@@ -13,13 +13,13 @@ import { YStack, XStack } from 'tamagui';
 import { useQuery } from '@tanstack/react-query';
 
 import { Text, Avatar, Icon } from '@ahub/ui';
-import { colors } from '@ahub/ui/themes';
 import X from 'phosphor-react-native/src/icons/X';
 import { getComments } from '../api/dashboard.api';
 import {
   useCreateComment,
   useDeleteComment,
 } from '../hooks/useFeedMutations';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import { CommentItem } from './CommentItem';
 import { ReactionBar } from './ReactionBar';
 import type { FeedComment, CommentsListResponse } from '@ahub/shared/types';
@@ -35,6 +35,7 @@ export function CommentsModal({
   postId,
   onClose,
 }: CommentsModalProps) {
+  const dt = useDashboardTheme();
   const [text, setText] = useState('');
   const [replyTo, setReplyTo] = useState<{
     id: string;
@@ -88,13 +89,13 @@ export function CommentsModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable style={[styles.overlay, { backgroundColor: dt.overlayBg }]} onPress={onClose}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardView}
         >
           <Pressable
-            style={styles.sheet}
+            style={[styles.sheet, { backgroundColor: dt.sheetBg }]}
             onPress={(e) => e.stopPropagation()}
           >
             <YStack gap="$3" flex={1}>
@@ -105,7 +106,7 @@ export function CommentsModal({
                 paddingHorizontal="$4"
                 paddingTop="$4"
               >
-                <Text weight="bold" size="lg">
+                <Text weight="bold" size="lg" style={{ color: dt.textPrimary }}>
                   Comentarios
                 </Text>
                 <Text size="sm" color="secondary">
@@ -116,7 +117,7 @@ export function CommentsModal({
               {/* Comments list */}
               {isLoading ? (
                 <YStack padding="$8" alignItems="center">
-                  <ActivityIndicator />
+                  <ActivityIndicator color={dt.textSecondary} />
                 </YStack>
               ) : (
                 <FlatList
@@ -178,7 +179,8 @@ export function CommentsModal({
                       ? `Respondendo a @${replyTo.name}...`
                       : 'Adicione um comentario...'
                   }
-                  style={styles.input}
+                  placeholderTextColor={dt.inputPlaceholder}
+                  style={[styles.input, { borderColor: dt.inputBorder, backgroundColor: dt.inputBg, color: dt.inputText }]}
                   multiline
                   maxLength={500}
                 />
@@ -187,14 +189,15 @@ export function CommentsModal({
                   disabled={!text.trim() || createComment.isPending}
                   style={[
                     styles.sendBtn,
+                    { backgroundColor: dt.sendBtnBg },
                     (!text.trim() || createComment.isPending) &&
                       styles.sendBtnDisabled,
                   ]}
                 >
                   {createComment.isPending ? (
-                    <ActivityIndicator color="#FFF" size="small" />
+                    <ActivityIndicator color={dt.sendBtnText} size="small" />
                   ) : (
-                    <Text style={{ color: '#FFF' }} weight="semibold" size="sm">
+                    <Text style={{ color: dt.sendBtnText }} weight="semibold" size="sm">
                       Enviar
                     </Text>
                   )}
@@ -211,7 +214,6 @@ export function CommentsModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   keyboardView: {
@@ -219,7 +221,6 @@ const styles = StyleSheet.create({
     maxHeight: '70%',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -229,7 +230,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -237,7 +237,6 @@ const styles = StyleSheet.create({
     maxHeight: 80,
   },
   sendBtn: {
-    backgroundColor: colors.accentDark,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,

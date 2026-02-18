@@ -17,6 +17,7 @@ import { Text, Icon } from '@ahub/ui';
 import X from 'phosphor-react-native/src/icons/X';
 import ImageSquare from 'phosphor-react-native/src/icons/ImageSquare';
 import { useCreatePost } from '../hooks/useFeedMutations';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 
 const MAX_DESCRIPTION_LENGTH = 500;
 
@@ -26,6 +27,7 @@ interface CreatePostSheetProps {
 }
 
 export function CreatePostSheet({ visible, onClose }: CreatePostSheetProps) {
+  const dt = useDashboardTheme();
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageMime, setImageMime] = useState<string>('image/jpeg');
@@ -81,13 +83,13 @@ export function CreatePostSheet({ visible, onClose }: CreatePostSheetProps) {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <Pressable style={styles.overlay} onPress={handleClose}>
+      <Pressable style={[styles.overlay, { backgroundColor: dt.overlayBg }]} onPress={handleClose}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={{ justifyContent: 'flex-end' }}
         >
           <Pressable
-            style={styles.sheet}
+            style={[styles.sheet, { backgroundColor: dt.sheetBg }]}
             onPress={(e) => e.stopPropagation()}
           >
             <YStack gap="$4" padding="$4">
@@ -100,7 +102,7 @@ export function CreatePostSheet({ visible, onClose }: CreatePostSheetProps) {
                     Cancelar
                   </Text>
                 </Pressable>
-                <Text weight="bold" size="lg">
+                <Text weight="bold" size="lg" style={{ color: dt.textPrimary }}>
                   Novo Post
                 </Text>
                 <Pressable
@@ -108,7 +110,7 @@ export function CreatePostSheet({ visible, onClose }: CreatePostSheetProps) {
                   disabled={!description.trim() || createPost.isPending}
                 >
                   {createPost.isPending ? (
-                    <ActivityIndicator size="small" />
+                    <ActivityIndicator size="small" color={dt.textSecondary} />
                   ) : (
                     <Text
                       color={description.trim() ? 'accent' : 'secondary'}
@@ -128,9 +130,10 @@ export function CreatePostSheet({ visible, onClose }: CreatePostSheetProps) {
                   t.length <= MAX_DESCRIPTION_LENGTH && setDescription(t)
                 }
                 placeholder="O que voce quer compartilhar?"
+                placeholderTextColor={dt.inputPlaceholder}
                 multiline
                 numberOfLines={4}
-                style={styles.input}
+                style={[styles.input, { color: dt.inputText }]}
                 maxLength={MAX_DESCRIPTION_LENGTH}
                 autoFocus
               />
@@ -165,7 +168,7 @@ export function CreatePostSheet({ visible, onClose }: CreatePostSheetProps) {
               <XStack gap="$3">
                 <Pressable
                   onPress={handlePickImage}
-                  style={styles.actionBtn}
+                  style={[styles.actionBtn, { borderColor: dt.borderColor }]}
                 >
                   <Icon icon={ImageSquare} size="lg" color="secondary" />
                   <Text size="xs" color="secondary">
@@ -184,11 +187,9 @@ export function CreatePostSheet({ visible, onClose }: CreatePostSheetProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -220,7 +221,6 @@ const styles = StyleSheet.create({
     gap: 4,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 8,
   },
 });

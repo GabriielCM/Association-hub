@@ -14,6 +14,7 @@ import { usePointsSocket } from '@/features/points/hooks/usePointsSocket';
 import { useNotificationWebSocket } from '@/features/notifications/hooks/useNotificationWebSocket';
 import { CelebrationOverlay } from '@/features/points/components/CelebrationOverlay';
 import { NotificationBadge } from '@/features/notifications/components/NotificationBadge';
+import { useDashboardTheme } from '@/features/dashboard/hooks/useDashboardTheme';
 
 import { PointsBalanceCard } from '@/features/dashboard/components/PointsBalanceCard';
 import { QuickAccessCarousel } from '@/features/dashboard/components/QuickAccessCarousel';
@@ -37,6 +38,7 @@ export default function HomeScreen() {
   const { user } = useAuthContext();
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
+  const dt = useDashboardTheme();
 
   const { data: summary, isLoading: summaryLoading } = useDashboardSummary();
   const {
@@ -155,7 +157,7 @@ export default function HomeScreen() {
   }, [feedLoading, router]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: dt.screenBg }} edges={['top']}>
       <OfflineBanner />
 
       {/* Sticky Header */}
@@ -164,15 +166,13 @@ export default function HomeScreen() {
         justifyContent="space-between"
         paddingHorizontal="$4"
         paddingVertical="$2"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-        backgroundColor="$background"
+        backgroundColor={dt.headerBg}
       >
         <YStack>
-          <Text color="secondary" size="sm">
+          <Text size="sm" style={{ color: dt.greetingText }}>
             Bem-vindo,
           </Text>
-          <Heading level={4}>{user?.name || 'Membro'}</Heading>
+          <Heading level={4} style={{ color: dt.textPrimary }}>{user?.name || 'Membro'}</Heading>
         </YStack>
         <XStack alignItems="center" gap="$3">
           <NotificationBadge />
@@ -204,9 +204,9 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor="#8B5CF6"
-            colors={['#8B5CF6']}
-            progressBackgroundColor="#FFFFFF"
+            tintColor={dt.refreshTint}
+            colors={[dt.refreshTint]}
+            progressBackgroundColor={dt.refreshBg}
           />
         }
         contentContainerStyle={{ paddingBottom: 80 }}
@@ -224,17 +224,13 @@ export default function HomeScreen() {
           width: 56,
           height: 56,
           borderRadius: 28,
-          backgroundColor: '#8B5CF6',
+          backgroundColor: dt.fabBg,
           alignItems: 'center',
           justifyContent: 'center',
-          elevation: 6,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.27,
-          shadowRadius: 4.65,
+          ...dt.fabShadow,
         }}
       >
-        <Icon icon={Plus} size="lg" color="#FFFFFF" weight="bold" />
+        <Icon icon={Plus} size="lg" color={dt.fabIcon} weight="bold" />
       </Pressable>
 
       <CelebrationOverlay />

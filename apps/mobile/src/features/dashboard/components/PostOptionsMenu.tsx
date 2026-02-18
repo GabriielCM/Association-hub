@@ -4,6 +4,7 @@ import { YStack } from 'tamagui';
 import { Text } from '@ahub/ui';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useDeletePost } from '../hooks/useFeedMutations';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import type { FeedPost } from '@ahub/shared/types';
 
 interface PostOptionsMenuProps {
@@ -23,6 +24,7 @@ export function PostOptionsMenu({
 }: PostOptionsMenuProps) {
   const { user } = useAuthContext();
   const deletePost = useDeletePost();
+  const dt = useDashboardTheme();
 
   if (!post) return null;
 
@@ -55,9 +57,9 @@ export function PostOptionsMenu({
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable style={[styles.overlay, { backgroundColor: dt.overlayBg }]} onPress={onClose}>
         <Pressable
-          style={styles.sheet}
+          style={[styles.sheet, { backgroundColor: dt.sheetBg }]}
           onPress={(e) => e.stopPropagation()}
         >
           <YStack gap="$1" padding="$2">
@@ -92,11 +94,9 @@ export function PostOptionsMenu({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',

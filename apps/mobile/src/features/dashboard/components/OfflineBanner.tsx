@@ -3,10 +3,12 @@ import { XStack } from 'tamagui';
 import { Platform } from 'react-native';
 
 import { Text } from '@ahub/ui';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 
 let NetInfo: any = null;
 
 export function OfflineBanner() {
+  const dt = useDashboardTheme();
   const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export function OfflineBanner() {
       alignItems="center"
       justifyContent="center"
     >
-      <Text size="xs" style={{ color: '#000' }} weight="semibold">
+      <Text size="xs" style={{ color: dt.offlineText }} weight="semibold">
         Voce esta offline - dados podem estar desatualizados
       </Text>
     </XStack>
