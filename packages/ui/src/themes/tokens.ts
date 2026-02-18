@@ -237,49 +237,63 @@ export const glass = {
   errorTint: 'rgba(239, 68, 68, 0.10)',
 } as const;
 
-// Messages glassmorphism tokens
+// Messages tokens - WhatsApp-inspired solid colors
 export const messageGlass = {
-  // Bubble backgrounds - Light
-  bubbleOwnLight: 'rgba(139, 92, 246, 0.18)',
-  bubbleOtherLight: 'rgba(255, 255, 255, 0.65)',
-  // Bubble backgrounds - Dark
-  bubbleOwnDark: 'rgba(139, 92, 246, 0.28)',
-  bubbleOtherDark: 'rgba(37, 37, 66, 0.65)',
+  // Bubble backgrounds - SOLID (WhatsApp style)
+  bubbleOwnLight: '#8B5CF6',
+  bubbleOtherLight: '#FFFFFF',
+  bubbleOwnDark: '#6D28D9',
+  bubbleOtherDark: '#2A2A4A',
 
-  // Bubble borders - Light
-  bubbleBorderOwnLight: 'rgba(139, 92, 246, 0.25)',
-  bubbleBorderOtherLight: 'rgba(0, 0, 0, 0.06)',
-  // Bubble borders - Dark
-  bubbleBorderOwnDark: 'rgba(139, 92, 246, 0.35)',
-  bubbleBorderOtherDark: 'rgba(255, 255, 255, 0.12)',
+  // Bubble borders
+  bubbleBorderOwnLight: 'transparent',
+  bubbleBorderOtherLight: '#E5E7EB',
+  bubbleBorderOwnDark: 'transparent',
+  bubbleBorderOtherDark: '#3D3D5C',
+
+  // Chat background
+  chatBgLight: '#F5F3FF',
+  chatBgDark: '#1A1A2E',
 
   // Date chip
-  dateChipLight: 'rgba(255, 255, 255, 0.75)',
-  dateChipDark: 'rgba(37, 37, 66, 0.75)',
+  dateChipLight: 'rgba(0, 0, 0, 0.06)',
+  dateChipDark: 'rgba(255, 255, 255, 0.08)',
+  dateChipTextLight: '#6B7280',
+  dateChipTextDark: '#9CA3AF',
 
-  // Input area
-  inputLight: 'rgba(255, 255, 255, 0.60)',
-  inputDark: 'rgba(37, 37, 66, 0.60)',
-  inputFieldLight: 'rgba(0, 0, 0, 0.04)',
+  // Input area - solid
+  inputLight: '#FFFFFF',
+  inputDark: '#252542',
+  inputFieldLight: '#F3F4F6',
   inputFieldDark: 'rgba(255, 255, 255, 0.08)',
+  inputBorderLight: '#E5E7EB',
+  inputBorderDark: '#3D3D5C',
 
   // Scroll button
-  scrollBtnLight: 'rgba(255, 255, 255, 0.80)',
-  scrollBtnDark: 'rgba(37, 37, 66, 0.80)',
+  scrollBtnLight: '#FFFFFF',
+  scrollBtnDark: '#252542',
 
   // Context menu
-  contextMenuLight: 'rgba(255, 255, 255, 0.92)',
-  contextMenuDark: 'rgba(30, 30, 46, 0.92)',
+  contextMenuLight: 'rgba(255, 255, 255, 0.95)',
+  contextMenuDark: 'rgba(30, 30, 46, 0.95)',
 
-  // Filter chips
-  chipLight: 'rgba(255, 255, 255, 0.70)',
-  chipDark: 'rgba(37, 37, 66, 0.70)',
-  chipActiveLight: 'rgba(139, 92, 246, 0.15)',
+  // Filter chips - solid
+  chipLight: '#F3F4F6',
+  chipDark: '#2A2A4A',
+  chipActiveLight: 'rgba(139, 92, 246, 0.12)',
   chipActiveDark: 'rgba(139, 92, 246, 0.25)',
 
-  // Text colors for bubbles
+  // Text colors for own bubbles
   bubbleOwnText: '#FFFFFF',
-  bubbleOwnTextSecondary: 'rgba(255, 255, 255, 0.70)',
-  bubbleOwnTextTime: 'rgba(255, 255, 255, 0.60)',
+  bubbleOwnTextSecondary: 'rgba(255, 255, 255, 0.75)',
+  bubbleOwnTextTime: 'rgba(255, 255, 255, 0.65)',
+
+  // Text colors for other (received) bubbles
+  bubbleOtherTextLight: '#1F2937',
+  bubbleOtherTextDark: '#F3F4F6',
+  bubbleOtherTextSecondaryLight: '#6B7280',
+  bubbleOtherTextSecondaryDark: '#9CA3AF',
+  bubbleOtherTextTimeLight: '#9CA3AF',
+  bubbleOtherTextTimeDark: '#6B7280',
 } as const;
 

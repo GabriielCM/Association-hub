@@ -36,36 +36,36 @@ const VARIANT_CONFIG: Record<GlassVariant, VariantConfig> = {
     bgDark: messageGlass.bubbleOwnDark,
     border: messageGlass.bubbleBorderOwnLight,
     borderDark: messageGlass.bubbleBorderOwnDark,
-    blur: 16,
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
+    blur: 0,
+    shadowOpacity: 0,
+    shadowRadius: 0,
   },
   'bubble-other': {
     bg: messageGlass.bubbleOtherLight,
     bgDark: messageGlass.bubbleOtherDark,
     border: messageGlass.bubbleBorderOtherLight,
     borderDark: messageGlass.bubbleBorderOtherDark,
-    blur: 16,
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
+    blur: 0,
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
   },
   'chip': {
     bg: messageGlass.chipLight,
     bgDark: messageGlass.chipDark,
-    border: 'rgba(255, 255, 255, 0.25)',
-    borderDark: 'rgba(255, 255, 255, 0.12)',
-    blur: 12,
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
+    border: 'transparent',
+    borderDark: 'transparent',
+    blur: 0,
+    shadowOpacity: 0,
+    shadowRadius: 0,
   },
   'input': {
     bg: messageGlass.inputLight,
     bgDark: messageGlass.inputDark,
-    border: 'rgba(0, 0, 0, 0.06)',
-    borderDark: 'rgba(255, 255, 255, 0.10)',
-    blur: 20,
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
+    border: messageGlass.inputBorderLight,
+    borderDark: messageGlass.inputBorderDark,
+    blur: 0,
+    shadowOpacity: 0,
+    shadowRadius: 0,
   },
   'menu': {
     bg: messageGlass.contextMenuLight,
@@ -79,26 +79,26 @@ const VARIANT_CONFIG: Record<GlassVariant, VariantConfig> = {
   'button': {
     bg: messageGlass.scrollBtnLight,
     bgDark: messageGlass.scrollBtnDark,
-    border: 'rgba(0, 0, 0, 0.06)',
-    borderDark: 'rgba(255, 255, 255, 0.10)',
-    blur: 12,
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    border: '#E5E7EB',
+    borderDark: '#3D3D5C',
+    blur: 0,
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
   'date-chip': {
     bg: messageGlass.dateChipLight,
     bgDark: messageGlass.dateChipDark,
-    border: 'rgba(0, 0, 0, 0.04)',
-    borderDark: 'rgba(255, 255, 255, 0.10)',
-    blur: 16,
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
+    border: 'transparent',
+    borderDark: 'transparent',
+    blur: 0,
+    shadowOpacity: 0,
+    shadowRadius: 0,
   },
 };
 
 /**
- * Glassmorphism wrapper for messages UI components.
- * Uses BlurView on iOS, semi-transparent fallback on Android.
+ * View wrapper for messages UI components.
+ * Uses solid backgrounds for most variants, BlurView only for menu on iOS.
  */
 export function GlassView({
   children,
@@ -115,25 +115,28 @@ export function GlassView({
   const borderColor = isDark ? config.borderDark : config.border;
   const blur = blurIntensity ?? config.blur;
 
-  const shadow = Platform.OS === 'ios'
-    ? {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: isDark ? config.shadowOpacity * 3 : config.shadowOpacity,
-        shadowRadius: config.shadowRadius,
-      }
-    : {
-        elevation: config.shadowRadius > 10 ? 4 : config.shadowRadius > 6 ? 2 : 1,
-      };
+  const shadow = config.shadowOpacity > 0
+    ? Platform.OS === 'ios'
+      ? {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: isDark ? config.shadowOpacity * 2 : config.shadowOpacity,
+          shadowRadius: config.shadowRadius,
+        }
+      : {
+          elevation: config.shadowRadius > 10 ? 4 : config.shadowRadius > 3 ? 2 : 1,
+        }
+    : {};
 
-  if (Platform.OS === 'android') {
+  // Use solid View for variants with no blur
+  if (blur === 0 || Platform.OS === 'android') {
     return (
       <View
         style={[
           {
             backgroundColor: bgColor,
             borderRadius,
-            borderWidth: 1,
+            borderWidth: borderColor !== 'transparent' ? 1 : 0,
             borderColor,
             overflow: 'hidden',
             ...shadow,
@@ -146,6 +149,7 @@ export function GlassView({
     );
   }
 
+  // Only use BlurView for menu variant on iOS
   return (
     <BlurView
       intensity={blur}
@@ -154,7 +158,7 @@ export function GlassView({
         {
           borderRadius,
           overflow: 'hidden',
-          borderWidth: 1,
+          borderWidth: borderColor !== 'transparent' ? 1 : 0,
           borderColor,
           ...shadow,
         },

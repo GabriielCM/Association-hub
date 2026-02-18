@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
-import { XStack } from 'tamagui';
+import { StyleSheet, useColorScheme, Platform } from 'react-native';
+import { XStack, View } from 'tamagui';
 import { Text, Icon } from '@ahub/ui';
 import { Microphone } from '@ahub/ui/src/icons';
+import { messageGlass } from '@ahub/ui/themes';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -13,7 +14,6 @@ import Animated, {
   FadeInUp,
   FadeOutDown,
 } from 'react-native-reanimated';
-import { GlassView } from './GlassView';
 
 interface TypingIndicatorProps {
   typingUsers: { id: string; name: string }[];
@@ -93,6 +93,8 @@ function MicPulse() {
 }
 
 export function TypingIndicator({ typingUsers, recordingUsers = [] }: TypingIndicatorProps) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const hasRecording = recordingUsers.length > 0;
   const hasTyping = typingUsers.length > 0;
 
@@ -101,7 +103,19 @@ export function TypingIndicator({ typingUsers, recordingUsers = [] }: TypingIndi
   return (
     <Animated.View entering={FadeInUp.duration(200)} exiting={FadeOutDown.duration(150)}>
       <XStack paddingHorizontal="$3" paddingVertical="$1">
-        <GlassView variant="bubble-other" borderRadius={16}>
+        <View
+          borderRadius={16}
+          backgroundColor={isDark ? messageGlass.bubbleOtherDark : messageGlass.bubbleOtherLight}
+          borderWidth={isDark ? 0 : 1}
+          borderColor={isDark ? 'transparent' : messageGlass.bubbleBorderOtherLight}
+          style={!isDark ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.06,
+            shadowRadius: 3,
+            ...(Platform.OS === 'android' ? { elevation: 1 } : {}),
+          } : undefined}
+        >
           <XStack alignItems="center" gap="$1.5" paddingHorizontal="$3" paddingVertical="$2">
             {hasRecording ? (
               <>
@@ -119,7 +133,7 @@ export function TypingIndicator({ typingUsers, recordingUsers = [] }: TypingIndi
               </>
             )}
           </XStack>
-        </GlassView>
+        </View>
       </XStack>
     </Animated.View>
   );

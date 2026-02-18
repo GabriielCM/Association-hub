@@ -1,7 +1,8 @@
 import { memo } from 'react';
+import { useColorScheme } from 'react-native';
 import { View } from 'tamagui';
 import { Text } from '@ahub/ui';
-import { GlassView } from './GlassView';
+import { messageGlass } from '@ahub/ui/themes';
 import { formatDateSeparator } from '../utils/dateFormatters';
 
 interface DateSeparatorProps {
@@ -9,15 +10,25 @@ interface DateSeparatorProps {
 }
 
 export const DateSeparator = memo(function DateSeparator({ date }: DateSeparatorProps) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   return (
     <View alignItems="center" paddingVertical="$2">
-      <GlassView variant="date-chip" borderRadius={9999}>
-        <View paddingHorizontal="$2" paddingVertical="$1">
-          <Text size="xs" weight="medium" color="secondary">
-            {formatDateSeparator(date)}
-          </Text>
-        </View>
-      </GlassView>
+      <View
+        paddingHorizontal="$2"
+        paddingVertical="$1"
+        borderRadius="$full"
+        backgroundColor={isDark ? messageGlass.dateChipDark : messageGlass.dateChipLight}
+      >
+        <Text
+          size="xs"
+          weight="medium"
+          style={{ color: isDark ? messageGlass.dateChipTextDark : messageGlass.dateChipTextLight }}
+        >
+          {formatDateSeparator(date)}
+        </Text>
+      </View>
     </View>
   );
 });

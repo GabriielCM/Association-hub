@@ -13,7 +13,7 @@ import { Text, Icon } from '@ahub/ui';
 import { Camera, Trash, Microphone, PaperPlaneRight, X } from '@ahub/ui/src/icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAudioRecording } from '../hooks/useAudioRecording';
-import { GlassView } from './GlassView';
+import { messageGlass } from '@ahub/ui/themes';
 import { MorphSendButton } from './MorphSendButton';
 import { AttachmentMenu } from './AttachmentMenu';
 import { messageHaptics } from '../utils/haptics';
@@ -186,7 +186,13 @@ export function MessageInput({
   const hasText = text.trim().length > 0;
 
   return (
-    <GlassView variant="input" borderRadius={0}>
+    <View
+      style={{
+        backgroundColor: isDark ? messageGlass.inputDark : messageGlass.inputLight,
+        borderTopWidth: 1,
+        borderTopColor: isDark ? messageGlass.inputBorderDark : messageGlass.inputBorderLight,
+      }}
+    >
       {/* Reply preview */}
       {replyTo && !isRecording && (
         <XStack
@@ -285,11 +291,11 @@ export function MessageInput({
               />
             )}
 
-            {/* Text Input - glass pill */}
+            {/* Text Input - solid pill */}
             <View
               flex={1}
               borderRadius="$full"
-              backgroundColor={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)'}
+              backgroundColor={isDark ? messageGlass.inputFieldDark : messageGlass.inputFieldLight}
               paddingHorizontal="$3"
               paddingVertical={Platform.OS === 'ios' ? 8 : 4}
               maxHeight={120}
@@ -319,7 +325,7 @@ export function MessageInput({
           </>
         )}
       </XStack>
-    </GlassView>
+    </View>
   );
 }
 

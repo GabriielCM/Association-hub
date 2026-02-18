@@ -1,5 +1,5 @@
 import { useCallback, useRef, memo } from 'react';
-import { Pressable, StyleSheet, Animated as RNAnimated } from 'react-native';
+import { Pressable, StyleSheet, Animated as RNAnimated, useColorScheme } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
 import { Text, Avatar, Icon } from '@ahub/ui';
 import {
@@ -82,6 +82,8 @@ export const ConversationItem = memo(function ConversationItem({
   onArchive,
   onDelete,
 }: ConversationItemProps) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const swipeableRef = useRef<Swipeable>(null);
 
   const handlePress = useCallback(() => {
@@ -136,6 +138,11 @@ export const ConversationItem = memo(function ConversationItem({
 
   const hasActivity = isRecording || isTyping;
   const activityLabel = recordingLabel ?? typingLabel;
+
+  // Wallet-inspired text colors for dark mode
+  const nameColor = isDark ? '#FFFFFF' : undefined;
+  const secondaryColor = isDark ? 'rgba(255,255,255,0.6)' : undefined;
+  const iconSecondaryColor = isDark ? 'rgba(255,255,255,0.4)' : 'secondary';
 
   // Swipe right = Pin
   const renderRightActions = useCallback(
@@ -233,8 +240,10 @@ export const ConversationItem = memo(function ConversationItem({
         alignItems="center"
         gap="$2.5"
         paddingHorizontal="$3"
-        paddingVertical="$2"
-        backgroundColor="$background"
+        paddingVertical="$1.5"
+        backgroundColor={isDark ? 'rgba(255,255,255,0.07)' : '$background'}
+        borderBottomWidth={StyleSheet.hairlineWidth}
+        borderBottomColor={isDark ? 'rgba(255,255,255,0.06)' : '#E5E7EB'}
       >
         {/* Avatar with status ring */}
         <Pressable onPress={handleAvatarPress}>
@@ -265,14 +274,15 @@ export const ConversationItem = memo(function ConversationItem({
                   size="sm"
                   numberOfLines={1}
                   flex={1}
+                  {...(nameColor ? { style: { color: nameColor } } : {})}
                 >
                   {displayName}
                 </Text>
                 {conversation.isMuted && (
-                  <Icon icon={SpeakerSlash} size="sm" color="secondary" />
+                  <Icon icon={SpeakerSlash} size="sm" color={iconSecondaryColor} />
                 )}
               </XStack>
-              <Text color="secondary" size="xs">
+              <Text size="xs" {...(secondaryColor ? { style: { color: secondaryColor } } : { color: 'secondary' })}>
                 {conversation.lastMessage
                   ? formatConversationTime(conversation.lastMessage.createdAt)
                   : ''}
@@ -290,10 +300,10 @@ export const ConversationItem = memo(function ConversationItem({
                     return (
                       <>
                         {preview.prefix ? (
-                          <Text color="secondary" size="xs" numberOfLines={1}>{preview.prefix}</Text>
+                          <Text size="xs" numberOfLines={1} {...(secondaryColor ? { style: { color: secondaryColor } } : { color: 'secondary' })}>{preview.prefix}</Text>
                         ) : null}
-                        <Icon icon={Camera} size={12} color="secondary" />
-                        <Text color="secondary" size="xs" numberOfLines={1}>Foto</Text>
+                        <Icon icon={Camera} size={12} color={iconSecondaryColor} />
+                        <Text size="xs" numberOfLines={1} {...(secondaryColor ? { style: { color: secondaryColor } } : { color: 'secondary' })}>Foto</Text>
                       </>
                     );
                   }
@@ -301,15 +311,15 @@ export const ConversationItem = memo(function ConversationItem({
                     return (
                       <>
                         {preview.prefix ? (
-                          <Text color="secondary" size="xs" numberOfLines={1}>{preview.prefix}</Text>
+                          <Text size="xs" numberOfLines={1} {...(secondaryColor ? { style: { color: secondaryColor } } : { color: 'secondary' })}>{preview.prefix}</Text>
                         ) : null}
-                        <Icon icon={Microphone} size={12} color="secondary" />
-                        <Text color="secondary" size="xs" numberOfLines={1}>Audio</Text>
+                        <Icon icon={Microphone} size={12} color={iconSecondaryColor} />
+                        <Text size="xs" numberOfLines={1} {...(secondaryColor ? { style: { color: secondaryColor } } : { color: 'secondary' })}>Audio</Text>
                       </>
                     );
                   }
                   return (
-                    <Text color="secondary" size="xs" numberOfLines={1} flex={1}>
+                    <Text size="xs" numberOfLines={1} flex={1} {...(secondaryColor ? { style: { color: secondaryColor } } : { color: 'secondary' })}>
                       {preview.prefix}{preview.text}
                     </Text>
                   );
@@ -332,7 +342,7 @@ export const ConversationItem = memo(function ConversationItem({
                   minWidth={20}
                   height={20}
                   borderRadius="$full"
-                  backgroundColor="$primary"
+                  backgroundColor={isDark ? '#06B6D4' : '$primary'}
                   alignItems="center"
                   justifyContent="center"
                   paddingHorizontal="$0.5"

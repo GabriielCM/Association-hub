@@ -1,9 +1,8 @@
 import { memo } from 'react';
 import { ScrollView, Pressable, StyleSheet, useColorScheme } from 'react-native';
-import { XStack, View } from 'tamagui';
+import { View } from 'tamagui';
 import { Text } from '@ahub/ui';
-import { colors } from '@ahub/ui/themes';
-import { GlassView } from './GlassView';
+import { colors, messageGlass } from '@ahub/ui/themes';
 
 export type ConversationFilter = 'all' | 'unread' | 'groups' | 'direct';
 
@@ -23,11 +22,15 @@ export const ConversationFilters = memo(function ConversationFilters({
   active,
   onFilterChange,
 }: ConversationFiltersProps) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
+      style={styles.scrollView}
     >
       {FILTERS.map((filter) => {
         const isActive = active === filter.key;
@@ -36,26 +39,34 @@ export const ConversationFilters = memo(function ConversationFilters({
             key={filter.key}
             onPress={() => onFilterChange(filter.key)}
           >
-            {isActive ? (
-              <View
-                paddingHorizontal="$2.5"
-                paddingVertical="$1"
-                borderRadius="$full"
-                backgroundColor={colors.primary}
+            <View
+              paddingHorizontal="$2.5"
+              paddingVertical="$1"
+              borderRadius="$full"
+              backgroundColor={
+                isActive
+                  ? (isDark ? 'rgba(139, 92, 246, 0.15)' : colors.primary)
+                  : (isDark ? 'transparent' : messageGlass.chipLight)
+              }
+              borderWidth={isDark ? 1 : 0}
+              borderColor={
+                isActive
+                  ? (isDark ? 'rgba(139, 92, 246, 0.35)' : 'transparent')
+                  : (isDark ? 'rgba(255,255,255,0.10)' : 'transparent')
+              }
+            >
+              <Text
+                size="xs"
+                weight={isActive ? 'semibold' : 'medium'}
+                style={{
+                  color: isActive
+                    ? (isDark ? '#A78BFA' : '#FFFFFF')
+                    : (isDark ? 'rgba(255,255,255,0.45)' : '#6B7280'),
+                }}
               >
-                <Text size="xs" weight="semibold" style={{ color: '#FFFFFF' }}>
-                  {filter.label}
-                </Text>
-              </View>
-            ) : (
-              <GlassView variant="chip" borderRadius={9999}>
-                <View paddingHorizontal="$2.5" paddingVertical="$1">
-                  <Text size="xs" weight="medium" color="secondary">
-                    {filter.label}
-                  </Text>
-                </View>
-              </GlassView>
-            )}
+                {filter.label}
+              </Text>
+            </View>
           </Pressable>
         );
       })}
@@ -64,9 +75,14 @@ export const ConversationFilters = memo(function ConversationFilters({
 });
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   container: {
     paddingHorizontal: 24,
-    paddingVertical: 8,
+    paddingTop: 8,
+    paddingBottom: 8,
     gap: 8,
   },
 });

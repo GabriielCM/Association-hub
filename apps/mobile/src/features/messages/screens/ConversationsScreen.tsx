@@ -14,6 +14,7 @@ import { ChatCircle, MagnifyingGlass, Plus } from '@ahub/ui/src/icons';
 import { router } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/auth.store';
+import { colors } from '@ahub/ui/themes';
 import { useConversations } from '../hooks/useConversations';
 import { usePresence } from '../hooks/usePresence';
 import { ConversationItem } from '../components/ConversationItem';
@@ -85,16 +86,16 @@ export function ConversationsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <YStack flex={1} backgroundColor="$background">
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#0D0520' : colors.background }]} edges={['top']}>
+      <YStack flex={1} backgroundColor={isDark ? '#0D0520' : '$background'}>
         {/* Header - Telegram style large title */}
         <YStack paddingHorizontal="$3" paddingTop="$2" paddingBottom="$1">
           <XStack alignItems="center" justifyContent="space-between">
             <XStack alignItems="center" gap="$2">
               <Pressable onPress={() => router.back()}>
-                <Text size="lg">&#8592;</Text>
+                <Text size="lg" {...(isDark ? { style: { color: '#FFFFFF' } } : {})}>&#8592;</Text>
               </Pressable>
-              <Text weight="bold" size="xl">
+              <Text weight="bold" size="xl" {...(isDark ? { style: { color: '#FFFFFF' } } : {})}>
                 Mensagens
               </Text>
             </XStack>
@@ -102,10 +103,10 @@ export function ConversationsScreen() {
         </YStack>
 
         {/* Search */}
-        <View paddingHorizontal="$3" paddingBottom="$1">
+        <View paddingHorizontal="$3" paddingBottom="$1.5">
           <XStack
             borderRadius="$full"
-            backgroundColor={isDark ? 'rgba(255,255,255,0.08)' : '$backgroundHover'}
+            backgroundColor={isDark ? 'rgba(255,255,255,0.07)' : '$backgroundHover'}
             paddingHorizontal="$3"
             paddingVertical="$1.5"
             alignItems="center"
@@ -116,7 +117,7 @@ export function ConversationsScreen() {
               value={search}
               onChangeText={setSearch}
               placeholder="Buscar conversa..."
-              placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+              placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : '#9CA3AF'}
               style={[
                 styles.searchInput,
                 { color: isDark ? '#F9FAFB' : '#1F2937' },
@@ -183,7 +184,7 @@ export function ConversationsScreen() {
             width={56}
             height={56}
             borderRadius="$full"
-            backgroundColor="$primary"
+            backgroundColor={isDark ? '#06B6D4' : '$primary'}
             alignItems="center"
             justifyContent="center"
             shadowColor="$shadowColor"

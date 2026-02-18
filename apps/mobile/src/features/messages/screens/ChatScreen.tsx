@@ -8,6 +8,7 @@ import {
   Alert,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  useColorScheme,
 } from 'react-native';
 import { YStack, View } from 'tamagui';
 import { Text, Avatar, ScreenHeader, Icon } from '@ahub/ui';
@@ -23,6 +24,7 @@ import { useMarkConversationAsRead } from '../hooks/useConversations';
 import { useMessageWebSocket } from '../hooks/useMessageWebSocket';
 import { useTyping } from '../hooks/useTyping';
 import { useWebSocket } from '@/providers/WebSocketProvider';
+import { messageGlass } from '@ahub/ui/themes';
 import { MessageBubble } from '../components/MessageBubble';
 import { MessageInput } from '../components/MessageInput';
 import { TypingIndicator } from '../components/TypingIndicator';
@@ -45,6 +47,9 @@ type ListItem =
 export function ChatScreen() {
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
   const user = useAuthStore((s) => s.user);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const chatBg = isDark ? messageGlass.chatBgDark : messageGlass.chatBgLight;
   const flatListRef = useRef<FlatList>(null);
 
   const { data: conversation } = useConversation(conversationId ?? '');
@@ -320,13 +325,13 @@ export function ChatScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: chatBg }]} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={0}
       >
-        <YStack flex={1} backgroundColor="$background">
+        <YStack flex={1} backgroundColor={chatBg}>
           {/* Header */}
           <Pressable onPress={handleHeaderPress}>
             <ScreenHeader onBack={() => router.back()} borderBottom>
@@ -381,6 +386,7 @@ export function ChatScreen() {
               keyExtractor={getItemKey}
               renderItem={renderItem}
               inverted
+              keyboardDismissMode="interactive"
               onScroll={handleScroll}
               scrollEventThrottle={16}
               onEndReached={() => {

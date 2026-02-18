@@ -1,7 +1,7 @@
-import { Alert } from 'react-native';
+import { Alert, useColorScheme } from 'react-native';
 import { ScrollView, StyleSheet } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
-import { Text, Avatar, Card, Button, ScreenHeader, Icon } from '@ahub/ui';
+import { Text, Heading, Avatar, Card, Button, ScreenHeader, Icon } from '@ahub/ui';
 import { SpeakerSlash, Bell, Warning } from '@ahub/ui/src/icons';
 import Prohibit from 'phosphor-react-native/src/icons/Prohibit';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -10,10 +10,13 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useConversation, useUpdateConversationSettings } from '@/features/messages/hooks/useConversations';
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import { OnlineStatus } from '@/features/messages/components/OnlineStatus';
+import { colors } from '@ahub/ui/themes';
 
 export default function ContactDetailScreen() {
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
   const user = useAuthStore((s) => s.user);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   const { data: conversation } = useConversation(conversationId ?? '');
   const updateSettings = useUpdateConversationSettings();
@@ -80,11 +83,21 @@ export default function ContactDetailScreen() {
 
   const isOnline = otherParticipant.isOnline ?? false;
 
+  // Dark mode glass card overrides
+  const darkCardProps = isDark ? {
+    backgroundColor: 'rgba(255,255,255,0.07)' as const,
+    borderColor: 'rgba(255,255,255,0.06)' as const,
+  } : {};
+
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <YStack flex={1} backgroundColor="$background">
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#0D0520' : colors.background }]} edges={['top', 'bottom']}>
+      <YStack flex={1} backgroundColor={isDark ? '#0D0520' : '$background'}>
         {/* Header */}
-        <ScreenHeader title="Detalhes do Contato" headingLevel={4} onBack={() => router.back()} />
+        <ScreenHeader headingLevel={4} onBack={() => router.back()}>
+          <Heading level={4} numberOfLines={1} {...(isDark ? { style: { color: '#FFFFFF' } } : {})}>
+            Detalhes do Contato
+          </Heading>
+        </ScreenHeader>
 
         <ScrollView contentContainerStyle={styles.content}>
           {/* Avatar & Info */}
@@ -100,11 +113,21 @@ export default function ContactDetailScreen() {
               </View>
             </View>
 
-            <Text weight="bold" size="xl">
+            <Text
+              weight="bold"
+              size="xl"
+              {...(isDark ? { style: { color: '#FFFFFF' } } : {})}
+            >
               {otherParticipant.name}
             </Text>
 
-            <Text color={isOnline ? 'success' : 'secondary'} size="sm">
+            <Text
+              size="sm"
+              {...(isDark
+                ? { style: { color: isOnline ? '#86EFAC' : 'rgba(255,255,255,0.6)' } }
+                : { color: isOnline ? 'success' : 'secondary' }
+              )}
+            >
               {isOnline
                 ? 'Online'
                 : otherParticipant.lastSeenAt
@@ -119,10 +142,10 @@ export default function ContactDetailScreen() {
 
             {profile?.bio && (
               <Text
-                color="secondary"
                 size="sm"
                 align="center"
-                style={{ maxWidth: 280 }}
+                style={{ maxWidth: 280, ...(isDark ? { color: 'rgba(255,255,255,0.6)' } : {}) }}
+                {...(!isDark ? { color: 'secondary' } : {})}
                 numberOfLines={3}
               >
                 {profile.bio}
@@ -137,6 +160,7 @@ export default function ContactDetailScreen() {
               size="lg"
               fullWidth
               onPress={handleViewProfile}
+              {...(isDark ? { backgroundColor: '#06B6D4' } : {})}
             >
               Ver Perfil Completo
             </Button>
@@ -145,30 +169,32 @@ export default function ContactDetailScreen() {
           {/* Actions */}
           <YStack paddingHorizontal="$4" gap="$2">
             {/* Mute */}
-            <Card variant="flat" pressable onPress={handleToggleMute}>
+            <Card variant="flat" pressable onPress={handleToggleMute} {...darkCardProps}>
               <XStack justifyContent="space-between" alignItems="center">
-                <Text weight="medium">Silenciar conversa</Text>
-                <Icon icon={isMuted ? SpeakerSlash : Bell} size="md" color="secondary" />
+                <Text weight="medium" {...(isDark ? { style: { color: '#FFFFFF' } } : {})}>
+                  Silenciar conversa
+                </Text>
+                <Icon icon={isMuted ? SpeakerSlash : Bell} size="md" color={isDark ? 'rgba(255,255,255,0.4)' : 'secondary'} />
               </XStack>
             </Card>
 
             {/* Block */}
-            <Card variant="flat" pressable onPress={handleBlock}>
+            <Card variant="flat" pressable onPress={handleBlock} {...darkCardProps}>
               <XStack justifyContent="space-between" alignItems="center">
-                <Text weight="medium" color="error">
+                <Text weight="medium" {...(isDark ? { style: { color: '#FFFFFF' } } : { color: 'error' })}>
                   Bloquear
                 </Text>
-                <Icon icon={Prohibit} size="md" color="error" />
+                <Icon icon={Prohibit} size="md" color={isDark ? 'rgba(255,255,255,0.4)' : 'error'} />
               </XStack>
             </Card>
 
             {/* Report */}
-            <Card variant="flat" pressable onPress={handleReport}>
+            <Card variant="flat" pressable onPress={handleReport} {...darkCardProps}>
               <XStack justifyContent="space-between" alignItems="center">
-                <Text weight="medium" color="error">
+                <Text weight="medium" {...(isDark ? { style: { color: '#FFFFFF' } } : { color: 'error' })}>
                   Denunciar
                 </Text>
-                <Icon icon={Warning} size="md" color="error" />
+                <Icon icon={Warning} size="md" color={isDark ? 'rgba(255,255,255,0.4)' : 'error'} />
               </XStack>
             </Card>
           </YStack>

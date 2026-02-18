@@ -1,5 +1,5 @@
 import { useCallback, memo } from 'react';
-import { Pressable, useColorScheme } from 'react-native';
+import { Pressable, useColorScheme, Platform } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
 import { Text, Avatar, Icon } from '@ahub/ui';
 import { Check, Checks, CircleNotch, Camera, Microphone, ArrowBendUpLeft } from '@ahub/ui/src/icons';
@@ -12,7 +12,6 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { GlassView } from './GlassView';
 import { ImageMessage } from './ImageMessage';
 import { AudioMessage } from './AudioMessage';
 import { LinkPreview } from './LinkPreview';
@@ -147,16 +146,22 @@ export const MessageBubble = memo(function MessageBubble({
   // Spacing: tight cluster gap or normal gap
   const paddingTop = isFirstInCluster ? NORMAL_MESSAGE_GAP : CLUSTER_MESSAGE_GAP;
 
-  // Text colors for glass bubbles
-  const textColor = isOwn ? messageGlass.bubbleOwnText : undefined;
-  const textSecondaryColor = isOwn ? messageGlass.bubbleOwnTextSecondary : undefined;
-  const textTimeColor = isOwn ? messageGlass.bubbleOwnTextTime : undefined;
+  // Text colors - explicit for both own and other bubbles
+  const textColor = isOwn
+    ? messageGlass.bubbleOwnText
+    : (isDark ? messageGlass.bubbleOtherTextDark : messageGlass.bubbleOtherTextLight);
+  const textSecondaryColor = isOwn
+    ? messageGlass.bubbleOwnTextSecondary
+    : (isDark ? messageGlass.bubbleOtherTextSecondaryDark : messageGlass.bubbleOtherTextSecondaryLight);
+  const textTimeColor = isOwn
+    ? messageGlass.bubbleOwnTextTime
+    : (isDark ? messageGlass.bubbleOtherTextTimeDark : messageGlass.bubbleOtherTextTimeLight);
 
   // Highlight matching text if search is active
   const renderContent = (content: string) => {
     if (!highlightText || !content) {
       return (
-        <Text style={isOwn ? { color: textColor } : undefined} size="sm">
+        <Text style={{ color: textColor }} size="sm">
           {content}
         </Text>
       );
@@ -166,7 +171,7 @@ export const MessageBubble = memo(function MessageBubble({
     const parts = content.split(regex);
 
     return (
-      <Text size="sm" style={isOwn ? { color: textColor } : undefined}>
+      <Text size="sm" style={{ color: textColor }}>
         {parts.map((part, i) =>
           regex.test(part) ? (
             <Text
@@ -174,7 +179,7 @@ export const MessageBubble = memo(function MessageBubble({
               size="sm"
               style={{
                 backgroundColor: 'rgba(255, 213, 0, 0.4)',
-                color: isOwn ? textColor : undefined,
+                color: textColor,
               }}
             >
               {part}
@@ -205,8 +210,10 @@ export const MessageBubble = memo(function MessageBubble({
             <Text
               size="xs"
               weight="semibold"
-              style={isGroup ? { color: getSenderColor(message.sender.id) } : undefined}
-              color={isGroup ? undefined : 'primary'}
+              style={{ color: isGroup
+                ? (isDark ? '#F3F4F6' : getSenderColor(message.sender.id))
+                : textColor
+              }}
             >
               {message.sender.name.split(' ')[0]}
             </Text>
@@ -249,15 +256,28 @@ export const MessageBubble = memo(function MessageBubble({
               onLongPress={handleLongPress}
               delayLongPress={400}
             >
-              <GlassView
-                variant={isOwn ? 'bubble-own' : 'bubble-other'}
-                borderRadius={0}
+              <View
                 style={{
+                  backgroundColor: isOwn
+                    ? (isDark ? messageGlass.bubbleOwnDark : messageGlass.bubbleOwnLight)
+                    : (isDark ? messageGlass.bubbleOtherDark : messageGlass.bubbleOtherLight),
+                  borderWidth: isOwn ? 0 : 1,
+                  borderColor: isOwn
+                    ? 'transparent'
+                    : (isDark ? messageGlass.bubbleBorderOtherDark : messageGlass.bubbleBorderOtherLight),
                   borderTopRightRadius,
                   borderTopLeftRadius,
                   borderBottomRightRadius,
                   borderBottomLeftRadius,
                   opacity: isDeleted ? 0.5 : 1,
+                  overflow: 'hidden',
+                  ...(!isOwn && !isDark ? {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.06,
+                    shadowRadius: 3,
+                    ...(Platform.OS === 'android' ? { elevation: 1 } : {}),
+                  } : {}),
                 }}
               >
                 <YStack padding="$2" gap="$1">
@@ -273,19 +293,17 @@ export const MessageBubble = memo(function MessageBubble({
                         <Text
                           size="xs"
                           weight="semibold"
-                          color={isOwn ? undefined : 'primary'}
-                          style={isOwn ? { color: messageGlass.bubbleOwnText } : undefined}
+                          style={{ color: isOwn ? messageGlass.bubbleOwnText : (isDark ? '#A78BFA' : '#8B5CF6') }}
                           numberOfLines={1}
                         >
                           {message.replyTo.senderName}
                         </Text>
                         {message.replyTo.contentType === 'IMAGE' ? (
                           <XStack alignItems="center" gap="$1">
-                            <Icon icon={Camera} size="sm" color={textSecondaryColor ?? 'secondary'} />
+                            <Icon icon={Camera} size="sm" color={textSecondaryColor} />
                             <Text
                               size="xs"
-                              color={isOwn ? undefined : 'secondary'}
-                              style={isOwn ? { color: textSecondaryColor } : undefined}
+                              style={{ color: textSecondaryColor }}
                               numberOfLines={1}
                             >
                               Foto
@@ -293,11 +311,10 @@ export const MessageBubble = memo(function MessageBubble({
                           </XStack>
                         ) : message.replyTo.contentType === 'AUDIO' ? (
                           <XStack alignItems="center" gap="$1">
-                            <Icon icon={Microphone} size="sm" color={textSecondaryColor ?? 'secondary'} />
+                            <Icon icon={Microphone} size="sm" color={textSecondaryColor} />
                             <Text
                               size="xs"
-                              color={isOwn ? undefined : 'secondary'}
-                              style={isOwn ? { color: textSecondaryColor } : undefined}
+                              style={{ color: textSecondaryColor }}
                               numberOfLines={1}
                             >
                               Audio
@@ -306,8 +323,7 @@ export const MessageBubble = memo(function MessageBubble({
                         ) : (
                           <Text
                             size="xs"
-                            color={isOwn ? undefined : 'secondary'}
-                            style={isOwn ? { color: textSecondaryColor } : undefined}
+                            style={{ color: textSecondaryColor }}
                             numberOfLines={1}
                           >
                             {message.replyTo.content}
@@ -320,13 +336,8 @@ export const MessageBubble = memo(function MessageBubble({
                   {/* Content */}
                   {isDeleted ? (
                     <Text
-                      color={isOwn ? undefined : 'secondary'}
                       size="sm"
-                      style={
-                        isOwn
-                          ? { fontStyle: 'italic', color: textSecondaryColor }
-                          : { fontStyle: 'italic' }
-                      }
+                      style={{ fontStyle: 'italic', color: textSecondaryColor }}
                     >
                       Mensagem apagada
                     </Text>
@@ -353,12 +364,11 @@ export const MessageBubble = memo(function MessageBubble({
                     <XStack alignItems="center" justifyContent="flex-end" gap="$1">
                       <Text
                         size="xs"
-                        color={isOwn ? undefined : 'secondary'}
                         style={{
                           fontSize: 10,
                           fontWeight: '300',
                           lineHeight: 12,
-                          ...(isOwn ? { color: textTimeColor } : {}),
+                          color: textTimeColor,
                         }}
                       >
                         {formatMessageTime(message.createdAt)}
@@ -379,7 +389,7 @@ export const MessageBubble = memo(function MessageBubble({
                     </XStack>
                   )}
                 </YStack>
-              </GlassView>
+              </View>
             </Pressable>
           </Animated.View>
         </GestureDetector>
