@@ -1,6 +1,8 @@
+import { useColorScheme } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
 import { Text, Icon } from '@ahub/ui';
 import { Play } from '@ahub/ui/src/icons';
+import { messageGlass } from '@ahub/ui/themes';
 
 function formatDuration(seconds?: number): string {
   if (!seconds) return '0:00';
@@ -16,13 +18,32 @@ interface AudioMessageProps {
 }
 
 export function AudioMessage({ duration, isOwn }: AudioMessageProps) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const playBtnBg = isOwn
+    ? 'rgba(255, 255, 255, 0.25)'
+    : isDark
+      ? 'rgba(139, 92, 246, 0.3)'
+      : '$primary';
+
+  const waveformBg = isOwn
+    ? 'rgba(255, 255, 255, 0.25)'
+    : isDark
+      ? 'rgba(139, 92, 246, 0.25)'
+      : 'rgba(139, 92, 246, 0.2)';
+
+  const durationColor = isOwn
+    ? messageGlass.bubbleOwnTextTime
+    : undefined;
+
   return (
     <XStack alignItems="center" gap="$2" minWidth={180}>
       <View
         width={32}
         height={32}
         borderRadius="$full"
-        backgroundColor={isOwn ? 'rgba(255,255,255,0.2)' : '$primary'}
+        backgroundColor={playBtnBg}
         alignItems="center"
         justifyContent="center"
       >
@@ -32,14 +53,12 @@ export function AudioMessage({ duration, isOwn }: AudioMessageProps) {
         <View
           height={4}
           borderRadius="$full"
-          backgroundColor={
-            isOwn ? 'rgba(255,255,255,0.2)' : 'rgba(139, 92, 246, 0.2)'
-          }
+          backgroundColor={waveformBg}
         />
         <Text
           size="xs"
           color={isOwn ? undefined : 'secondary'}
-          style={isOwn ? { fontSize: 10, color: 'rgba(255,255,255,0.6)' } : { fontSize: 10 }}
+          style={{ fontSize: 10, ...(durationColor ? { color: durationColor } : {}) }}
         >
           {formatDuration(duration)}
         </Text>

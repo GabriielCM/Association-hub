@@ -1,93 +1,186 @@
-import { ScrollView, RefreshControl } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { YStack, XStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Button, Spinner, ScreenHeader, Icon } from '@ahub/ui';
-import { User, CreditCard } from '@ahub/ui/src/icons';
+import { Text } from '@ahub/ui';
+import { CreditCard, CaretLeft } from '@ahub/ui/src/icons';
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 import { useWalletDashboard } from '@/features/wallet/hooks/useWallet';
+import { useCachedBalance } from '@/stores/wallet.store';
+import { WalletGlassBackground } from '@/features/wallet/components/WalletGlassBackground';
 import { WalletCard } from '@/features/wallet/components/WalletCard';
 import { QuickActions } from '@/features/wallet/components/QuickActions';
+import { WalletSummaryBar } from '@/features/wallet/components/WalletSummaryBar';
 import { StravaCard } from '@/features/wallet/components/StravaCard';
-import { useCachedBalance } from '@/stores/wallet.store';
-import { formatPoints } from '@ahub/shared/utils';
+import { RecentTransactionsSection } from '@/features/wallet/components/RecentTransactionsSection';
+import { OfflineBanner } from '@/features/wallet/components/OfflineBanner';
+import { WalletHomeSkeleton } from '@/features/wallet/components/ShimmerGlassSkeleton';
+import { GlassPanel } from '@/features/wallet/components/GlassPanel';
+import { useWalletTheme } from '@/features/wallet/hooks/useWalletTheme';
 
 export default function WalletHomeScreen() {
-  const { data: dashboard, isLoading, refetch, isRefetching } = useWalletDashboard();
+  const { data: dashboard, isLoading, isError, refetch } = useWalletDashboard();
   const cachedBalance = useCachedBalance();
+  const t = useWalletTheme();
+
+  // Parallax scroll
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const cardParallaxStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: scrollY.value * -0.25 }],
+  }));
+
+  // Simple offline detection via error state + cached data
+  const isOffline = isError && cachedBalance !== null;
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
-      <ScreenHeader title="Minha Carteira" headingLevel={3} onBack={() => router.back()} />
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-      >
-        <YStack padding="$4" gap="$4">
-          {/* Loading state */}
-          {isLoading && !dashboard ? (
-            <YStack alignItems="center" paddingVertical="$8" gap="$2">
-              {cachedBalance !== null && (
-                <Text color="secondary" size="sm">
-                  Último saldo: {formatPoints(cachedBalance)} pts
-                </Text>
-              )}
-              <Spinner size="lg" />
-            </YStack>
-          ) : dashboard ? (
-            <>
-              {/* Wallet Card */}
-              <WalletCard
-                dashboard={dashboard}
-                onQrPress={() => router.push('/(tabs)/carteirinha')}
-              />
+    <View style={[styles.root, { backgroundColor: t.screenBg }]}>
+      <WalletGlassBackground colors={t.gradientColors} />
+      <SafeAreaView style={styles.flex} edges={['top']}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={12}
+            style={[styles.backButton, { backgroundColor: t.headerButtonBg }]}
+          >
+            <CaretLeft size={22} color={t.textPrimary} />
+          </Pressable>
+          <Text style={[styles.headerTitle, { color: t.textPrimary }]}>Minha Carteira</Text>
+          <View style={{ width: 34 }} />
+        </View>
 
-              {/* Quick Actions */}
+        <Animated.ScrollView
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Offline Banner */}
+          <OfflineBanner visible={isOffline} />
+
+          {/* Loading State */}
+          {isLoading && !dashboard ? (
+            <WalletHomeSkeleton />
+          ) : dashboard ? (
+            <YStack gap={20}>
+              {/* 1. Wallet Card with parallax */}
+              <Animated.View style={cardParallaxStyle}>
+                <WalletCard
+                  dashboard={dashboard}
+                  onQrPress={() => router.push('/(tabs)/carteirinha')}
+                />
+              </Animated.View>
+
+              {/* 2. Quick Actions */}
               <QuickActions
                 onTransfer={() => router.push('/wallet/transfer')}
                 onScanner={() => router.push('/wallet/scanner')}
                 onHistory={() => router.push('/wallet/history')}
               />
 
-              {/* Strava */}
+              {/* 3. Summary Cards */}
+              <WalletSummaryBar />
+
+              {/* 4. Strava */}
               <StravaCard
                 strava={dashboard.strava}
                 onConnect={() => router.push('/wallet/strava')}
                 onDetails={() => router.push('/wallet/strava')}
               />
 
-              {/* Recent Recipients */}
-              {dashboard.recentRecipients.length > 0 && (
-                <YStack gap="$2">
-                  <Text weight="semibold" size="lg">
-                    Transferir novamente
-                  </Text>
-                  <XStack gap="$3" flexWrap="wrap">
-                    {dashboard.recentRecipients.slice(0, 4).map((r) => (
-                      <YStack key={r.id} alignItems="center" gap={4}>
-                        <Icon icon={User} size="lg" color="primary" />
-                        <Text size="xs" numberOfLines={1} style={{ maxWidth: 60 }}>
-                          {r.name.split(' ')[0]}
-                        </Text>
-                      </YStack>
-                    ))}
-                  </XStack>
-                </YStack>
-              )}
-            </>
+              {/* 5. Recent Transactions */}
+              <RecentTransactionsSection
+                transactions={(dashboard as any).recentTransactions ?? []}
+                onViewAll={() => router.push('/wallet/history')}
+              />
+            </YStack>
           ) : (
-            <YStack alignItems="center" paddingVertical="$8">
-              <Icon icon={CreditCard} size="xl" color="muted" weight="duotone" />
-              <Text color="secondary" align="center" marginTop="$2">
-                Não foi possível carregar a carteira.
-              </Text>
-              <Button variant="outline" marginTop="$4" onPress={() => refetch()}>
-                Tentar novamente
-              </Button>
+            /* Error state */
+            <YStack alignItems="center" paddingVertical={60} gap={16}>
+              <GlassPanel
+                padding={24}
+                borderRadius={20}
+                blurTint={t.glassBlurTint}
+                intensity={t.glassBlurIntensity}
+                borderColor={t.glassBorder}
+              >
+                <YStack alignItems="center" gap={12}>
+                  <CreditCard size={48} color={t.textTertiary} weight="duotone" />
+                  <Text style={[styles.errorText, { color: t.textSecondary }]}>
+                    Nao foi possivel carregar a carteira.
+                  </Text>
+                  <Pressable
+                    onPress={() => refetch()}
+                    style={[
+                      styles.retryButton,
+                      { backgroundColor: t.accentBg, borderColor: t.accentBorder },
+                    ]}
+                  >
+                    <Text style={[styles.retryText, { color: t.accent }]}>
+                      Tentar novamente
+                    </Text>
+                  </Pressable>
+                </YStack>
+              </GlassPanel>
             </YStack>
           )}
-        </YStack>
-      </ScrollView>
-    </SafeAreaView>
+        </Animated.ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  flex: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  backButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  errorText: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  retryText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+});

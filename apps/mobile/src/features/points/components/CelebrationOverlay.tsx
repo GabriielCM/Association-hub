@@ -1,36 +1,50 @@
-import { useEffect, useRef } from 'react';
-import { Animated, Modal, Pressable, StyleSheet } from 'react-native';
+import { useEffect, useCallback } from 'react';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withDelay,
+  runOnJS,
+} from 'react-native-reanimated';
 import { YStack } from 'tamagui';
-
-import { Text, Heading, Icon } from '@ahub/ui';
-import { Confetti } from '@ahub/ui/src/icons';
+import { Text } from '@ahub/ui';
+import { CheckCircle } from '@ahub/ui/src/icons';
 import { formatPoints } from '@ahub/shared/utils';
 import { useCelebration, usePointsStore } from '@/stores/points.store';
+import { useWalletTheme } from '@/features/wallet/hooks/useWalletTheme';
+import * as Haptics from 'expo-haptics';
 
 const AUTO_DISMISS_MS = 3000;
 
 export function CelebrationOverlay() {
   const celebration = useCelebration();
   const { hideCelebration } = usePointsStore();
+  const t = useWalletTheme();
 
-  const scale = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useSharedValue(0);
+  const opacity = useSharedValue(0);
+  const checkScale = useSharedValue(0);
+
+  const dismiss = useCallback(() => {
+    scale.value = withTiming(0, { duration: 200 });
+    opacity.value = withTiming(0, { duration: 200 }, (finished) => {
+      if (finished) runOnJS(hideCelebration)();
+    });
+  }, [hideCelebration, scale, opacity]);
 
   useEffect(() => {
     if (celebration.visible) {
-      Animated.parallel([
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scale, {
-          toValue: 1,
-          damping: 8,
-          stiffness: 100,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // Entrance animations
+      opacity.value = withTiming(1, { duration: 200 });
+      scale.value = withSpring(1, { damping: 8, stiffness: 100 });
+      checkScale.value = withDelay(
+        400,
+        withSpring(1, { damping: 6, stiffness: 120 }),
+      );
 
       const timer = setTimeout(() => {
         dismiss();
@@ -38,52 +52,63 @@ export function CelebrationOverlay() {
 
       return () => clearTimeout(timer);
     } else {
-      scale.setValue(0);
-      opacity.setValue(0);
+      scale.value = 0;
+      opacity.value = 0;
+      checkScale.value = 0;
     }
   }, [celebration.visible]);
 
-  const dismiss = () => {
-    Animated.parallel([
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scale, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      hideCelebration();
-    });
-  };
+  const contentStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  const checkStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: checkScale.value }],
+  }));
 
   if (!celebration.visible) return null;
 
   return (
     <Modal transparent animationType="none" visible={celebration.visible}>
-      <Pressable style={styles.overlay} onPress={dismiss}>
+      <Pressable style={[styles.overlay, { backgroundColor: t.overlayBg }]} onPress={dismiss}>
         <Animated.View
           style={[
             styles.content,
-            { transform: [{ scale }], opacity },
+            {
+              backgroundColor: t.glassBg,
+              borderColor: t.successBorder,
+            },
+            t.cardShadow,
+            contentStyle,
           ]}
         >
-          <YStack alignItems="center" gap="$3">
-            <Icon icon={Confetti} size="xl" color="primary" weight="duotone" />
-            <Heading level={2} color="accent" align="center">
-              +{formatPoints(celebration.points)} pts
-            </Heading>
+          <YStack alignItems="center" gap={20}>
+            {/* Checkmark Circle */}
+            <Animated.View
+              style={[
+                styles.checkCircle,
+                { backgroundColor: t.celebrationCheckBg, borderWidth: 1, borderColor: t.successBorder },
+                checkStyle,
+              ]}
+            >
+              <CheckCircle size={48} color={t.successIcon} weight="fill" />
+            </Animated.View>
+
+            <YStack alignItems="center" gap={8}>
+              <Text style={[styles.title, { color: t.textPrimary }]}>Transferencia realizada!</Text>
+              <Text style={[styles.amount, { color: t.success }]}>
+                +{formatPoints(celebration.points)} pts
+              </Text>
+            </YStack>
+
             {celebration.eventName && (
-              <Text color="secondary" size="lg" align="center">
+              <Text style={[styles.eventName, { color: t.textSecondary }]}>
                 {celebration.eventName}
               </Text>
             )}
-            <Text color="secondary" size="sm">
-              Toque para fechar
-            </Text>
+
+            <Text style={[styles.dismiss, { color: t.textTertiary }]}>Toque para fechar</Text>
           </YStack>
         </Animated.View>
       </Pressable>
@@ -96,13 +121,38 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   content: {
     padding: 40,
-    borderRadius: 24,
-    backgroundColor: 'white',
+    borderRadius: 28,
+    borderWidth: 1,
     alignItems: 'center',
-    minWidth: 250,
+    minWidth: 280,
+  },
+  checkCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  amount: {
+    fontSize: 36,
+    fontWeight: '800',
+    textAlign: 'center',
+    lineHeight: 44,
+  },
+  eventName: {
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  dismiss: {
+    fontSize: 13,
+    marginTop: 8,
   },
 });

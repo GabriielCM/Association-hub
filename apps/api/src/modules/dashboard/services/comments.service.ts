@@ -303,7 +303,7 @@ export class CommentsService {
     userId: string,
   ): FeedReactionType | null {
     const userReaction = reactions?.find((r) => r.userId === userId);
-    return userReaction?.type || null;
+    return (userReaction?.type as FeedReactionType) ?? null;
   }
 
   private mapReactionType(type: string): FeedReactionType {

@@ -5,21 +5,27 @@ import {
   Pressable,
   TextInput,
   StyleSheet,
+  Platform,
+  useColorScheme,
 } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { Text, Icon } from '@ahub/ui';
-import { ChatCircle } from '@ahub/ui/src/icons';
+import { ChatCircle, MagnifyingGlass, Plus } from '@ahub/ui/src/icons';
 import { router } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/auth.store';
 import { useConversations } from '../hooks/useConversations';
 import { usePresence } from '../hooks/usePresence';
 import { ConversationItem } from '../components/ConversationItem';
+import { ConversationFilters, type ConversationFilter } from '../components/ConversationFilters';
 import type { Conversation } from '@ahub/shared/types';
 
 export function ConversationsScreen() {
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [search, setSearch] = useState('');
+  const [activeFilter, setActiveFilter] = useState<ConversationFilter>('all');
   const user = useAuthStore((s) => s.user);
 
   const {
@@ -34,17 +40,32 @@ export function ConversationsScreen() {
   const conversations = conversationsData?.data ?? [];
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return conversations;
-    const q = search.toLowerCase();
-    return conversations.filter((c) => {
-      if (c.type === 'GROUP' && c.group) {
-        return c.group.name.toLowerCase().includes(q);
-      }
-      return c.participants.some(
-        (p) => p.id !== user?.id && p.name.toLowerCase().includes(q)
-      );
-    });
-  }, [conversations, search, user?.id]);
+    let result = conversations;
+
+    // Apply filter
+    if (activeFilter === 'unread') {
+      result = result.filter((c) => c.unreadCount > 0);
+    } else if (activeFilter === 'groups') {
+      result = result.filter((c) => c.type === 'GROUP');
+    } else if (activeFilter === 'direct') {
+      result = result.filter((c) => c.type === 'DIRECT');
+    }
+
+    // Apply search
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((c) => {
+        if (c.type === 'GROUP' && c.group) {
+          return c.group.name.toLowerCase().includes(q);
+        }
+        return c.participants.some(
+          (p) => p.id !== user?.id && p.name.toLowerCase().includes(q)
+        );
+      });
+    }
+
+    return result;
+  }, [conversations, search, user?.id, activeFilter]);
 
   const handleNewConversation = useCallback(() => {
     router.push('/messages/new');
@@ -66,39 +87,49 @@ export function ConversationsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <YStack flex={1} backgroundColor="$background">
-        {/* Header */}
-        <XStack
-          alignItems="center"
-          justifyContent="space-between"
-          paddingHorizontal="$3"
-          paddingVertical="$2"
-        >
-          <XStack alignItems="center" gap="$2">
-            <Pressable onPress={() => router.back()}>
-              <Text size="lg">←</Text>
-            </Pressable>
-            <Text weight="bold" size="xl">
-              Mensagens
-            </Text>
+        {/* Header - Telegram style large title */}
+        <YStack paddingHorizontal="$3" paddingTop="$2" paddingBottom="$1">
+          <XStack alignItems="center" justifyContent="space-between">
+            <XStack alignItems="center" gap="$2">
+              <Pressable onPress={() => router.back()}>
+                <Text size="lg">&#8592;</Text>
+              </Pressable>
+              <Text weight="bold" size="xl">
+                Mensagens
+              </Text>
+            </XStack>
           </XStack>
-        </XStack>
+        </YStack>
 
         {/* Search */}
-        <View paddingHorizontal="$3" paddingBottom="$2">
-          <View
-            borderRadius="$xl"
-            backgroundColor="$backgroundHover"
+        <View paddingHorizontal="$3" paddingBottom="$1">
+          <XStack
+            borderRadius="$full"
+            backgroundColor={isDark ? 'rgba(255,255,255,0.08)' : '$backgroundHover'}
             paddingHorizontal="$3"
             paddingVertical="$1.5"
+            alignItems="center"
+            gap="$1.5"
           >
+            <Icon icon={MagnifyingGlass} size="sm" color="secondary" />
             <TextInput
               value={search}
               onChangeText={setSearch}
               placeholder="Buscar conversa..."
-              style={styles.searchInput}
+              placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+              style={[
+                styles.searchInput,
+                { color: isDark ? '#F9FAFB' : '#1F2937' },
+              ]}
             />
-          </View>
+          </XStack>
         </View>
+
+        {/* Filter chips */}
+        <ConversationFilters
+          active={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
 
         {/* Conversations List */}
         <FlatList
@@ -119,11 +150,11 @@ export function ConversationsScreen() {
               >
                 <Icon icon={ChatCircle} size="xl" color="muted" weight="duotone" />
                 <Text color="secondary" size="sm" align="center">
-                  {search
+                  {search || activeFilter !== 'all'
                     ? 'Nenhuma conversa encontrada'
                     : 'Nenhuma conversa ainda'}
                 </Text>
-                {!search && (
+                {!search && activeFilter === 'all' && (
                   <Pressable onPress={handleNewConversation}>
                     <Text color="primary" size="sm" weight="semibold">
                       Iniciar conversa
@@ -138,6 +169,9 @@ export function ConversationsScreen() {
               ? [styles.emptyList, { paddingBottom: 80 + insets.bottom }]
               : { paddingBottom: 80 + insets.bottom }
           }
+          maxToRenderPerBatch={15}
+          windowSize={11}
+          removeClippedSubviews={Platform.OS === 'android'}
         />
 
         {/* FAB: New conversation */}
@@ -157,9 +191,7 @@ export function ConversationsScreen() {
             shadowOpacity={0.3}
             shadowRadius={8}
           >
-            <Text color="white" size="xl" weight="bold">
-              +
-            </Text>
+            <Icon icon={Plus} size="lg" color="#FFFFFF" weight="bold" />
           </View>
         </Pressable>
       </YStack>
@@ -173,7 +205,8 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     fontSize: 14,
-    color: '#1F2937',
+    flex: 1,
+    paddingVertical: 0,
   },
   emptyList: {
     flex: 1,

@@ -56,6 +56,19 @@ export const darkTheme = {
 
   // Placeholders
   placeholderColor: colors.textTertiaryDark,
+
+  // Messages
+  messageBubbleOwn: 'rgba(139, 92, 246, 0.28)',
+  messageBubbleOther: 'rgba(37, 37, 66, 0.65)',
+  messageBubbleBorderOwn: 'rgba(139, 92, 246, 0.35)',
+  messageBubbleBorderOther: 'rgba(255, 255, 255, 0.12)',
+  messageInput: 'rgba(37, 37, 66, 0.60)',
+  messageInputField: 'rgba(255, 255, 255, 0.08)',
+  messageDateChip: 'rgba(37, 37, 66, 0.75)',
+  messageScrollBtn: 'rgba(37, 37, 66, 0.80)',
+  messageContextMenu: 'rgba(30, 30, 46, 0.92)',
+  messageChip: 'rgba(37, 37, 66, 0.70)',
+  messageChipActive: 'rgba(139, 92, 246, 0.25)',
 } as const;
 
 export type DarkTheme = typeof darkTheme;

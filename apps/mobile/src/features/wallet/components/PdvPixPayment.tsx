@@ -1,14 +1,19 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Alert, Pressable } from 'react-native';
+import { Alert, Pressable, StyleSheet, View, Image } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Heading, Button, Spinner, Card, Icon } from '@ahub/ui';
-import { PixIcon } from '@ahub/ui/src/icons';
-import { DeviceMobile } from '@ahub/ui/src/icons';
+import { Text } from '@ahub/ui';
+import { CopySimple, DeviceMobile, Coin } from '@ahub/ui/src/icons';
+import * as Haptics from 'expo-haptics';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import {
   useInitiatePixPayment,
   usePixStatus,
 } from '../hooks/usePdvPayment';
 import type { PdvPixPaymentResult } from '@ahub/shared/types';
+import { GlassPanel } from './GlassPanel';
+import { CircularProgressRing } from './CircularProgressRing';
+import { ShimmerGlassSkeleton } from './ShimmerGlassSkeleton';
+import { useWalletTheme } from '../hooks/useWalletTheme';
 
 interface PdvPixPaymentProps {
   checkoutCode: string;
@@ -18,6 +23,8 @@ interface PdvPixPaymentProps {
   onCancel: () => void;
   displayHasQr?: boolean;
 }
+
+const PIX_TIMEOUT_SECONDS = 300; // 5 minutes
 
 export function PdvPixPayment({
   checkoutCode,
@@ -29,12 +36,14 @@ export function PdvPixPayment({
 }: PdvPixPaymentProps) {
   const [pixData, setPixData] = useState<PdvPixPaymentResult | null>(null);
   const [countdown, setCountdown] = useState(0);
+  const [totalTime, setTotalTime] = useState(PIX_TIMEOUT_SECONDS);
   const [copied, setCopied] = useState(false);
+  const t = useWalletTheme();
 
   const initiatePix = useInitiatePixPayment();
   const { data: pixStatus } = usePixStatus(
     checkoutCode,
-    !!pixData // Only poll when PIX is initiated
+    !!pixData,
   );
 
   // Initiate PIX payment on mount
@@ -54,12 +63,14 @@ export function PdvPixPayment({
   useEffect(() => {
     if (!pixData?.pix?.expiresAt) return;
 
+    const expiresAt = new Date(pixData.pix.expiresAt).getTime();
+    const totalSeconds = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+    setTotalTime(totalSeconds);
+
     const updateCountdown = () => {
       const remaining = Math.max(
         0,
-        Math.floor(
-          (new Date(pixData.pix.expiresAt).getTime() - Date.now()) / 1000
-        )
+        Math.floor((expiresAt - Date.now()) / 1000),
       );
       setCountdown(remaining);
 
@@ -77,17 +88,19 @@ export function PdvPixPayment({
   // Handle PIX status updates
   useEffect(() => {
     if (pixStatus?.status === 'PAID') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       onSuccess(pixStatus.cashbackEarned ?? 0, pixStatus.newBalance ?? 0);
     }
   }, [pixStatus?.status]);
 
   const handleCopyCode = useCallback(async () => {
     if (!pixData?.pix?.copyPaste) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       const Clipboard = await import('expo-clipboard');
       await Clipboard.setStringAsync(pixData.pix.copyPaste);
     } catch {
-      Alert.alert('Código PIX', pixData.pix.copyPaste);
+      Alert.alert('Codigo PIX', pixData.pix.copyPaste);
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -99,144 +112,262 @@ export function PdvPixPayment({
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
+  const countdownProgress = totalTime > 0 ? countdown / totalTime : 0;
+
   // Loading state
   if (initiatePix.isPending || !pixData) {
     return (
-      <YStack flex={1} justifyContent="center" alignItems="center" gap="$3">
-        <Spinner size="lg" />
-        <Text color="secondary">Gerando PIX...</Text>
+      <YStack flex={1} justifyContent="center" alignItems="center" gap={16}>
+        <ShimmerGlassSkeleton width={200} height={200} borderRadius={16} />
+        <ShimmerGlassSkeleton width={160} height={24} borderRadius={8} />
+        <ShimmerGlassSkeleton width={120} height={16} borderRadius={6} />
       </YStack>
     );
   }
 
   return (
-    <YStack flex={1} gap="$4">
+    <YStack flex={1} gap={20}>
       {/* Header */}
-      <YStack alignItems="center" gap="$1">
-        <PixIcon size={40} />
-        <Heading level={4}>Pagamento PIX</Heading>
-        <Text color="secondary" size="sm">{pdvName}</Text>
-      </YStack>
+      <Animated.View entering={FadeIn.duration(400)}>
+        <YStack alignItems="center" gap={6}>
+          <Text style={[styles.title, { color: t.textPrimary }]}>Pagamento PIX</Text>
+          <Text style={[styles.subtitle, { color: t.textTertiary }]}>{pdvName}</Text>
+        </YStack>
+      </Animated.View>
 
       {/* Amount */}
-      <Card variant="flat" style={{ borderWidth: 1, borderColor: '#7C3AED' }}>
-        <YStack alignItems="center" gap="$1">
-          <Text color="secondary" size="sm">Valor</Text>
-          <Heading level={2}>R$ {totalMoney.toFixed(2)}</Heading>
-        </YStack>
-      </Card>
+      <Animated.View entering={FadeIn.delay(100).duration(300)}>
+        <GlassPanel
+          padding={16}
+          borderRadius={16}
+          borderColor={t.accentBorder}
+          blurTint={t.glassBlurTint}
+          intensity={t.glassBlurIntensity}
+        >
+          <YStack alignItems="center" gap={4}>
+            <Text style={[styles.amountLabel, { color: t.textTertiary }]}>Valor</Text>
+            <Text style={[styles.amountValue, { color: t.accent }]}>R$ {totalMoney.toFixed(2)}</Text>
+          </YStack>
+        </GlassPanel>
+      </Animated.View>
 
       {/* QR Code Area */}
-      {displayHasQr ? (
-        <Card variant="flat">
-          <YStack alignItems="center" gap="$3" padding="$4">
-            <Icon icon={DeviceMobile} size="xl" color="primary" weight="duotone" />
-            <Heading level={4} align="center">
-              QR Code PIX no display
-            </Heading>
-            <Text color="secondary" size="sm" align="center">
-              Escaneie o QR Code PIX exibido na tela do PDV{'\n'}com o app do seu banco
-            </Text>
-          </YStack>
-        </Card>
-      ) : (
-        <Card variant="flat">
-          <YStack alignItems="center" gap="$3" padding="$2">
-            {pixData.pix.qrCodeBase64 ? (
-              <YStack
-                width={200}
-                height={200}
-                backgroundColor="white"
-                borderRadius={8}
-                justifyContent="center"
-                alignItems="center"
-                overflow="hidden"
+      <Animated.View entering={FadeIn.delay(200).duration(300)}>
+        {displayHasQr ? (
+          <GlassPanel
+            padding={24}
+            borderRadius={16}
+            blurTint={t.glassBlurTint}
+            intensity={t.glassBlurIntensity}
+            borderColor={t.glassBorder}
+          >
+            <YStack alignItems="center" gap={12}>
+              <DeviceMobile size={36} color={t.accent} weight="duotone" />
+              <Text style={[styles.displayTitle, { color: t.textPrimary }]}>QR Code PIX no display</Text>
+              <Text style={[styles.displaySubtitle, { color: t.textTertiary }]}>
+                Escaneie o QR Code PIX exibido na tela do PDV{'\n'}com o app do seu banco
+              </Text>
+            </YStack>
+          </GlassPanel>
+        ) : (
+          <GlassPanel
+            padding={16}
+            borderRadius={16}
+            blurTint={t.glassBlurTint}
+            intensity={t.glassBlurIntensity}
+            borderColor={t.glassBorder}
+          >
+            <YStack alignItems="center" gap={14}>
+              {/* QR Code Image - always white bg for readability */}
+              {pixData.pix.qrCodeBase64 ? (
+                <View style={styles.qrContainer}>
+                  <Image
+                    source={{ uri: `data:image/png;base64,${pixData.pix.qrCodeBase64}` }}
+                    style={styles.qrImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              ) : (
+                <View style={[styles.qrPlaceholder, { backgroundColor: t.inputBg, borderColor: t.inputBorder }]}>
+                  <Text style={[styles.qrPlaceholderText, { color: t.textTertiary }]}>
+                    Copie o codigo PIX abaixo{'\n'}e cole no app do seu banco
+                  </Text>
+                </View>
+              )}
+
+              {/* Copy & Paste */}
+              <Pressable
+                onPress={handleCopyCode}
+                style={({ pressed }) => [
+                  styles.copyButton,
+                  { backgroundColor: t.accentBg, borderColor: t.accentBorder },
+                  pressed && { opacity: 0.8 },
+                  copied && { borderColor: t.successBorder, backgroundColor: t.successBg },
+                ]}
               >
-                {/* Base64 QR code would be rendered as an Image */}
-                <Text size="xs" color="secondary" align="center">
-                  Escaneie o QR Code{'\n'}no app do seu banco
-                </Text>
-              </YStack>
-            ) : (
-              <YStack
-                width={200}
-                height={200}
-                backgroundColor="$gray3"
-                borderRadius={8}
-                justifyContent="center"
-                alignItems="center"
-              >
-                <Text size="xs" color="secondary" align="center">
-                  Copie o codigo PIX abaixo{'\n'}e cole no app do seu banco
-                </Text>
-              </YStack>
-            )}
+                <XStack alignItems="center" gap={8}>
+                  <CopySimple size={16} color={copied ? t.success : t.accent} />
+                  <YStack flex={1}>
+                    <Text style={[styles.copyCode, { color: t.textSecondary }]} numberOfLines={1}>
+                      {pixData.pix.copyPaste?.substring(0, 40)}...
+                    </Text>
+                    <Text style={[styles.copyLabel, { color: copied ? t.success : t.accent }]}>
+                      {copied ? 'Copiado!' : 'Toque para copiar'}
+                    </Text>
+                  </YStack>
+                </XStack>
+              </Pressable>
+            </YStack>
+          </GlassPanel>
+        )}
+      </Animated.View>
 
-            {/* Copy & Paste Button */}
-            <Pressable onPress={handleCopyCode} style={{ width: '100%' }}>
-              <YStack
-                backgroundColor="$gray3"
-                borderRadius={8}
-                padding="$3"
-                alignItems="center"
-              >
-                <Text size="xs" color="secondary" numberOfLines={1}>
-                  {pixData.pix.copyPaste?.substring(0, 40)}...
-                </Text>
-                <Text
-                  size="sm"
-                  weight="semibold"
-                  color={copied ? 'success' : 'primary'}
-                  marginTop="$1"
-                >
-                  {copied ? 'Copiado!' : 'Toque para copiar'}
-                </Text>
-              </YStack>
-            </Pressable>
-          </YStack>
-        </Card>
-      )}
+      {/* Countdown Timer - Circular */}
+      <Animated.View entering={FadeIn.delay(300).duration(300)}>
+        <YStack alignItems="center" gap={8}>
+          <CircularProgressRing
+            progress={countdownProgress}
+            size={72}
+            strokeWidth={5}
+            color={countdown < 60 ? t.error : t.accent}
+            trackColor={t.ringTrack}
+            duration={0}
+          >
+            <YStack alignItems="center">
+              <Text style={[styles.timerValue, { color: countdown < 60 ? t.error : t.accent }]}>
+                {formatTime(countdown)}
+              </Text>
+            </YStack>
+          </CircularProgressRing>
+          <Text style={[styles.timerLabel, { color: t.textTertiary }]}>Aguardando pagamento...</Text>
+        </YStack>
+      </Animated.View>
 
-      {/* Timer */}
-      <YStack alignItems="center" gap="$1">
-        <Text color="secondary" size="sm">Expira em</Text>
-        <Text
-          weight="bold"
-          size="lg"
-          color={countdown < 60 ? 'error' : undefined}
-        >
-          {formatTime(countdown)}
-        </Text>
-      </YStack>
-
-      {/* Status */}
-      <YStack alignItems="center" gap="$2">
-        <XStack gap="$2" alignItems="center">
-          <Spinner size="sm" />
-          <Text color="secondary" size="sm">
-            Aguardando pagamento...
-          </Text>
-        </XStack>
-      </YStack>
-
-      {/* Cashback preview */}
+      {/* Cashback Preview */}
       {pixData.cashbackPreview > 0 && (
-        <Card variant="flat">
-          <XStack justifyContent="space-between" alignItems="center">
-            <Text size="sm" color="secondary">Cashback</Text>
-            <Text size="sm" weight="semibold" color="success">
-              +{pixData.cashbackPreview} pts
-            </Text>
-          </XStack>
-        </Card>
+        <Animated.View entering={FadeIn.delay(400).duration(300)}>
+          <GlassPanel
+            padding={14}
+            borderRadius={14}
+            borderColor={t.successBorder}
+            blurTint={t.glassBlurTint}
+            intensity={t.glassBlurIntensity}
+          >
+            <XStack justifyContent="space-between" alignItems="center">
+              <XStack alignItems="center" gap={8}>
+                <Coin size={18} color={t.success} weight="duotone" />
+                <Text style={[styles.cashbackLabel, { color: t.textSecondary }]}>Cashback</Text>
+              </XStack>
+              <Text style={[styles.cashbackValue, { color: t.success }]}>+{pixData.cashbackPreview} pts</Text>
+            </XStack>
+          </GlassPanel>
+        </Animated.View>
       )}
 
       {/* Cancel */}
       <YStack marginTop="auto">
-        <Button variant="outline" onPress={onCancel}>
-          Cancelar
-        </Button>
+        <Pressable onPress={onCancel} style={[styles.cancelButton, { borderColor: t.outlineButtonBorder }]}>
+          <Text style={[styles.cancelText, { color: t.outlineButtonText }]}>Cancelar</Text>
+        </Pressable>
       </YStack>
     </YStack>
   );
 }
+
+const styles = StyleSheet.create({
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  subtitle: {
+    fontSize: 14,
+  },
+  amountLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  amountValue: {
+    fontSize: 32,
+    fontWeight: '800',
+  },
+  displayTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  displaySubtitle: {
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  // QR Code - always white bg for readability
+  qrContainer: {
+    width: 200,
+    height: 200,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  qrImage: {
+    width: '100%',
+    height: '100%',
+  },
+  qrPlaceholder: {
+    width: 200,
+    height: 200,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  qrPlaceholderText: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  // Copy Button
+  copyButton: {
+    width: '100%',
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+  },
+  copyCode: {
+    fontSize: 11,
+  },
+  copyLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  // Timer
+  timerValue: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  timerLabel: {
+    fontSize: 13,
+  },
+  // Cashback
+  cashbackLabel: {
+    fontSize: 13,
+  },
+  cashbackValue: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  // Cancel
+  cancelButton: {
+    height: 44,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  cancelText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+});

@@ -56,6 +56,19 @@ export const lightTheme = {
 
   // Placeholders
   placeholderColor: colors.textTertiary,
+
+  // Messages
+  messageBubbleOwn: 'rgba(139, 92, 246, 0.18)',
+  messageBubbleOther: 'rgba(255, 255, 255, 0.65)',
+  messageBubbleBorderOwn: 'rgba(139, 92, 246, 0.25)',
+  messageBubbleBorderOther: 'rgba(0, 0, 0, 0.06)',
+  messageInput: 'rgba(255, 255, 255, 0.60)',
+  messageInputField: 'rgba(0, 0, 0, 0.04)',
+  messageDateChip: 'rgba(255, 255, 255, 0.75)',
+  messageScrollBtn: 'rgba(255, 255, 255, 0.80)',
+  messageContextMenu: 'rgba(255, 255, 255, 0.92)',
+  messageChip: 'rgba(255, 255, 255, 0.70)',
+  messageChipActive: 'rgba(139, 92, 246, 0.15)',
 } as const;
 
 export type LightTheme = typeof lightTheme;

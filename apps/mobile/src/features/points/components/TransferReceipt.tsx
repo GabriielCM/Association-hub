@@ -1,8 +1,9 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View, Pressable } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Heading, Button, Avatar, Card, Icon } from '@ahub/ui';
+import { Text, Avatar } from '@ahub/ui';
 import { CheckCircle } from '@ahub/ui/src/icons';
 import { formatPoints } from '@ahub/shared/utils';
+import { useWalletTheme } from '@/features/wallet/hooks/useWalletTheme';
 import type { TransferResult } from '@ahub/shared/types';
 
 interface TransferReceiptProps {
@@ -11,16 +12,9 @@ interface TransferReceiptProps {
   onClose: () => void;
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <XStack justifyContent="space-between" alignItems="center">
-      <Text color="secondary" size="sm">{label}</Text>
-      <Text size="sm" weight="medium" numberOfLines={1} style={{ maxWidth: '60%' }}>{value}</Text>
-    </XStack>
-  );
-}
-
 export function TransferReceipt({ result, message, onClose }: TransferReceiptProps) {
+  const t = useWalletTheme();
+
   const date = new Date(result.createdAt);
   const formattedDate = date.toLocaleDateString('pt-BR', {
     day: '2-digit',
@@ -37,56 +31,76 @@ export function TransferReceipt({ result, message, onClose }: TransferReceiptPro
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      <YStack gap="$4" alignItems="center">
-        <View style={styles.checkCircle}>
-          <Icon icon={CheckCircle} size={28} color="#16A34A" weight="fill" />
+      <YStack gap={20} alignItems="center">
+        {/* Success Icon */}
+        <View style={[styles.checkCircle, { backgroundColor: t.successBg, borderColor: t.successBorder }]}>
+          <CheckCircle size={32} color={t.success} weight="fill" />
         </View>
 
-        <Heading level={3} align="center">
-          Transferência realizada!
-        </Heading>
+        <Text style={[styles.title, { color: t.textPrimary }]}>Transferencia realizada!</Text>
 
-        <Text style={styles.amountText} numberOfLines={1} adjustsFontSizeToFit>
+        <Text style={[styles.amount, { color: t.accent }]}>
           -{formatPoints(result.amount)} pts
         </Text>
 
-        <XStack alignItems="center" gap="$3">
+        {/* Recipient */}
+        <XStack alignItems="center" gap={12}>
           <Avatar
             src={result.recipient.avatar}
             name={result.recipient.name}
             size="md"
           />
           <YStack>
-            <Text weight="semibold">{result.recipient.name}</Text>
-            <Text color="secondary" size="xs">Destinatário</Text>
+            <Text style={[styles.recipientName, { color: t.textPrimary }]}>{result.recipient.name}</Text>
+            <Text style={[styles.recipientLabel, { color: t.textTertiary }]}>Destinatario</Text>
           </YStack>
         </XStack>
 
-        <Card variant="flat" width="100%">
-          <YStack gap="$2">
-            <DetailRow label="Valor" value={`${formatPoints(result.amount)} pts`} />
-            <DetailRow label="Saldo atual" value={`${formatPoints(result.senderBalanceAfter)} pts`} />
-            <DetailRow label="Data" value={`${formattedDate} às ${formattedTime}`} />
-            <DetailRow label="ID" value={result.transactionId.slice(0, 12) + '...'} />
+        {/* Details Card */}
+        <View style={[styles.detailsCard, { backgroundColor: t.inputBg, borderColor: t.inputBorder }]}>
+          <YStack gap={12}>
+            <DetailRow label="Valor" value={`${formatPoints(result.amount)} pts`} t={t} />
+            <DetailRow label="Saldo atual" value={`${formatPoints(result.senderBalanceAfter)} pts`} t={t} />
+            <DetailRow label="Data" value={`${formattedDate} as ${formattedTime}`} t={t} />
+            <DetailRow label="ID" value={result.transactionId.slice(0, 12) + '...'} t={t} />
           </YStack>
-        </Card>
+        </View>
 
+        {/* Message */}
         {message ? (
-          <Card variant="flat" width="100%">
-            <YStack gap="$1">
-              <Text color="secondary" size="xs">Mensagem</Text>
-              <Text size="sm">"{message}"</Text>
+          <View style={[styles.messageCard, { backgroundColor: t.inputBg, borderColor: t.inputBorder }]}>
+            <YStack gap={4}>
+              <Text style={[styles.messageLabel, { color: t.textTertiary }]}>Mensagem</Text>
+              <Text style={[styles.messageText, { color: t.textSecondary }]}>"{message}"</Text>
             </YStack>
-          </Card>
+          </View>
         ) : null}
 
-        <YStack gap="$2" width="100%" marginTop="$2">
-          <Button onPress={onClose}>
-            Fechar
-          </Button>
+        {/* Close Button */}
+        <YStack gap={10} width="100%" marginTop={8}>
+          <Pressable onPress={onClose} style={[styles.closeButton, { backgroundColor: t.primaryButton }]}>
+            <Text style={[styles.closeText, { color: t.primaryButtonText }]}>Fechar</Text>
+          </Pressable>
         </YStack>
       </YStack>
     </ScrollView>
+  );
+}
+
+function DetailRow({
+  label,
+  value,
+  t,
+}: {
+  label: string;
+  value: string;
+  t: ReturnType<typeof useWalletTheme>;
+}) {
+  return (
+    <XStack justifyContent="space-between" alignItems="center">
+      <Text style={[styles.detailLabel, { color: t.textTertiary }]}>{label}</Text>
+      <Text style={[styles.detailValue, { color: t.textPrimary }]} numberOfLines={1}>{value}</Text>
+    </XStack>
   );
 }
 
@@ -97,23 +111,66 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   checkCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  amount: {
+    fontSize: 32,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  recipientName: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  recipientLabel: {
+    fontSize: 12,
+  },
+  detailsCard: {
+    width: '100%',
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 18,
+  },
+  detailLabel: {
+    fontSize: 13,
+  },
+  detailValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    maxWidth: '60%',
+  },
+  messageCard: {
+    width: '100%',
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+  },
+  messageLabel: {
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  messageText: {
+    fontSize: 14,
+  },
+  closeButton: {
+    height: 52,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkIcon: {
-    fontSize: 28,
-    color: '#16A34A',
+  closeText: {
+    fontSize: 16,
     fontWeight: '700',
-  },
-  amountText: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#8B5CF6',
-    minWidth: 50,
-    textAlign: 'center',
   },
 });

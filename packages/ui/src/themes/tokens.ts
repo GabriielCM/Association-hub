@@ -15,6 +15,9 @@ export const colors = {
   secondaryLight: '#22D3EE',
   secondaryDark: '#0891B2',
 
+  // Accent (action buttons, CTAs)
+  accentDark: '#7C3AED',
+
   // Status colors (pastel)
   success: '#86EFAC',
   successDark: '#22C55E',
@@ -232,5 +235,51 @@ export const glass = {
   secondaryTint: 'rgba(6, 182, 212, 0.10)',
   successTint: 'rgba(34, 197, 94, 0.12)',
   errorTint: 'rgba(239, 68, 68, 0.10)',
+} as const;
+
+// Messages glassmorphism tokens
+export const messageGlass = {
+  // Bubble backgrounds - Light
+  bubbleOwnLight: 'rgba(139, 92, 246, 0.18)',
+  bubbleOtherLight: 'rgba(255, 255, 255, 0.65)',
+  // Bubble backgrounds - Dark
+  bubbleOwnDark: 'rgba(139, 92, 246, 0.28)',
+  bubbleOtherDark: 'rgba(37, 37, 66, 0.65)',
+
+  // Bubble borders - Light
+  bubbleBorderOwnLight: 'rgba(139, 92, 246, 0.25)',
+  bubbleBorderOtherLight: 'rgba(0, 0, 0, 0.06)',
+  // Bubble borders - Dark
+  bubbleBorderOwnDark: 'rgba(139, 92, 246, 0.35)',
+  bubbleBorderOtherDark: 'rgba(255, 255, 255, 0.12)',
+
+  // Date chip
+  dateChipLight: 'rgba(255, 255, 255, 0.75)',
+  dateChipDark: 'rgba(37, 37, 66, 0.75)',
+
+  // Input area
+  inputLight: 'rgba(255, 255, 255, 0.60)',
+  inputDark: 'rgba(37, 37, 66, 0.60)',
+  inputFieldLight: 'rgba(0, 0, 0, 0.04)',
+  inputFieldDark: 'rgba(255, 255, 255, 0.08)',
+
+  // Scroll button
+  scrollBtnLight: 'rgba(255, 255, 255, 0.80)',
+  scrollBtnDark: 'rgba(37, 37, 66, 0.80)',
+
+  // Context menu
+  contextMenuLight: 'rgba(255, 255, 255, 0.92)',
+  contextMenuDark: 'rgba(30, 30, 46, 0.92)',
+
+  // Filter chips
+  chipLight: 'rgba(255, 255, 255, 0.70)',
+  chipDark: 'rgba(37, 37, 66, 0.70)',
+  chipActiveLight: 'rgba(139, 92, 246, 0.15)',
+  chipActiveDark: 'rgba(139, 92, 246, 0.25)',
+
+  // Text colors for bubbles
+  bubbleOwnText: '#FFFFFF',
+  bubbleOwnTextSecondary: 'rgba(255, 255, 255, 0.70)',
+  bubbleOwnTextTime: 'rgba(255, 255, 255, 0.60)',
 } as const;
 

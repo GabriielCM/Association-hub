@@ -1,6 +1,5 @@
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image, useColorScheme } from 'react-native';
 import { Avatar } from '@ahub/ui';
-import { Image } from 'react-native';
 import type { ConversationParticipant } from '@ahub/shared/types';
 
 interface GroupAvatarProps {
@@ -14,10 +13,15 @@ export function GroupAvatar({
   imageUrl,
   size = 48,
 }: GroupAvatarProps) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const containerBg = isDark ? '#374151' : '#E5E7EB';
+  const borderColor = isDark ? '#1A1A2E' : '#FFFFFF';
+
   // If group has a custom image, use it
   if (imageUrl) {
     return (
-      <View style={[styles.container, { width: size, height: size }]}>
+      <View style={[styles.container, { width: size, height: size, backgroundColor: containerBg }]}>
         <Image
           source={{ uri: imageUrl }}
           style={[styles.fullImage, { borderRadius: size / 2 }]}
@@ -26,29 +30,27 @@ export function GroupAvatar({
     );
   }
 
-  // Show up to 4 participant avatars in a grid
-  const shown = participants.slice(0, 4);
-  const miniSize = size * 0.55;
-
-  if (shown.length <= 2) {
-    return (
-      <View style={[styles.container, { width: size, height: size }]}>
-        <View style={styles.row}>
-          {shown.map((p) => (
-            <Avatar key={p.id} src={p.avatarUrl} name={p.name} size="xs" />
-          ))}
-        </View>
-      </View>
-    );
-  }
+  // Show up to 3 overlapping circular avatars
+  const shown = participants.slice(0, 3);
+  const miniSize = size * 0.6;
+  const overlap = -8;
 
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
-      <View style={styles.grid}>
-        {shown.map((p) => (
+    <View style={[styles.container, { width: size, height: size, backgroundColor: containerBg }]}>
+      <View style={styles.stackRow}>
+        {shown.map((p, i) => (
           <View
             key={p.id}
-            style={[styles.gridItem, { width: miniSize, height: miniSize }]}
+            style={[
+              styles.stackItem,
+              {
+                width: miniSize,
+                height: miniSize,
+                marginLeft: i === 0 ? 0 : overlap,
+                zIndex: shown.length - i,
+                borderColor,
+              },
+            ]}
           >
             <Avatar src={p.avatarUrl} name={p.name} size="xs" />
           </View>
@@ -64,27 +66,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 999,
     overflow: 'hidden',
-    backgroundColor: '#E5E7EB',
   },
   fullImage: {
     width: '100%',
     height: '100%',
   },
-  row: {
+  stackRow: {
     flexDirection: 'row',
-    gap: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gridItem: {
+  stackItem: {
     borderRadius: 999,
     overflow: 'hidden',
+    borderWidth: 2,
   },
 });

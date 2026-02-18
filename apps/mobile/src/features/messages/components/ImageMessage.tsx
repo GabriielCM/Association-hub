@@ -32,7 +32,12 @@ export function ImageMessage({ mediaUrl }: ImageMessageProps) {
   return (
     <>
       <Pressable onPress={handleOpen}>
-        <View borderRadius="$md" overflow="hidden">
+        <View
+          borderRadius="$md"
+          overflow="hidden"
+          borderWidth={1}
+          borderColor="rgba(0,0,0,0.06)"
+        >
           <Image
             source={{ uri: mediaUrl }}
             style={[

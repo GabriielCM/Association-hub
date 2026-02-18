@@ -1,105 +1,93 @@
-import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, useColorScheme } from 'react-native';
 import { XStack } from 'tamagui';
-import { Text } from '@ahub/ui';
-import Microphone from 'phosphor-react-native/src/icons/Microphone';
+import { Text, Icon } from '@ahub/ui';
+import { Microphone } from '@ahub/ui/src/icons';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  withDelay,
+  FadeInUp,
+  FadeOutDown,
+} from 'react-native-reanimated';
+import { GlassView } from './GlassView';
 
 interface TypingIndicatorProps {
   typingUsers: { id: string; name: string }[];
   recordingUsers?: { id: string; name: string }[];
 }
 
-function DotAnimation() {
-  const dot1 = useRef(new Animated.Value(0)).current;
-  const dot2 = useRef(new Animated.Value(0)).current;
-  const dot3 = useRef(new Animated.Value(0)).current;
+function AnimatedDot({ delay }: { delay: number }) {
+  const scale = useSharedValue(0.8);
+  const opacity = useSharedValue(0.3);
 
   useEffect(() => {
-    const animate = (dot: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(dot, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-        ])
-      );
+    scale.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(1.2, { duration: 300 }),
+          withTiming(0.8, { duration: 300 }),
+        ),
+        -1,
+        false,
+      ),
+    );
+    opacity.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(1, { duration: 300 }),
+          withTiming(0.3, { duration: 300 }),
+        ),
+        -1,
+        false,
+      ),
+    );
+  }, [delay, scale, opacity]);
 
-    const a1 = animate(dot1, 0);
-    const a2 = animate(dot2, 150);
-    const a3 = animate(dot3, 300);
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
 
-    a1.start();
-    a2.start();
-    a3.start();
+  return <Animated.View style={[styles.dot, style]} />;
+}
 
-    return () => {
-      a1.stop();
-      a2.stop();
-      a3.stop();
-    };
-  }, [dot1, dot2, dot3]);
-
+function DotAnimation() {
   return (
     <XStack gap="$0.5" alignItems="center">
-      {[dot1, dot2, dot3].map((dot, i) => (
-        <Animated.View
-          key={i}
-          style={[
-            styles.dot,
-            {
-              opacity: dot.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.3, 1],
-              }),
-              transform: [
-                {
-                  scale: dot.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.8, 1.2],
-                  }),
-                },
-              ],
-            },
-          ]}
-        />
-      ))}
+      <AnimatedDot delay={0} />
+      <AnimatedDot delay={150} />
+      <AnimatedDot delay={300} />
     </XStack>
   );
 }
 
 function MicPulse() {
-  const pulse = useRef(new Animated.Value(1)).current;
+  const opacity = useSharedValue(1);
 
   useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 0.4,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ])
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.4, { duration: 600 }),
+        withTiming(1, { duration: 600 }),
+      ),
+      -1,
+      false,
     );
-    anim.start();
-    return () => anim.stop();
-  }, [pulse]);
+  }, [opacity]);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
 
   return (
-    <Animated.View style={{ opacity: pulse }}>
-      <Microphone size={12} color="#8B5CF6" />
+    <Animated.View style={style}>
+      <Icon icon={Microphone} size={12} color="$primary" />
     </Animated.View>
   );
 }
@@ -111,49 +99,44 @@ export function TypingIndicator({ typingUsers, recordingUsers = [] }: TypingIndi
   if (!hasRecording && !hasTyping) return null;
 
   return (
-    <>
-      {hasRecording && (
-        <XStack
-          alignItems="center"
-          gap="$1"
-          paddingHorizontal="$3"
-          paddingVertical="$1"
-        >
-          <MicPulse />
-          <Text color="primary" size="xs" style={{ fontStyle: 'italic' }}>
-            {formatRecordingLabel(recordingUsers)}
-          </Text>
-        </XStack>
-      )}
-      {hasTyping && (
-        <XStack
-          alignItems="center"
-          gap="$1"
-          paddingHorizontal="$3"
-          paddingVertical="$1"
-        >
-          <DotAnimation />
-          <Text color="secondary" size="xs" style={{ fontStyle: 'italic' }}>
-            {formatTypingLabel(typingUsers)}
-          </Text>
-        </XStack>
-      )}
-    </>
+    <Animated.View entering={FadeInUp.duration(200)} exiting={FadeOutDown.duration(150)}>
+      <XStack paddingHorizontal="$3" paddingVertical="$1">
+        <GlassView variant="bubble-other" borderRadius={16}>
+          <XStack alignItems="center" gap="$1.5" paddingHorizontal="$3" paddingVertical="$2">
+            {hasRecording ? (
+              <>
+                <MicPulse />
+                <Text color="primary" size="xs" style={{ fontStyle: 'italic' }}>
+                  {formatRecordingLabel(recordingUsers)}
+                </Text>
+              </>
+            ) : (
+              <>
+                <DotAnimation />
+                <Text color="secondary" size="xs" style={{ fontStyle: 'italic' }}>
+                  {formatTypingLabel(typingUsers)}
+                </Text>
+              </>
+            )}
+          </XStack>
+        </GlassView>
+      </XStack>
+    </Animated.View>
   );
 }
 
 function formatTypingLabel(users: { id: string; name: string }[]): string {
   const names = users.map((u) => u.name.split(' ')[0]);
-  if (names.length === 1) return `${names[0]} está digitando`;
-  if (names.length === 2) return `${names[0]} e ${names[1]} estão digitando`;
-  return `${names[0]} e mais ${names.length - 1} estão digitando`;
+  if (names.length === 1) return `${names[0]} esta digitando`;
+  if (names.length === 2) return `${names[0]} e ${names[1]} estao digitando`;
+  return `${names[0]} e mais ${names.length - 1} estao digitando`;
 }
 
 function formatRecordingLabel(users: { id: string; name: string }[]): string {
   const names = users.map((u) => u.name.split(' ')[0]);
-  if (names.length === 1) return `${names[0]} está gravando áudio`;
-  if (names.length === 2) return `${names[0]} e ${names[1]} estão gravando áudio`;
-  return `${names[0]} e mais ${names.length - 1} gravando áudio`;
+  if (names.length === 1) return `${names[0]} esta gravando audio`;
+  if (names.length === 2) return `${names[0]} e ${names[1]} estao gravando audio`;
+  return `${names[0]} e mais ${names.length - 1} gravando audio`;
 }
 
 const styles = StyleSheet.create({

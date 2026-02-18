@@ -1,21 +1,24 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   FlatList,
   Pressable,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Alert,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
 import { YStack, View } from 'tamagui';
-import { Text, Avatar, ScreenHeader } from '@ahub/ui';
+import { Text, Avatar, ScreenHeader, Icon } from '@ahub/ui';
+import { ArrowDown } from '@ahub/ui/src/icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Clipboard from 'expo-clipboard';
 import { useAuthStore } from '@/stores/auth.store';
 import { useConversation } from '../hooks/useConversations';
 import { useMessages } from '../hooks/useMessages';
-import { useSendMessage, useAddReaction } from '../hooks/useSendMessage';
+import { useSendMessage, useAddReaction, useDeleteMessage } from '../hooks/useSendMessage';
 import { useMarkConversationAsRead } from '../hooks/useConversations';
 import { useMessageWebSocket } from '../hooks/useMessageWebSocket';
 import { useTyping } from '../hooks/useTyping';
@@ -24,10 +27,20 @@ import { MessageBubble } from '../components/MessageBubble';
 import { MessageInput } from '../components/MessageInput';
 import { TypingIndicator } from '../components/TypingIndicator';
 import { OnlineStatus } from '../components/OnlineStatus';
-import { ReactionPicker } from '../components/ReactionPicker';
+import { MessageContextMenu } from '../components/MessageContextMenu';
+import { ChatBackground } from '../components/ChatBackground';
+import { DateSeparator } from '../components/DateSeparator';
+import { GlassView } from '../components/GlassView';
+import { EmptyChatState } from '../components/EmptyChatState';
+import { isSameDay } from '../utils/dateFormatters';
+import { CLUSTER_TIME_GAP } from '../utils/animations';
 import type { Message, MessageContentType } from '@ahub/shared/types';
 
-const SCROLL_THRESHOLD = 150; // px from bottom to trigger auto-scroll
+const SCROLL_THRESHOLD = 150;
+
+type ListItem =
+  | { type: 'message'; data: Message; isFirstInCluster: boolean; isLastInCluster: boolean }
+  | { type: 'date'; date: string };
 
 export function ChatScreen() {
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
@@ -43,6 +56,7 @@ export function ChatScreen() {
   } = useMessages(conversationId ?? '');
   const sendMessage = useSendMessage(conversationId ?? '');
   const addReaction = useAddReaction();
+  const deleteMessage = useDeleteMessage();
   const markAsRead = useMarkConversationAsRead();
 
   const { typingUsers, recordingUsers, presenceMap } = useMessageWebSocket(conversationId ?? '');
@@ -54,22 +68,59 @@ export function ChatScreen() {
   }, [emit, conversationId]);
 
   const [replyTo, setReplyTo] = useState<Message | null>(null);
-  const [reactionTarget, setReactionTarget] = useState<string | null>(null);
+  const [contextMenuTarget, setContextMenuTarget] = useState<Message | null>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const prevMessageCount = useRef(0);
 
-  // Mark as read on mount
   useEffect(() => {
     if (conversationId) {
       markAsRead.mutate(conversationId);
     }
   }, [conversationId]);
 
-  // Flatten messages from infinite query pages (reversed for inverted list)
   const messages = messagesData?.pages.flatMap((page) => page.data) ?? [];
 
-  // Track new messages for the "new message" badge
+  // Build list items with clustering and date separators
+  const listItems = useMemo((): ListItem[] => {
+    if (messages.length === 0) return [];
+
+    const items: ListItem[] = [];
+
+    for (let i = 0; i < messages.length; i++) {
+      const msg = messages[i]!;
+      const prevMsg = messages[i - 1]; // newer in time (list is inverted)
+      const nextMsg = messages[i + 1]; // older in time
+
+      // Cluster logic: same sender + within time gap
+      const isSameSenderAsPrev =
+        prevMsg && prevMsg.sender.id === msg.sender.id &&
+        Math.abs(new Date(prevMsg.createdAt).getTime() - new Date(msg.createdAt).getTime()) < CLUSTER_TIME_GAP;
+
+      const isSameSenderAsNext =
+        nextMsg && nextMsg.sender.id === msg.sender.id &&
+        Math.abs(new Date(msg.createdAt).getTime() - new Date(nextMsg.createdAt).getTime()) < CLUSTER_TIME_GAP;
+
+      const isFirstInCluster = !isSameSenderAsPrev;
+      const isLastInCluster = !isSameSenderAsNext;
+
+      items.push({ type: 'message', data: msg, isFirstInCluster, isLastInCluster });
+
+      // Date separator: insert after message if next message is on a different day
+      // (since list is inverted, "after" means older in time = next in array)
+      if (nextMsg && !isSameDay(msg.createdAt, nextMsg.createdAt)) {
+        items.push({ type: 'date', date: msg.createdAt });
+      }
+
+      // Last message (oldest) gets a date separator
+      if (i === messages.length - 1) {
+        items.push({ type: 'date', date: msg.createdAt });
+      }
+    }
+
+    return items;
+  }, [messages]);
+
   useEffect(() => {
     if (messages.length > prevMessageCount.current && !isNearBottom) {
       setNewMessageCount((c) => c + (messages.length - prevMessageCount.current));
@@ -97,14 +148,14 @@ export function ChatScreen() {
   const headerSubtitle = (() => {
     if (recordingUsers.length > 0) {
       const names = recordingUsers.map((u) => u.name?.split(' ')[0]).filter(Boolean);
-      if (names.length === 1) return `${names[0]} está gravando áudio...`;
-      if (names.length === 2) return `${names[0]} e ${names[1]} estão gravando áudio...`;
-      return `${names[0]} e mais ${names.length - 1} gravando áudio...`;
+      if (names.length === 1) return `${names[0]} esta gravando audio...`;
+      if (names.length === 2) return `${names[0]} e ${names[1]} estao gravando audio...`;
+      return `${names[0]} e mais ${names.length - 1} gravando audio...`;
     }
     if (typingUsers.length > 0) {
       const names = typingUsers.map((u) => u.name?.split(' ')[0]).filter(Boolean);
-      if (names.length === 1) return `${names[0]} está digitando...`;
-      if (names.length === 2) return `${names[0]} e ${names[1]} estão digitando...`;
+      if (names.length === 1) return `${names[0]} esta digitando...`;
+      if (names.length === 2) return `${names[0]} e ${names[1]} estao digitando...`;
       return `${names[0]} e mais ${names.length - 1} digitando...`;
     }
     if (!isGroup && otherParticipant) {
@@ -126,7 +177,6 @@ export function ChatScreen() {
     }) => {
       sendMessage.mutate(data);
       stopTyping();
-      // Auto-scroll to bottom on send
       setTimeout(() => {
         flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
       }, 100);
@@ -135,22 +185,69 @@ export function ChatScreen() {
   );
 
   const handleLongPress = useCallback((message: Message) => {
-    setReactionTarget(message.id);
+    setContextMenuTarget(message);
   }, []);
 
-  const handleReactionSelect = useCallback(
+  const handleContextMenuReaction = useCallback(
     (emoji: string) => {
-      if (reactionTarget) {
-        addReaction.mutate({ messageId: reactionTarget, emoji });
-        setReactionTarget(null);
+      if (contextMenuTarget) {
+        addReaction.mutate({ messageId: contextMenuTarget.id, emoji });
       }
     },
-    [reactionTarget, addReaction]
+    [contextMenuTarget, addReaction]
   );
+
+  const handleContextMenuReply = useCallback(() => {
+    if (contextMenuTarget) {
+      setReplyTo(contextMenuTarget);
+    }
+  }, [contextMenuTarget]);
+
+  const handleContextMenuCopy = useCallback(async () => {
+    if (contextMenuTarget?.content) {
+      await Clipboard.setStringAsync(contextMenuTarget.content);
+    }
+  }, [contextMenuTarget]);
+
+  const handleContextMenuForward = useCallback(() => {
+    if (contextMenuTarget) {
+      router.push({
+        pathname: '/messages/forward',
+        params: { messageId: contextMenuTarget.id },
+      } as never);
+    }
+  }, [contextMenuTarget]);
+
+  const handleContextMenuDelete = useCallback(() => {
+    if (contextMenuTarget) {
+      Alert.alert(
+        'Apagar mensagem',
+        'Tem certeza que deseja apagar esta mensagem?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Apagar',
+            style: 'destructive',
+            onPress: () => deleteMessage.mutate(contextMenuTarget.id),
+          },
+        ]
+      );
+    }
+  }, [contextMenuTarget, deleteMessage]);
 
   const handleReply = useCallback((message: Message) => {
     setReplyTo(message);
   }, []);
+
+  const handleIceBreaker = useCallback(
+    (text: string) => {
+      sendMessage.mutate({ content: text, contentType: 'TEXT' });
+      setTimeout(() => {
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      }, 100);
+    },
+    [sendMessage]
+  );
 
   const handleHeaderPress = useCallback(() => {
     if (!conversationId) return;
@@ -169,7 +266,6 @@ export function ChatScreen() {
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      // For inverted list, offset 0 = bottom. Near bottom = offset < threshold
       const offset = event.nativeEvent.contentOffset.y;
       setIsNearBottom(offset < SCROLL_THRESHOLD);
     },
@@ -188,22 +284,28 @@ export function ChatScreen() {
     } as never);
   }, []);
 
-  const renderMessage = useCallback(
-    ({ item, index }: { item: Message; index: number }) => {
-      const isOwn = item.sender.id === user?.id;
-      // Show sender for group chats when sender changes
-      const prevMsg = messages[index + 1]; // Inverted list, so +1 is previous in time
+  const renderItem = useCallback(
+    ({ item }: { item: ListItem }) => {
+      if (item.type === 'date') {
+        return <DateSeparator date={item.date} />;
+      }
+
+      const msg = item.data;
+      const isOwn = msg.sender.id === user?.id;
+      const prevMsg = messages[messages.indexOf(msg) + 1];
       const showSender =
-        isGroup && !isOwn && prevMsg?.sender.id !== item.sender.id;
+        isGroup && !isOwn && item.isFirstInCluster && prevMsg?.sender.id !== msg.sender.id;
 
       return (
         <MessageBubble
-          message={item}
+          message={msg}
           isOwn={isOwn}
           showSender={showSender}
           isGroup={isGroup}
+          isFirstInCluster={item.isFirstInCluster}
+          isLastInCluster={item.isLastInCluster}
           onLongPress={handleLongPress}
-          onReaction={() => setReactionTarget(item.id)}
+          onReaction={() => setContextMenuTarget(msg)}
           onReplyPress={handleReply}
           onSenderPress={handleSenderPress}
         />
@@ -211,6 +313,11 @@ export function ChatScreen() {
     },
     [user?.id, isGroup, messages, handleLongPress, handleReply, handleSenderPress]
   );
+
+  const getItemKey = useCallback((item: ListItem, index: number) => {
+    if (item.type === 'date') return `date-${item.date}-${index}`;
+    return item.data.id;
+  }, []);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -265,14 +372,17 @@ export function ChatScreen() {
 
           {/* Messages */}
           <View flex={1} position="relative">
+            {/* Subtle background pattern */}
+            <ChatBackground />
+
             <FlatList
               ref={flatListRef}
-              data={messages}
-              keyExtractor={(item) => item.id}
-              renderItem={renderMessage}
+              data={listItems}
+              keyExtractor={getItemKey}
+              renderItem={renderItem}
               inverted
               onScroll={handleScroll}
-              scrollEventThrottle={100}
+              scrollEventThrottle={16}
               onEndReached={() => {
                 if (hasNextPage && !isFetchingNextPage) {
                   fetchNextPage();
@@ -282,31 +392,39 @@ export function ChatScreen() {
               ListHeaderComponent={
                 <TypingIndicator typingUsers={typingUsers} recordingUsers={recordingUsers} />
               }
-              contentContainerStyle={styles.messagesList}
+              ListEmptyComponent={
+                <EmptyChatState
+                  onIceBreaker={handleIceBreaker}
+                  participantName={otherParticipant?.name?.split(' ')[0]}
+                />
+              }
+              contentContainerStyle={
+                listItems.length === 0
+                  ? [styles.messagesList, styles.emptyList]
+                  : styles.messagesList
+              }
+              maxToRenderPerBatch={15}
+              windowSize={11}
+              removeClippedSubviews={Platform.OS === 'android'}
+              initialNumToRender={20}
             />
 
-            {/* Scroll to bottom button */}
+            {/* Scroll to bottom button - glassmorphism */}
             {!isNearBottom && (
               <Pressable
                 onPress={scrollToBottom}
                 style={styles.scrollToBottomBtn}
               >
-                <View
-                  width={40}
-                  height={40}
-                  borderRadius="$full"
-                  backgroundColor="$background"
-                  alignItems="center"
-                  justifyContent="center"
-                  shadowColor="$shadowColor"
-                  shadowOffset={{ width: 0, height: 2 }}
-                  shadowOpacity={0.2}
-                  shadowRadius={4}
-                  borderWidth={1}
-                  borderColor="$borderColor"
-                >
-                  <Text size="sm">↓</Text>
-                </View>
+                <GlassView variant="button" borderRadius={9999}>
+                  <View
+                    width={40}
+                    height={40}
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Icon icon={ArrowDown} size="sm" color="secondary" />
+                  </View>
+                </GlassView>
                 {newMessageCount > 0 && (
                   <View
                     position="absolute"
@@ -321,9 +439,8 @@ export function ChatScreen() {
                     paddingHorizontal="$0.5"
                   >
                     <Text
-                      color="white"
                       weight="bold"
-                      style={{ fontSize: 10, lineHeight: 12 }}
+                      style={{ fontSize: 10, lineHeight: 12, color: '#FFFFFF' }}
                     >
                       {newMessageCount > 99 ? '99+' : newMessageCount}
                     </Text>
@@ -333,21 +450,18 @@ export function ChatScreen() {
             )}
           </View>
 
-          {/* Reaction Picker overlay */}
-          {reactionTarget && (
-            <View
-              position="absolute"
-              bottom={100}
-              left={0}
-              right={0}
-              alignItems="center"
-              zIndex={10}
-            >
-              <ReactionPicker
-                onSelect={handleReactionSelect}
-                onClose={() => setReactionTarget(null)}
-              />
-            </View>
+          {/* Context Menu overlay */}
+          {contextMenuTarget && (
+            <MessageContextMenu
+              message={contextMenuTarget}
+              isOwn={contextMenuTarget.sender.id === user?.id}
+              onReaction={handleContextMenuReaction}
+              onReply={handleContextMenuReply}
+              onCopy={handleContextMenuCopy}
+              onForward={handleContextMenuForward}
+              onDelete={handleContextMenuDelete}
+              onClose={() => setContextMenuTarget(null)}
+            />
           )}
 
           {/* Input */}
@@ -370,6 +484,10 @@ const styles = StyleSheet.create({
   },
   messagesList: {
     paddingVertical: 8,
+  },
+  emptyList: {
+    flex: 1,
+    justifyContent: 'center',
   },
   scrollToBottomBtn: {
     position: 'absolute',

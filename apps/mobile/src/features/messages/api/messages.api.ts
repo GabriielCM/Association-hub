@@ -140,6 +140,53 @@ export async function uploadMedia(
   return postFormData<{ url: string }>('/messages/media/upload', formData);
 }
 
+// Read receipts
+export interface ReadReceipt {
+  userId: string;
+  name: string;
+  avatarUrl?: string;
+  readAt: string;
+}
+
+export async function getReadReceipts(
+  messageId: string
+): Promise<{ read: ReadReceipt[]; unread: ReadReceipt[] }> {
+  return get<{ read: ReadReceipt[]; unread: ReadReceipt[] }>(
+    `/messages/${messageId}/read-receipts`
+  );
+}
+
+// Forward
+export async function forwardMessage(
+  messageId: string,
+  conversationIds: string[]
+): Promise<{ forwarded: number }> {
+  return post<{ forwarded: number }>(`/messages/${messageId}/forward`, {
+    conversation_ids: conversationIds,
+  });
+}
+
+// Pin / Mute / Archive
+export async function pinConversation(
+  id: string,
+  pinned: boolean
+): Promise<{ pinned: boolean }> {
+  return put<{ pinned: boolean }>(`/conversations/${id}/pin`, { pinned });
+}
+
+export async function muteConversation(
+  id: string,
+  muted: boolean
+): Promise<{ muted: boolean }> {
+  return put<{ muted: boolean }>(`/conversations/${id}/mute`, { muted });
+}
+
+export async function archiveConversation(
+  id: string
+): Promise<{ archived: boolean }> {
+  return put<{ archived: boolean }>(`/conversations/${id}/archive`, { archived: true });
+}
+
 // Presence
 export async function getOnlineContacts(): Promise<{ userIds: string[] }> {
   return get<{ userIds: string[] }>('/conversations/presence/online');

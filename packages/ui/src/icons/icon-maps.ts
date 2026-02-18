@@ -93,6 +93,19 @@ import BookmarkSimple from 'phosphor-react-native/src/icons/BookmarkSimple';
 import ListBullets from 'phosphor-react-native/src/icons/ListBullets';
 import MapTrifold from 'phosphor-react-native/src/icons/MapTrifold';
 import MagnifyingGlass from 'phosphor-react-native/src/icons/MagnifyingGlass';
+import ArrowBendUpLeft from 'phosphor-react-native/src/icons/ArrowBendUpLeft';
+import CopySimple from 'phosphor-react-native/src/icons/CopySimple';
+import Plus from 'phosphor-react-native/src/icons/Plus';
+import ImageSquare from 'phosphor-react-native/src/icons/ImageSquare';
+import File from 'phosphor-react-native/src/icons/File';
+import PushPin from 'phosphor-react-native/src/icons/PushPin';
+import BellSlash from 'phosphor-react-native/src/icons/BellSlash';
+import Archive from 'phosphor-react-native/src/icons/Archive';
+import DotsThreeVertical from 'phosphor-react-native/src/icons/DotsThreeVertical';
+import Eye from 'phosphor-react-native/src/icons/Eye';
+import EyeSlash from 'phosphor-react-native/src/icons/EyeSlash';
+import FingerprintSimple from 'phosphor-react-native/src/icons/FingerprintSimple';
+import WifiSlash from 'phosphor-react-native/src/icons/WifiSlash';
 
 // ─── TAB BAR ────────────────────────────────────────
 export const TAB_ICONS = {
@@ -390,4 +403,17 @@ export {
   ListBullets,
   MapTrifold,
   MagnifyingGlass,
+  ArrowBendUpLeft,
+  CopySimple,
+  Plus,
+  ImageSquare,
+  File,
+  PushPin,
+  BellSlash,
+  Archive,
+  DotsThreeVertical,
+  Eye,
+  EyeSlash,
+  FingerprintSimple,
+  WifiSlash,
 };

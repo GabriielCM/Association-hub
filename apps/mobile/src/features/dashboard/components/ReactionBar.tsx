@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Pressable } from 'react-native';
 import { XStack } from 'tamagui';
 
@@ -14,6 +14,10 @@ const REACTION_EMOJIS: Record<ReactionType, string> = {
   wow: '😮',
 };
 
+/** Normalize backend enum (HEART) to frontend type (heart) */
+const normalize = (r?: ReactionType | string | null): ReactionType | null =>
+  (r?.toLowerCase() as ReactionType) ?? null;
+
 interface ReactionBarProps {
   reactions: CommentReactions;
   myReaction?: ReactionType | null | undefined;
@@ -27,18 +31,23 @@ export function ReactionBar({
 }: ReactionBarProps) {
   const queryClient = useQueryClient();
 
-  // Optimistic local state
+  // Optimistic local state — normalized to lowercase
   const [localReactions, setLocalReactions] = useState<CommentReactions>(reactions);
-  const [localMyReaction, setLocalMyReaction] = useState<ReactionType | null>(myReaction ?? null);
+  const [localMyReaction, setLocalMyReaction] = useState<ReactionType | null>(normalize(myReaction));
+
+  // Ref to always read latest localMyReaction in callbacks (avoids stale closure)
+  const localMyReactionRef = useRef(localMyReaction);
+  localMyReactionRef.current = localMyReaction;
 
   // Sync when server data changes
   useEffect(() => {
     setLocalReactions(reactions);
-    setLocalMyReaction(myReaction ?? null);
+    setLocalMyReaction(normalize(myReaction));
   }, [reactions, myReaction]);
 
   const handleReaction = useCallback(async (type: ReactionType) => {
-    const wasActive = localMyReaction === type;
+    const currentReaction = localMyReactionRef.current;
+    const wasActive = currentReaction === type;
 
     // Optimistic update
     if (wasActive) {
@@ -49,10 +58,10 @@ export function ReactionBar({
       }));
     } else {
       // If switching from another reaction, decrement old one
-      if (localMyReaction) {
+      if (currentReaction) {
         setLocalReactions((prev) => ({
           ...prev,
-          [localMyReaction]: Math.max(0, (prev[localMyReaction] || 0) - 1),
+          [currentReaction]: Math.max(0, (prev[currentReaction] || 0) - 1),
           [type]: (prev[type] || 0) + 1,
         }));
       } else {
@@ -70,13 +79,13 @@ export function ReactionBar({
       } else {
         await addReaction(commentId, { reaction: type });
       }
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'comments'] });
+      await queryClient.invalidateQueries({ queryKey: ['dashboard', 'comments'] });
     } catch {
       // Rollback on error
       setLocalReactions(reactions);
-      setLocalMyReaction(myReaction ?? null);
+      setLocalMyReaction(normalize(myReaction));
     }
-  }, [localMyReaction, commentId, reactions, myReaction, queryClient]);
+  }, [commentId, reactions, myReaction, queryClient]);
 
   return (
     <XStack alignItems="center" gap="$1">

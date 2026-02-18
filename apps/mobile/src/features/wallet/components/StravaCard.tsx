@@ -1,8 +1,11 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { Text, Card, Icon } from '@ahub/ui';
-import { PersonSimpleRun } from '@ahub/ui/src/icons';
+import { Text } from '@ahub/ui';
+import { PersonSimpleRun, CaretRight } from '@ahub/ui/src/icons';
 import type { StravaStatus } from '@ahub/shared/types';
+import { GlassPanel } from './GlassPanel';
+import { CircularProgressRing } from './CircularProgressRing';
+import { useWalletTheme } from '../hooks/useWalletTheme';
 
 interface StravaCardProps {
   strava: StravaStatus;
@@ -11,117 +14,141 @@ interface StravaCardProps {
 }
 
 export function StravaCard({ strava, onConnect, onDetails }: StravaCardProps) {
+  const t = useWalletTheme();
+
   if (!strava.connected) {
     return (
-      <Pressable onPress={onConnect}>
-        <Card variant="flat" style={styles.connectCard}>
-          <XStack alignItems="center" gap="$3">
-            <View style={styles.stravaIcon}>
-              <Icon icon={PersonSimpleRun} size="lg" color="primary" />
+      <Pressable
+        onPress={onConnect}
+        style={({ pressed }) => pressed && { opacity: 0.8 }}
+      >
+        <GlassPanel
+          borderColor={t.stravaBorder}
+          borderRadius={20}
+          blurTint={t.glassBlurTint}
+          intensity={t.glassBlurIntensity}
+        >
+          <XStack alignItems="center" gap={14}>
+            <View style={[styles.stravaIcon, { backgroundColor: t.stravaBg }]}>
+              <PersonSimpleRun size={24} color={t.strava} weight="fill" />
             </View>
             <YStack flex={1}>
-              <Text weight="semibold">Conectar Strava</Text>
-              <Text color="secondary" size="xs">
-                Ganhe pontos com suas atividades físicas
+              <Text style={[styles.connectTitle, { color: t.textPrimary }]}>
+                Conectar Strava
+              </Text>
+              <Text style={[styles.connectSub, { color: t.textSecondary }]}>
+                Ganhe pontos com suas atividades fisicas
               </Text>
             </YStack>
-            <Text color="primary" weight="semibold" size="sm">→</Text>
+            <CaretRight size={18} color={t.strava} />
           </XStack>
-        </Card>
+        </GlassPanel>
       </Pressable>
     );
   }
 
+  const totalKm = strava.kmUsedToday + strava.kmRemainingToday;
+  const progress = totalKm > 0 ? strava.kmUsedToday / totalKm : 0;
+
   return (
-    <Pressable onPress={onDetails}>
-      <Card variant="flat">
-        <YStack gap="$2">
-          <XStack alignItems="center" gap="$2">
-            <Icon icon={PersonSimpleRun} size="md" color="primary" />
-            <Text weight="semibold" flex={1}>Strava</Text>
-            <View style={styles.connectedBadge}>
-              <Text style={styles.connectedText}>Conectado</Text>
-            </View>
-          </XStack>
+    <Pressable
+      onPress={onDetails}
+      style={({ pressed }) => pressed && { opacity: 0.8 }}
+    >
+      <GlassPanel
+        borderColor={t.isDark ? 'rgba(252, 76, 2, 0.20)' : 'rgba(252, 76, 2, 0.15)'}
+        borderRadius={20}
+        blurTint={t.glassBlurTint}
+        intensity={t.glassBlurIntensity}
+      >
+        <XStack alignItems="center" gap={16}>
+          <CircularProgressRing
+            progress={progress}
+            size={72}
+            color={t.strava}
+            strokeWidth={5}
+            trackColor={t.ringTrack}
+          >
+            <YStack alignItems="center">
+              <Text style={[styles.ringValue, { color: t.strava }]}>
+                {strava.kmUsedToday.toFixed(1)}
+              </Text>
+              <Text style={[styles.ringUnit, { color: t.textTertiary }]}>km</Text>
+            </YStack>
+          </CircularProgressRing>
 
-          {strava.athleteName && (
-            <Text color="secondary" size="sm">{strava.athleteName}</Text>
-          )}
+          <YStack flex={1} gap={4}>
+            <XStack alignItems="center" gap={6}>
+              <PersonSimpleRun size={16} color={t.strava} weight="fill" />
+              <Text style={[styles.stravaTitle, { color: t.textPrimary }]}>Strava</Text>
+              <View style={styles.connectedBadge}>
+                <Text style={styles.connectedText}>Conectado</Text>
+              </View>
+            </XStack>
+            {strava.athleteName && (
+              <Text style={[styles.athleteName, { color: t.textSecondary }]}>
+                {strava.athleteName}
+              </Text>
+            )}
+            <Text style={[styles.remaining, { color: t.strava }]}>
+              {strava.kmRemainingToday.toFixed(1)} km restantes hoje
+            </Text>
+          </YStack>
 
-          {/* Daily Progress */}
-          <StravaProgressBar
-            used={strava.kmUsedToday}
-            remaining={strava.kmRemainingToday}
-          />
-        </YStack>
-      </Card>
+          <CaretRight size={18} color={t.textTertiary} />
+        </XStack>
+      </GlassPanel>
     </Pressable>
   );
 }
 
-function StravaProgressBar({
-  used,
-  remaining,
-}: {
-  used: number;
-  remaining: number;
-}) {
-  const total = used + remaining;
-  const percentage = total > 0 ? (used / total) * 100 : 0;
-
-  return (
-    <YStack gap={4}>
-      <XStack justifyContent="space-between">
-        <Text color="secondary" size="xs">
-          {used.toFixed(1)} km hoje
-        </Text>
-        <Text color="secondary" size="xs">
-          {remaining.toFixed(1)} km restantes
-        </Text>
-      </XStack>
-      <View style={styles.progressBar}>
-        <View
-          style={[styles.progressFill, { width: `${Math.min(percentage, 100)}%` }]}
-        />
-      </View>
-    </YStack>
-  );
-}
-
 const styles = StyleSheet.create({
-  connectCard: {
-    borderWidth: 1,
-    borderColor: '#FC4C02',
-    borderStyle: 'dashed',
-  },
   stravaIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: 'rgba(252, 76, 2, 0.1)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  connectTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  connectSub: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  ringValue: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  ringUnit: {
+    fontSize: 9,
+    fontWeight: '500',
+    marginTop: -2,
+  },
+  stravaTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
   connectedBadge: {
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    backgroundColor: 'rgba(74, 222, 128, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.20)',
   },
   connectedText: {
-    color: '#16A34A',
-    fontSize: 11,
+    color: '#4ADE80',
+    fontSize: 10,
     fontWeight: '600',
   },
-  progressBar: {
-    height: 6,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    borderRadius: 3,
-    overflow: 'hidden',
+  athleteName: {
+    fontSize: 12,
   },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#FC4C02',
-    borderRadius: 3,
+  remaining: {
+    fontSize: 11,
+    fontWeight: '500',
   },
 });
