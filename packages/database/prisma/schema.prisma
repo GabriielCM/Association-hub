@@ -750,6 +750,11 @@ model EventCheckIn {
   @@map("event_checkins")
 }
 
+enum EventCommentContentType {
+  TEXT
+  IMAGE
+}
+
 model EventComment {
   id      String @id @default(cuid())
   eventId String @map("event_id")
@@ -757,7 +762,10 @@ model EventComment {
   userId  String @map("user_id")
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  text      String   @db.Text
+  contentType EventCommentContentType @default(TEXT) @map("content_type")
+  text        String?                 @db.Text
+  mediaUrl    String?                 @map("media_url")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

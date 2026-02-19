@@ -4,9 +4,11 @@ import {
   removeConfirmation,
   checkin,
   createComment,
+  uploadCommentImage,
 } from '../api/events.api';
+import type { CreateCommentPayload } from '../api/events.api';
 import { eventsKeys } from './useEvents';
-import type { CheckinRequest, EventDetail } from '@ahub/shared/types';
+import type { CheckinRequest, EventDetail, EventCommentContentType } from '@ahub/shared/types';
 
 export function useConfirmEvent(eventId: string) {
   const queryClient = useQueryClient();
@@ -93,11 +95,35 @@ export function useCheckin(eventId: string) {
   });
 }
 
+export interface CommentInput {
+  text?: string;
+  contentType: EventCommentContentType;
+  localImageUri?: string;
+}
+
 export function useCreateComment(eventId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (text: string) => createComment(eventId, text),
+    mutationFn: async (input: CommentInput) => {
+      let payload: CreateCommentPayload;
+
+      if (input.contentType === 'IMAGE' && input.localImageUri) {
+        const { url } = await uploadCommentImage(eventId, input.localImageUri);
+        payload = {
+          contentType: 'IMAGE',
+          mediaUrl: url,
+          text: input.text || undefined,
+        };
+      } else {
+        payload = {
+          contentType: 'TEXT',
+          text: input.text,
+        };
+      }
+
+      return createComment(eventId, payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: eventsKeys.comments(eventId),

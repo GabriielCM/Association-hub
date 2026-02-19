@@ -7,14 +7,24 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiConsumes,
 } from '@nestjs/swagger';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { writeFile } from 'fs/promises';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators';
 import type { JwtPayload } from '../../common/types';
@@ -98,6 +108,40 @@ export class EventsController {
   async getComments(@Param('id') id: string, @Query() query: CommentQueryDto) {
     const data = await this.eventsService.getComments(id, query);
     return { success: true, data };
+  }
+
+  @Post(':id/comments/media/upload')
+  @ApiOperation({ summary: 'Upload de imagem para comentário do evento' })
+  @ApiParam({ name: 'id', description: 'ID do evento' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Imagem enviada com sucesso' })
+  @ApiResponse({ status: 400, description: 'Arquivo inválido' })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadCommentMedia(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const uploadsDir = join(process.cwd(), 'uploads', 'events', 'comments', user.sub);
+    if (!existsSync(uploadsDir)) {
+      mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const ext = file.originalname.split('.').pop();
+    const fileName = `${Date.now()}.${ext}`;
+    const filePath = join(uploadsDir, fileName);
+    await writeFile(filePath, file.buffer);
+
+    const url = `/uploads/events/comments/${user.sub}/${fileName}`;
+    return { success: true, data: { url } };
   }
 
   @Post(':id/comments')

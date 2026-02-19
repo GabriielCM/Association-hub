@@ -1,4 +1,4 @@
-import { get, post, del } from '@/services/api/client';
+import { get, post, del, postFormData } from '@/services/api/client';
 import type {
   EventsListResponse,
   EventDetail,
@@ -7,6 +7,7 @@ import type {
   CheckinResponse,
   EventCommentsResponse,
   EventComment,
+  EventCommentContentType,
   EventsFilterParams,
 } from '@ahub/shared/types';
 
@@ -46,9 +47,33 @@ export async function getComments(
   return get<EventCommentsResponse>(`/events/${eventId}/comments`, params);
 }
 
+export async function uploadCommentImage(
+  eventId: string,
+  uri: string,
+): Promise<{ url: string }> {
+  const filename = uri.split('/').pop() ?? `comment_${Date.now()}.jpg`;
+  const ext = filename.split('.').pop()?.toLowerCase() ?? 'jpg';
+  const type = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+
+  const formData = new FormData();
+  formData.append('file', {
+    uri,
+    name: filename,
+    type,
+  } as unknown as Blob);
+
+  return postFormData<{ url: string }>(`/events/${eventId}/comments/media/upload`, formData);
+}
+
+export interface CreateCommentPayload {
+  text?: string;
+  contentType: EventCommentContentType;
+  mediaUrl?: string;
+}
+
 export async function createComment(
   eventId: string,
-  text: string
+  data: CreateCommentPayload,
 ): Promise<EventComment> {
-  return post<EventComment>(`/events/${eventId}/comments`, { text });
+  return post<EventComment>(`/events/${eventId}/comments`, data);
 }

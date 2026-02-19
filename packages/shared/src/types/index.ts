@@ -1211,9 +1211,13 @@ export interface EventConfirmResponse {
   confirmedAt?: Date;
 }
 
+export type EventCommentContentType = 'TEXT' | 'IMAGE';
+
 export interface EventComment {
   id: string;
-  text: string;
+  contentType: EventCommentContentType;
+  text: string | null;
+  mediaUrl: string | null;
   author: {
     id: string;
     name: string;

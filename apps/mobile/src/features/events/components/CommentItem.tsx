@@ -1,5 +1,7 @@
 import { XStack, YStack, View } from 'tamagui';
-import { Text } from '@ahub/ui';
+import { Text, Avatar } from '@ahub/ui';
+import { ImageMessage } from '@/features/messages/components/ImageMessage';
+import { resolveUploadUrl } from '@/config/constants';
 import type { EventComment } from '@ahub/shared/types';
 
 interface CommentItemProps {
@@ -23,19 +25,11 @@ function timeAgo(date: Date): string {
 export function CommentItem({ comment }: CommentItemProps) {
   return (
     <XStack gap="$3" alignItems="flex-start">
-      {/* Avatar */}
-      <View
-        width={36}
-        height={36}
-        borderRadius="$full"
-        backgroundColor="$backgroundHover"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Text size="sm" weight="bold">
-          {comment.author.name.charAt(0).toUpperCase()}
-        </Text>
-      </View>
+      <Avatar
+        src={resolveUploadUrl(comment.author.avatarUrl) || undefined}
+        name={comment.author.name}
+        size="sm"
+      />
 
       {/* Content */}
       <YStack flex={1} gap="$1">
@@ -47,7 +41,12 @@ export function CommentItem({ comment }: CommentItemProps) {
             {timeAgo(comment.createdAt)}
           </Text>
         </XStack>
-        <Text size="sm">{comment.text}</Text>
+        {comment.contentType === 'IMAGE' && comment.mediaUrl && (
+          <View marginTop="$1" maxWidth={220}>
+            <ImageMessage mediaUrl={resolveUploadUrl(comment.mediaUrl)!} />
+          </View>
+        )}
+        {comment.text && <Text size="sm">{comment.text}</Text>}
       </YStack>
     </XStack>
   );

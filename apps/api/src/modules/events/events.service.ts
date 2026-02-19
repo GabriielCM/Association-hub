@@ -569,7 +569,9 @@ export class EventsService {
     return {
       data: comments.map((c) => ({
         id: c.id,
+        contentType: c.contentType,
         text: c.text,
+        mediaUrl: c.mediaUrl,
         createdAt: c.createdAt,
         author: c.user,
       })),
@@ -592,11 +594,15 @@ export class EventsService {
       throw new NotFoundException('Evento nao encontrado');
     }
 
+    const contentType = dto.contentType || 'TEXT';
+
     const comment = await this.prisma.eventComment.create({
       data: {
         eventId,
         userId,
-        text: dto.text,
+        contentType,
+        text: dto.text || null,
+        mediaUrl: dto.mediaUrl || null,
       },
       include: {
         user: {
@@ -611,9 +617,11 @@ export class EventsService {
 
     return {
       id: comment.id,
+      contentType: comment.contentType,
       text: comment.text,
+      mediaUrl: comment.mediaUrl,
       createdAt: comment.createdAt,
-      user: comment.user,
+      author: comment.user,
     };
   }
 

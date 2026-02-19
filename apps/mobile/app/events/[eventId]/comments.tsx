@@ -6,6 +6,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, Spinner, ScreenHeader } from '@ahub/ui';
 import { useEventComments } from '@/features/events/hooks/useEvents';
 import { useCreateComment } from '@/features/events/hooks/useEventMutations';
+import type { CommentInput as CommentInputData } from '@/features/events/hooks/useEventMutations';
 import { CommentItem } from '@/features/events/components/CommentItem';
 import { CommentInput } from '@/features/events/components/CommentInput';
 import type { EventComment } from '@ahub/shared/types';
@@ -23,8 +24,8 @@ export default function EventCommentsScreen() {
   const comments = data?.data ?? [];
 
   const handleSubmit = useCallback(
-    (text: string) => {
-      createComment.mutate(text);
+    (data: CommentInputData) => {
+      createComment.mutate(data);
     },
     [createComment]
   );
