@@ -1,3 +1,5 @@
+// Crypto polyfill MUST be first — TweetNaCl needs crypto.getRandomValues
+import '../src/lib/cryptoPolyfill';
 // Ensure Tamagui config is created before any component renders
 import '../tamagui.config';
 

@@ -33,7 +33,8 @@ export class UsersController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateEncryptionKeysDto
   ) {
-    return this.usersService.updateEncryptionKeys(user.sub, dto);
+    const data = await this.usersService.updateEncryptionKeys(user.sub, dto);
+    return { success: true, data };
   }
 
   @Get('encryption-keys/backup')
@@ -44,7 +45,7 @@ export class UsersController {
     if (!backup) {
       throw new NotFoundException('Nenhum backup de chave encontrado');
     }
-    return backup;
+    return { success: true, data: backup };
   }
 
   @Get(':userId/public-key')
@@ -55,6 +56,6 @@ export class UsersController {
     if (!publicKey) {
       throw new NotFoundException('Chave pública não encontrada para este usuário');
     }
-    return { userId, publicKey };
+    return { success: true, data: { userId, publicKey } };
   }
 }
