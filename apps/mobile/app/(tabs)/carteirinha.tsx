@@ -9,6 +9,7 @@ import ViewShot from 'react-native-view-shot';
 import { Text, Button, Icon } from '@ahub/ui';
 import { CreditCard, Sparkle, ClipboardText, ShareNetwork } from '@ahub/ui/src/icons';
 import { useBrightness } from '@/hooks/useBrightness';
+import { useScreenCaptureProtection } from '@/hooks/useScreenCaptureProtection';
 import { useCard, useCardQrCode } from '@/features/card/hooks/useCard';
 import { useMySubscription } from '@/features/subscriptions/hooks/useMySubscription';
 import { useCachedCard, useCachedQrCode } from '@/stores/card.store';
@@ -28,13 +29,19 @@ export default function CarteirinhaScreen() {
   const cachedCard = useCachedCard();
   const cachedQrCode = useCachedQrCode();
   const [refreshing, setRefreshing] = useState(false);
-  const { viewShotRef, shareCard } = useShareCard();
 
   // Only enable gyroscope when this tab is focused (saves battery)
   const isFocused = useIsFocused();
 
   // Increase brightness when card is visible
   useBrightness();
+
+  // Prevent screenshots while viewing the card (protects QR code)
+  const { withProtectionDisabled } = useScreenCaptureProtection({
+    enabled: isFocused,
+  });
+
+  const { viewShotRef, shareCard } = useShareCard({ withProtectionDisabled });
 
   const displayCard = card || cachedCard;
   const displayQr = qrCode || cachedQrCode;
