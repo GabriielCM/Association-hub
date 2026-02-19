@@ -23,13 +23,12 @@ import { CollapsedHeader } from '@/features/profile/components/CollapsedHeader';
 import { TieredAvatar } from '@/features/profile/components/TieredAvatar';
 import { VerifiedSealBadge } from '@/features/profile/components/VerifiedSealBadge';
 import { SocialLinksRow } from '@/features/profile/components/SocialLinksRow';
-import { GlassStatsRow } from '@/features/profile/components/GlassStatsRow';
+import { ProfileStatsRow } from '@/features/profile/components/ProfileStatsRow';
 import { ProfileActions } from '@/features/profile/components/ProfileActions';
 import { StickyGlassTabBar } from '@/features/profile/components/StickyGlassTabBar';
 import { PostsTab } from '@/features/profile/components/PostsTab';
 import { BadgesTab } from '@/features/profile/components/BadgesTab';
 import { RankingsTab } from '@/features/profile/components/RankingsTab';
-import { BadgeRow } from '@/features/profile/components/BadgeRow';
 
 export default function UserProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
@@ -171,11 +170,7 @@ export default function UserProfileScreen() {
             <SocialLinksRow socialLinks={profile.socialLinks} />
           )}
 
-          {profile.badges.length > 0 && (
-            <BadgeRow badges={profile.badges} />
-          )}
-
-          <GlassStatsRow profile={profile} />
+          <ProfileStatsRow profile={profile} />
 
           <ProfileActions
             isMe={profile.isMe}
