@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, Input, Button } from '@ahub/ui';
 import { updateProfileFullSchema } from '@ahub/shared/validation';
 import { useCheckUsername } from '../hooks/useEditProfile';
+import { useProfileTheme } from '../hooks/useProfileTheme';
 import type { UpdateProfileFullInput } from '@ahub/shared/validation';
 
 const USERNAME_COOLDOWN_DAYS = 30;
@@ -79,11 +80,13 @@ export function EditProfileForm({
   const usernameAvailable =
     !shouldCheck || usernameCheck?.isAvailable !== false;
 
+  const pt = useProfileTheme();
+
   return (
     <YStack gap="$4">
       {/* Name */}
       <YStack gap="$1">
-        <Text weight="medium" size="sm">
+        <Text weight="medium" size="sm" style={{ color: pt.textPrimary }}>
           Nome
         </Text>
         <Controller
@@ -108,7 +111,7 @@ export function EditProfileForm({
 
       {/* Username */}
       <YStack gap="$1">
-        <Text weight="medium" size="sm">
+        <Text weight="medium" size="sm" style={{ color: pt.textPrimary }}>
           Username
         </Text>
         <Controller
@@ -136,7 +139,7 @@ export function EditProfileForm({
           )}
         />
         {usernameLocked && (
-          <Text color="secondary" size="xs">
+          <Text color="secondary" size="xs" style={{ color: pt.textSecondary }}>
             Você poderá alterar seu username em {daysRemaining} dia(s)
           </Text>
         )}
@@ -159,7 +162,7 @@ export function EditProfileForm({
 
       {/* Bio */}
       <YStack gap="$1">
-        <Text weight="medium" size="sm">
+        <Text weight="medium" size="sm" style={{ color: pt.textPrimary }}>
           Bio
         </Text>
         <Controller
@@ -178,7 +181,7 @@ export function EditProfileForm({
             />
           )}
         />
-        <Text color="secondary" size="xs" align="right">
+        <Text color="secondary" size="xs" align="right" style={{ color: pt.textSecondary }}>
           {(watch('bio') || '').length}/150
         </Text>
         {errors.bio && (
@@ -190,7 +193,7 @@ export function EditProfileForm({
 
       {/* Phone */}
       <YStack gap="$1">
-        <Text weight="medium" size="sm">
+        <Text weight="medium" size="sm" style={{ color: pt.textPrimary }}>
           Telefone
         </Text>
         <Controller
@@ -210,7 +213,7 @@ export function EditProfileForm({
 
       {/* Social Links */}
       <YStack gap="$3">
-        <Text weight="medium" size="sm">
+        <Text weight="medium" size="sm" style={{ color: pt.textPrimary }}>
           Redes Sociais
         </Text>
         <YStack gap="$2">

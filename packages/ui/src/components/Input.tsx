@@ -1,4 +1,4 @@
-import { styled, YStack, XStack, View, Text } from 'tamagui';
+import { styled, YStack, XStack, View, Text, useTheme } from 'tamagui';
 import { forwardRef, useState } from 'react';
 import { TextInput, type TextInputProps, type StyleProp, type TextStyle } from 'react-native';
 
@@ -155,6 +155,7 @@ export const Input = forwardRef<TextInput, InputProps>(
     ref
   ) => {
     const [isFocused, setIsFocused] = useState(false);
+    const theme = useTheme();
 
     const fontSize = size === 'sm' ? 14 : size === 'lg' ? 18 : 16;
 
@@ -174,7 +175,7 @@ export const Input = forwardRef<TextInput, InputProps>(
               flex: 1,
               fontFamily: 'Inter',
               fontSize,
-              color: '#1F2937',
+              color: theme.color.val as string,
               padding: 0,
               margin: 0,
             }, customStyle]}
@@ -182,7 +183,7 @@ export const Input = forwardRef<TextInput, InputProps>(
             defaultValue={defaultValue}
             onChangeText={onChangeText}
             placeholder={placeholder}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={theme.placeholderColor.val as string}
             editable={editable !== undefined ? editable : !disabled}
             autoFocus={autoFocus}
             secureTextEntry={secureTextEntry}

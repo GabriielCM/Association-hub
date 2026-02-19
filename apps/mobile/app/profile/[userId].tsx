@@ -17,6 +17,7 @@ import { MISC_ICONS } from '@ahub/ui/src/icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import { useProfileAnimations, COVER_HEIGHT } from '@/features/profile/hooks/useProfileAnimations';
+import { useProfileTheme } from '@/features/profile/hooks/useProfileTheme';
 
 import { ProfileCover } from '@/features/profile/components/ProfileCover';
 import { CollapsedHeader } from '@/features/profile/components/CollapsedHeader';
@@ -50,6 +51,8 @@ export default function UserProfileScreen() {
     setActiveTab: setAnimatedTab,
     insets,
   } = useProfileAnimations();
+
+  const pt = useProfileTheme();
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -112,7 +115,7 @@ export default function UserProfileScreen() {
   const tabContentHeight = screenHeight * 0.6;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: pt.screenBg }]}>
       <Animated.ScrollView
         onScroll={scrollHandler}
         scrollEventThrottle={16}
@@ -143,12 +146,12 @@ export default function UserProfileScreen() {
 
           <YStack alignItems="center" gap="$1" marginTop="$2">
             <XStack alignItems="center" gap="$1.5">
-              <Heading level={4}>{profile.name}</Heading>
+              <Heading level={4} style={{ color: pt.textPrimary }}>{profile.name}</Heading>
               <VerifiedSealBadge isVerified={profile.isVerified} />
             </XStack>
 
             {profile.username && (
-              <Text color="secondary" size="sm">
+              <Text color="secondary" size="sm" style={{ color: pt.textSecondary }}>
                 @{profile.username}
               </Text>
             )}
@@ -158,7 +161,7 @@ export default function UserProfileScreen() {
                 color="secondary"
                 size="sm"
                 align="center"
-                style={{ maxWidth: 280 }}
+                style={{ color: pt.textSecondary, maxWidth: 280 }}
                 numberOfLines={3}
               >
                 {profile.bio}

@@ -4,6 +4,7 @@ import { Text, Icon } from '@ahub/ui';
 import { Trophy, Calendar, PersonSimpleRun, ChartBar } from '@ahub/ui/src/icons';
 import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import type { UserRankingEntry } from '@ahub/shared/types';
+import { useProfileTheme } from '../hooks/useProfileTheme';
 
 interface RankingRowProps {
   ranking: UserRankingEntry;
@@ -16,6 +17,8 @@ const typeIcons: Record<string, PhosphorIcon> = {
 };
 
 export function RankingRow({ ranking }: RankingRowProps) {
+  const pt = useProfileTheme();
+
   return (
     <XStack
       padding="$3"
@@ -24,24 +27,24 @@ export function RankingRow({ ranking }: RankingRowProps) {
       alignItems="center"
       gap="$3"
     >
-      <View style={styles.iconContainer}>
+      <View style={[styles.iconContainer, { backgroundColor: pt.accentBg }]}>
         <Icon icon={typeIcons[ranking.type] || ChartBar} size="md" color="primary" />
       </View>
 
       <YStack flex={1}>
-        <Text weight="medium">{ranking.name}</Text>
-        <Text color="secondary" size="sm">
+        <Text weight="medium" style={{ color: pt.textPrimary }}>{ranking.name}</Text>
+        <Text color="secondary" size="sm" style={{ color: pt.textSecondary }}>
           {ranking.value} {ranking.unit}
         </Text>
       </YStack>
 
       {ranking.position !== null && (
         <YStack alignItems="center">
-          <Text weight="bold" size="lg" color="primary">
+          <Text weight="bold" size="lg" style={{ color: pt.textPrimary }}>
             #{ranking.position}
           </Text>
           {ranking.totalParticipants !== null && (
-            <Text color="secondary" size="xs">
+            <Text color="secondary" size="xs" style={{ color: pt.textSecondary }}>
               de {ranking.totalParticipants}
             </Text>
           )}
@@ -56,7 +59,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },

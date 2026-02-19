@@ -1,6 +1,7 @@
 import { View, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Avatar } from '@ahub/ui';
+import { useProfileTheme } from '../hooks/useProfileTheme';
 
 interface TieredAvatarProps {
   avatarUrl?: string | undefined;
@@ -20,7 +21,8 @@ export function TieredAvatar({
   subscriptionColor,
   isOnline,
 }: TieredAvatarProps) {
-  const ringColor = subscriptionColor || '#9CA3AF';
+  const pt = useProfileTheme();
+  const ringColor = subscriptionColor || pt.defaultRingColor;
 
   return (
     <Animated.View
@@ -43,7 +45,10 @@ export function TieredAvatar({
       <View
         style={[
           styles.onlineDot,
-          { backgroundColor: isOnline ? '#22C55E' : '#9CA3AF' },
+          {
+            backgroundColor: isOnline ? '#22C55E' : pt.defaultRingColor,
+            borderColor: pt.onlineDotBorder,
+          },
         ]}
       />
     </Animated.View>
@@ -63,6 +68,5 @@ const styles = StyleSheet.create({
     height: ONLINE_DOT_SIZE,
     borderRadius: ONLINE_DOT_SIZE / 2,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
   },
 });

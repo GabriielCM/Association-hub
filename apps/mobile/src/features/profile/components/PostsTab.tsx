@@ -3,6 +3,7 @@ import { YStack } from 'tamagui';
 import { useRouter } from 'expo-router';
 import { Text, Icon } from '@ahub/ui';
 import { Camera } from '@ahub/ui/src/icons';
+import { useProfileTheme } from '../hooks/useProfileTheme';
 import { useUserPosts } from '@/features/dashboard/hooks/useDashboard';
 import { resolveUploadUrl } from '@/config/constants';
 import type { FeedPost } from '@ahub/shared/types';
@@ -17,6 +18,7 @@ interface PostsTabProps {
 
 export function PostsTab({ userId }: PostsTabProps) {
   const router = useRouter();
+  const pt = useProfileTheme();
   const { data, fetchNextPage, hasNextPage, isLoading } =
     useUserPosts(userId);
 
@@ -26,10 +28,10 @@ export function PostsTab({ userId }: PostsTabProps) {
     return (
       <YStack alignItems="center" paddingVertical="$8" gap="$3">
         <Icon icon={Camera} size={48} color="muted" weight="duotone" />
-        <Text weight="semibold" size="lg">
+        <Text weight="semibold" size="lg" style={{ color: pt.textPrimary }}>
           Nenhum post ainda
         </Text>
-        <Text color="secondary" size="sm" align="center" style={{ maxWidth: 240 }}>
+        <Text color="secondary" size="sm" align="center" style={{ color: pt.textSecondary, maxWidth: 240 }}>
           Os posts do usuário aparecerão aqui.
         </Text>
       </YStack>

@@ -6,6 +6,7 @@ import { Text, Heading, Button, Icon } from '@ahub/ui';
 import { Medal } from '@ahub/ui/src/icons';
 import { BadgeCard } from './BadgeCard';
 import type { UserBadge } from '@ahub/shared/types';
+import { useProfileTheme } from '../hooks/useProfileTheme';
 
 interface BadgesModalProps {
   visible: boolean;
@@ -29,6 +30,7 @@ export function BadgesModal({
     .map((b) => b.id);
 
   const [selectedIds, setSelectedIds] = useState<string[]>(initialSelected);
+  const pt = useProfileTheme();
 
   const handleToggle = useCallback(
     (badge: UserBadge) => {
@@ -68,20 +70,20 @@ export function BadgesModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: pt.modalBg }]} edges={['top', 'bottom']}>
         <YStack flex={1} padding="$4" gap="$4">
           {/* Header */}
           <XStack justifyContent="space-between" alignItems="center">
             <Pressable onPress={onClose}>
-              <Text color="primary" weight="medium">
+              <Text color="primary" weight="medium" style={{ color: pt.textPrimary }}>
                 Cancelar
               </Text>
             </Pressable>
-            <Heading level={5}>Meus Badges</Heading>
+            <Heading level={5} style={{ color: pt.textPrimary }}>Meus Badges</Heading>
             <View style={{ width: 60 }} />
           </XStack>
 
-          <Text color="secondary" size="sm" align="center">
+          <Text color="secondary" size="sm" align="center" style={{ color: pt.textSecondary }}>
             Selecione até {MAX_FEATURED} badges para exibir no perfil ({selectedIds.length}/{MAX_FEATURED})
           </Text>
 
@@ -125,7 +127,6 @@ export function BadgesModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   grid: {
     gap: 8,

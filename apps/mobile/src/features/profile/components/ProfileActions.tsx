@@ -5,6 +5,7 @@ import { Button } from '@ahub/ui';
 import { PencilSimple, ShareNetwork } from 'phosphor-react-native';
 import { useCreateConversation } from '@/features/messages/hooks/useConversations';
 import * as Haptics from 'expo-haptics';
+import { useProfileTheme } from '../hooks/useProfileTheme';
 
 interface ProfileActionsProps {
   isMe: boolean;
@@ -14,6 +15,7 @@ interface ProfileActionsProps {
 
 export function ProfileActions({ isMe, userId, onSharePress }: ProfileActionsProps) {
   const createConversation = useCreateConversation();
+  const pt = useProfileTheme();
 
   if (isMe) {
     return (
@@ -23,9 +25,9 @@ export function ProfileActions({ isMe, userId, onSharePress }: ProfileActionsPro
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             router.push('/profile/edit');
           }}
-          style={styles.iconButton}
+          style={[styles.iconButton, { borderColor: pt.borderColor }]}
         >
-          <PencilSimple size={20} color="#6B7280" weight="regular" />
+          <PencilSimple size={20} color={pt.iconColor} weight="regular" />
         </Pressable>
         {onSharePress && (
           <Pressable
@@ -33,9 +35,9 @@ export function ProfileActions({ isMe, userId, onSharePress }: ProfileActionsPro
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               onSharePress();
             }}
-            style={styles.iconButton}
+            style={[styles.iconButton, { borderColor: pt.borderColor }]}
           >
-            <ShareNetwork size={20} color="#6B7280" weight="regular" />
+            <ShareNetwork size={20} color={pt.iconColor} weight="regular" />
           </Pressable>
         )}
       </XStack>
@@ -96,7 +98,6 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
   },

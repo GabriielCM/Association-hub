@@ -6,6 +6,7 @@ import { PROFILE_ICONS } from '@ahub/ui/src/icons';
 import { CardGlassView } from '@/features/card/components/CardGlassView';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useProfileTheme } from '../hooks/useProfileTheme';
 
 interface CollapsedHeaderProps {
   name: string;
@@ -21,6 +22,7 @@ export function CollapsedHeader({
   isMe,
 }: CollapsedHeaderProps) {
   const insets = useSafeAreaInsets();
+  const pt = useProfileTheme();
 
   return (
     <Animated.View
@@ -30,7 +32,7 @@ export function CollapsedHeader({
         animatedStyle,
       ]}
     >
-      <CardGlassView intensity={20} tint="light" borderRadius={0}>
+      <CardGlassView intensity={20} tint={pt.glassTint} borderRadius={0}>
         <XStack
           paddingHorizontal="$3"
           paddingVertical="$2"
@@ -44,7 +46,7 @@ export function CollapsedHeader({
           )}
 
           <Avatar src={avatarUrl} name={name} size="xs" />
-          <Text weight="semibold" size="base" numberOfLines={1} style={{ flex: 1 }}>
+          <Text weight="semibold" size="base" numberOfLines={1} style={{ flex: 1, color: pt.textPrimary }}>
             {name}
           </Text>
 

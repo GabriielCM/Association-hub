@@ -1,6 +1,7 @@
 import { YStack } from 'tamagui';
 import { Text, Spinner, Icon } from '@ahub/ui';
 import { ChartBar } from '@ahub/ui/src/icons';
+import { useProfileTheme } from '../hooks/useProfileTheme';
 import { useUserRankings } from '@/features/profile/hooks/useProfile';
 import { RankingRow } from './RankingRow';
 
@@ -10,6 +11,7 @@ interface RankingsTabProps {
 
 export function RankingsTab({ userId }: RankingsTabProps) {
   const { data: rankingsData, isLoading } = useUserRankings(userId);
+  const pt = useProfileTheme();
 
   const rankings = rankingsData?.data || [];
 
@@ -25,10 +27,10 @@ export function RankingsTab({ userId }: RankingsTabProps) {
     return (
       <YStack alignItems="center" paddingVertical="$8" gap="$3">
         <Icon icon={ChartBar} size={48} color="muted" weight="duotone" />
-        <Text weight="semibold" size="lg">
+        <Text weight="semibold" size="lg" style={{ color: pt.textPrimary }}>
           Nenhum ranking disponível
         </Text>
-        <Text color="secondary" size="sm" align="center" style={{ maxWidth: 260 }}>
+        <Text color="secondary" size="sm" align="center" style={{ color: pt.textSecondary, maxWidth: 260 }}>
           Seus rankings aparecerão aqui conforme você participa.
         </Text>
       </YStack>

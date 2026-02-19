@@ -3,6 +3,7 @@ import { YStack } from 'tamagui';
 import { Text, Icon } from '@ahub/ui';
 import { Medal, Check } from '@ahub/ui/src/icons';
 import type { UserBadge } from '@ahub/shared/types';
+import { useProfileTheme } from '../hooks/useProfileTheme';
 
 interface BadgeCardProps {
   badge: UserBadge;
@@ -11,6 +12,7 @@ interface BadgeCardProps {
 }
 
 export function BadgeCard({ badge, isSelected, onPress }: BadgeCardProps) {
+  const pt = useProfileTheme();
   const formatDate = (date: Date) =>
     new Date(date).toLocaleDateString('pt-BR');
 
@@ -19,23 +21,24 @@ export function BadgeCard({ badge, isSelected, onPress }: BadgeCardProps) {
       onPress={() => onPress?.(badge)}
       style={({ pressed }) => [
         styles.container,
-        isSelected && styles.selected,
+        { backgroundColor: pt.accentBgSubtle },
+        isSelected && [styles.selected, { backgroundColor: pt.accentBg, borderColor: pt.accent }],
         pressed && styles.pressed,
       ]}
     >
-      <View style={styles.iconContainer}>
+      <View style={[styles.iconContainer, { backgroundColor: pt.accentBg }]}>
         <Icon icon={Medal} size="lg" color="primary" />
       </View>
       <YStack alignItems="center" gap="$0.5" flex={1}>
-        <Text weight="medium" size="xs" align="center" numberOfLines={2}>
+        <Text weight="medium" size="xs" align="center" numberOfLines={2} style={{ color: pt.textPrimary }}>
           {badge.name}
         </Text>
-        <Text color="secondary" size="xs">
+        <Text color="secondary" size="xs" style={{ color: pt.textSecondary }}>
           {formatDate(badge.earnedAt)}
         </Text>
       </YStack>
       {isSelected && (
-        <View style={styles.checkmark}>
+        <View style={[styles.checkmark, { backgroundColor: pt.accent }]}>
           <Check size={10} color="#fff" weight="bold" />
         </View>
       )}
@@ -49,14 +52,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderRadius: 12,
-    backgroundColor: 'rgba(139, 92, 246, 0.05)',
     gap: 8,
     minWidth: 100,
   },
   selected: {
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
     borderWidth: 2,
-    borderColor: '#8B5CF6',
   },
   pressed: {
     opacity: 0.7,
@@ -65,7 +65,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -79,7 +78,6 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#8B5CF6',
     justifyContent: 'center',
     alignItems: 'center',
   },

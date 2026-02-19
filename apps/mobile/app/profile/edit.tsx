@@ -11,6 +11,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Text, ScreenHeader, Spinner } from '@ahub/ui';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useProfile } from '@/features/profile/hooks/useProfile';
+import { useProfileTheme } from '@/features/profile/hooks/useProfileTheme';
 import { AvatarPicker } from '@/features/profile/components/AvatarPicker';
 import { EditProfileForm } from '@/features/profile/components/EditProfileForm';
 import {
@@ -28,6 +29,7 @@ export default function EditProfileScreen() {
   const uploadAvatar = useUploadAvatar();
   const uploadCover = useUploadCover();
   const [avatarChanged, setAvatarChanged] = useState(false);
+  const pt = useProfileTheme();
 
   const handleSubmit = async (data: UpdateProfileFullInput) => {
     try {
@@ -94,7 +96,7 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: pt.screenBg }} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -138,7 +140,7 @@ export default function EditProfileScreen() {
                 onImageSelected={handleImageSelected}
                 isUploading={uploadAvatar.isPending}
               />
-              <Text color="secondary" size="xs" align="center">
+              <Text color="secondary" size="xs" align="center" style={{ color: pt.textSecondary }}>
                 Toque na foto para alterar (JPG/PNG, máx 5MB)
               </Text>
 

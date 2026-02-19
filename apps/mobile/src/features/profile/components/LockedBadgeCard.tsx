@@ -2,22 +2,25 @@ import { View, StyleSheet } from 'react-native';
 import { Text } from '@ahub/ui';
 import { Lock, Medal } from 'phosphor-react-native';
 import type { LockedBadge } from '@ahub/shared/types';
+import { useProfileTheme } from '../hooks/useProfileTheme';
 
 interface LockedBadgeCardProps {
   badge: LockedBadge;
 }
 
 export function LockedBadgeCard({ badge }: LockedBadgeCardProps) {
+  const pt = useProfileTheme();
+
   return (
-    <View style={styles.container}>
-      <View style={styles.iconContainer}>
+    <View style={[styles.container, { backgroundColor: pt.lockedBg }]}>
+      <View style={[styles.iconContainer, { backgroundColor: pt.lockedIconBg }]}>
         {badge.iconUrl ? (
           <Text style={styles.emoji}>{badge.iconUrl}</Text>
         ) : (
-          <Medal size={24} color="#9CA3AF" weight="regular" />
+          <Medal size={24} color={pt.lockedIconColor} weight="regular" />
         )}
-        <View style={styles.lockOverlay}>
-          <Lock size={12} color="#6B7280" weight="fill" />
+        <View style={[styles.lockOverlay, { backgroundColor: pt.lockOverlayBg, borderColor: pt.lockOverlayBorder }]}>
+          <Lock size={12} color={pt.lockColor} weight="fill" />
         </View>
       </View>
       <Text
@@ -25,7 +28,7 @@ export function LockedBadgeCard({ badge }: LockedBadgeCardProps) {
         color="tertiary"
         align="center"
         numberOfLines={2}
-        style={styles.name}
+        style={[styles.name, { color: pt.textTertiary }]}
       >
         {badge.name}
       </Text>
@@ -37,7 +40,6 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     padding: 12,
-    backgroundColor: 'rgba(156, 163, 175, 0.08)',
     borderRadius: 12,
     minWidth: 100,
     opacity: 0.5,
@@ -46,7 +48,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(156, 163, 175, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -61,11 +62,9 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   name: {
     marginTop: 8,

@@ -11,6 +11,7 @@ import { Text } from '@ahub/ui';
 import { CardGlassView } from '@/features/card/components/CardGlassView';
 import * as Haptics from 'expo-haptics';
 import { TAB_BAR_HEIGHT } from '../hooks/useProfileAnimations';
+import { useProfileTheme } from '../hooks/useProfileTheme';
 
 const TABS = [
   { key: 'posts', label: 'Posts' },
@@ -40,6 +41,7 @@ export function StickyGlassTabBar({
 }: StickyGlassTabBarProps) {
   const { width: screenWidth } = useWindowDimensions();
   const tabWidth = screenWidth / TABS.length;
+  const pt = useProfileTheme();
 
   const indicatorStyle = useAnimatedStyle(() => ({
     transform: [
@@ -72,14 +74,14 @@ export function StickyGlassTabBar({
             <Text
               weight={isActive ? 'semibold' : 'regular'}
               size="sm"
-              color={isActive ? 'primary' : 'secondary'}
+              style={{ color: isActive ? pt.textPrimary : pt.textSecondary }}
             >
               {tab.label}
             </Text>
           </Pressable>
         );
       })}
-      <Animated.View style={[styles.indicator, indicatorStyle]} />
+      <Animated.View style={[styles.indicator, { backgroundColor: pt.tabIndicator }, indicatorStyle]} />
     </View>
   );
 
@@ -92,7 +94,7 @@ export function StickyGlassTabBar({
           fixedStyle,
         ]}
       >
-        <CardGlassView intensity={20} tint="light" borderRadius={0}>
+        <CardGlassView intensity={20} tint={pt.glassTint} borderRadius={0}>
           {content}
         </CardGlassView>
       </Animated.View>
@@ -100,7 +102,7 @@ export function StickyGlassTabBar({
   }
 
   return (
-    <View onLayout={onLayout} style={styles.inlineContainer}>
+    <View onLayout={onLayout} style={[styles.inlineContainer, { borderBottomColor: pt.tabBorder }]}>
       {content}
     </View>
   );
@@ -116,7 +118,6 @@ const styles = StyleSheet.create({
   },
   inlineContainer: {
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   tabBarInner: {
     flexDirection: 'row',
@@ -132,7 +133,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     height: 3,
-    backgroundColor: '#8B5CF6',
     borderTopLeftRadius: 3,
     borderTopRightRadius: 3,
   },

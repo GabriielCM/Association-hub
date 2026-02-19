@@ -3,6 +3,7 @@ import { View, StyleSheet, Alert } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { Text, Button, Spinner, Icon } from '@ahub/ui';
 import { Medal } from '@ahub/ui/src/icons';
+import { useProfileTheme } from '../hooks/useProfileTheme';
 import { useUserBadges } from '@/features/profile/hooks/useProfile';
 import { useUpdateBadgesDisplay } from '@/features/profile/hooks/useEditProfile';
 import { BadgeCard } from './BadgeCard';
@@ -18,6 +19,7 @@ export function BadgesTab({ userId, isMe }: BadgesTabProps) {
   const { data: badgesData, isLoading } = useUserBadges(userId);
   const updateBadges = useUpdateBadgesDisplay();
   const [showModal, setShowModal] = useState(false);
+  const pt = useProfileTheme();
 
   const badges = badgesData?.data || [];
   const lockedBadges = badgesData?.lockedBadges || [];
@@ -44,10 +46,10 @@ export function BadgesTab({ userId, isMe }: BadgesTabProps) {
     return (
       <YStack alignItems="center" paddingVertical="$8" gap="$3">
         <Icon icon={Medal} size={48} color="muted" weight="duotone" />
-        <Text weight="semibold" size="lg">
+        <Text weight="semibold" size="lg" style={{ color: pt.textPrimary }}>
           Nenhum badge conquistado
         </Text>
-        <Text color="secondary" size="sm" align="center" style={{ maxWidth: 260 }}>
+        <Text color="secondary" size="sm" align="center" style={{ color: pt.textSecondary, maxWidth: 260 }}>
           Participe de eventos e atividades para conquistar badges!
         </Text>
       </YStack>
@@ -57,7 +59,7 @@ export function BadgesTab({ userId, isMe }: BadgesTabProps) {
   return (
     <YStack gap="$3" paddingVertical="$3">
       <XStack justifyContent="space-between" alignItems="center">
-        <Text color="secondary" size="sm">
+        <Text color="secondary" size="sm" style={{ color: pt.textSecondary }}>
           {badges.length} badge{badges.length !== 1 ? 's' : ''} · {badgesData?.featured || 0}/3 em destaque
         </Text>
         {isMe && (
@@ -77,7 +79,7 @@ export function BadgesTab({ userId, isMe }: BadgesTabProps) {
 
       {lockedBadges.length > 0 && (
         <>
-          <Text color="secondary" size="sm" style={{ marginTop: 12 }}>
+          <Text color="secondary" size="sm" style={{ marginTop: 12, color: pt.textSecondary }}>
             A conquistar
           </Text>
           <View style={styles.grid}>
