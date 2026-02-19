@@ -18,6 +18,8 @@ export interface User {
   associationId: string;
   memberId?: string | undefined;
   usernameChangedAt?: Date | undefined;
+  // E2E Encryption
+  encryptionPublicKey?: string | undefined;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -1437,6 +1439,7 @@ export interface ConversationLastMessage {
   senderId: string;
   senderName: string;
   createdAt: string;
+  isEncrypted?: boolean;
 }
 
 export interface ConversationGroupInfo {
@@ -1522,6 +1525,10 @@ export interface Message {
   status: MessageStatus;
   createdAt: string;
   deletedAt?: string;
+  // E2E Encryption
+  encryptedContent?: string;
+  nonce?: string;
+  isEncrypted?: boolean;
 }
 
 export interface ConversationsListResponse {
@@ -1567,6 +1574,10 @@ export interface SendMessageRequest {
   mediaUrl?: string | undefined;
   mediaDuration?: number | undefined;
   replyTo?: string | undefined;
+  // E2E Encryption
+  encryptedContent?: string;
+  nonce?: string;
+  isEncrypted?: boolean;
 }
 
 export interface UpdateConversationSettingsRequest {

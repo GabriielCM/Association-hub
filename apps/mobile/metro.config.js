@@ -1,6 +1,19 @@
+const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
 
-const config = getDefaultConfig(__dirname);
+const projectRoot = __dirname;
+const monorepoRoot = path.resolve(projectRoot, '../..');
+
+const config = getDefaultConfig(projectRoot);
+
+// Monorepo: watch all packages
+config.watchFolders = [monorepoRoot];
+
+// Monorepo: resolve node_modules from root
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
+  path.resolve(monorepoRoot, 'node_modules'),
+];
 
 // Exclude build artifacts from watching
 config.resolver.blockList = [

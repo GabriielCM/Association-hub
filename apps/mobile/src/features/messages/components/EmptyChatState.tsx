@@ -29,12 +29,13 @@ export function EmptyChatState({ onIceBreaker, participantName }: EmptyChatState
   );
 
   return (
-    <Animated.View entering={FadeInUp.delay(200).duration(400)}>
+    <Animated.View entering={FadeInUp.delay(200).duration(400)} style={{ flex: 1 }}>
       <YStack
         alignItems="center"
         justifyContent="center"
         padding="$6"
         gap="$4"
+        flex={1}
       >
         {/* Icon */}
         <YStack
@@ -50,12 +51,16 @@ export function EmptyChatState({ onIceBreaker, participantName }: EmptyChatState
 
         {/* Message */}
         <YStack alignItems="center" gap="$1">
-          <Text weight="semibold" size="md" align="center">
+          <Text weight="semibold" size="base" align="center"
+            {...(isDark ? { style: { color: '#FFFFFF' } } : {})}
+          >
             {participantName
               ? `Inicie uma conversa com ${participantName}!`
               : 'Envie a primeira mensagem!'}
           </Text>
-          <Text color="secondary" size="sm" align="center">
+          <Text size="sm" align="center"
+            {...(isDark ? { style: { color: 'rgba(255,255,255,0.6)' } } : { color: 'secondary' })}
+          >
             Quebre o gelo com uma das sugestoes abaixo
           </Text>
         </YStack>
@@ -66,7 +71,9 @@ export function EmptyChatState({ onIceBreaker, participantName }: EmptyChatState
             <Pressable key={text} onPress={() => handleIceBreaker(text)}>
               <GlassView variant="chip" borderRadius={9999}>
                 <XStack paddingHorizontal="$3" paddingVertical="$2">
-                  <Text size="sm" color="primary" weight="medium">
+                  <Text size="sm" weight="medium"
+                    {...(isDark ? { style: { color: '#A78BFA' } } : { color: 'primary' })}
+                  >
                     {text}
                   </Text>
                 </XStack>

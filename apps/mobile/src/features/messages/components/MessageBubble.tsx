@@ -1,5 +1,5 @@
 import { useCallback, memo } from 'react';
-import { Pressable, useColorScheme, Platform } from 'react-native';
+import { Pressable, useColorScheme, Platform, Text as RNText } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
 import { Text, Avatar, Icon } from '@ahub/ui';
 import { Check, Checks, CircleNotch, Camera, Microphone, ArrowBendUpLeft } from '@ahub/ui/src/icons';
@@ -161,9 +161,9 @@ export const MessageBubble = memo(function MessageBubble({
   const renderContent = (content: string) => {
     if (!highlightText || !content) {
       return (
-        <Text style={{ color: textColor }} size="sm">
+        <RNText style={{ color: textColor, fontSize: 14, lineHeight: 22 }}>
           {content}
-        </Text>
+        </RNText>
       );
     }
 
@@ -171,24 +171,25 @@ export const MessageBubble = memo(function MessageBubble({
     const parts = content.split(regex);
 
     return (
-      <Text size="sm" style={{ color: textColor }}>
+      <RNText style={{ color: textColor, fontSize: 14, lineHeight: 22 }}>
         {parts.map((part, i) =>
           regex.test(part) ? (
-            <Text
+            <RNText
               key={i}
-              size="sm"
               style={{
                 backgroundColor: 'rgba(255, 213, 0, 0.4)',
                 color: textColor,
+                fontSize: 14,
+                lineHeight: 22,
               }}
             >
               {part}
-            </Text>
+            </RNText>
           ) : (
             part
           ),
         )}
-      </Text>
+      </RNText>
     );
   };
 
@@ -359,9 +360,16 @@ export const MessageBubble = memo(function MessageBubble({
                     </>
                   )}
 
-                  {/* Footer: time + status - only shown on last message of cluster */}
+                  {/* Footer: time + encryption + status - only shown on last message of cluster */}
                   {isLastInCluster && (
                     <XStack alignItems="center" justifyContent="flex-end" gap="$1">
+                      {message.isEncrypted && (
+                        <Icon
+                          icon="LockSimple"
+                          size={10}
+                          color={textTimeColor ?? 'secondary'}
+                        />
+                      )}
                       <Text
                         size="xs"
                         style={{
@@ -422,7 +430,7 @@ export const MessageBubble = memo(function MessageBubble({
                 borderWidth={reaction.hasReacted ? 1 : 0}
                 borderColor="$primary"
               >
-                <Text style={{ fontSize: 12 }}>{reaction.emoji}</Text>
+                <RNText style={{ fontSize: 12, lineHeight: 18 }}>{reaction.emoji}</RNText>
                 {reaction.count > 1 && (
                   <Text size="xs" color="secondary" style={{ fontSize: 10 }}>
                     {reaction.count}

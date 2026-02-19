@@ -149,6 +149,32 @@ export class ConversationsController {
   }
 
   // ============================================
+  // E2E ENCRYPTION KEY BUNDLES
+  // ============================================
+
+  @Get(':id/key-bundle')
+  @ApiOperation({ summary: 'Obter key bundle da conversa para o usuário autenticado' })
+  @ApiParam({ name: 'id', description: 'ID da conversa' })
+  @ApiResponse({ status: 200, description: 'Key bundle retornado' })
+  async getKeyBundle(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    const bundle = await this.messagesService.getKeyBundle(user.sub, id);
+    return { success: true, data: bundle };
+  }
+
+  @Post(':id/key-bundles')
+  @ApiOperation({ summary: 'Criar key bundles para participantes da conversa' })
+  @ApiParam({ name: 'id', description: 'ID da conversa' })
+  @ApiResponse({ status: 201, description: 'Key bundles criados' })
+  async createKeyBundles(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() body: { bundles: { userId: string; encryptedKey: string; nonce: string; senderPublicKey: string }[] }
+  ) {
+    const data = await this.messagesService.createKeyBundles(user.sub, id, body.bundles);
+    return { success: true, data };
+  }
+
+  // ============================================
   // MESSAGES
   // ============================================
 

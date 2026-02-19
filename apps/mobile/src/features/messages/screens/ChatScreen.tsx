@@ -10,7 +10,7 @@ import {
   NativeScrollEvent,
   useColorScheme,
 } from 'react-native';
-import { YStack, View } from 'tamagui';
+import { YStack, XStack, View } from 'tamagui';
 import { Text, Avatar, ScreenHeader, Icon } from '@ahub/ui';
 import { ArrowDown } from '@ahub/ui/src/icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -36,6 +36,9 @@ import { GlassView } from '../components/GlassView';
 import { EmptyChatState } from '../components/EmptyChatState';
 import { isSameDay } from '../utils/dateFormatters';
 import { CLUSTER_TIME_GAP } from '../utils/animations';
+import { useEncryption } from '../hooks/useEncryption';
+import { hasEncryptionKeys } from '@/lib/keyStore';
+import { buildMessagePayload } from '@ahub/shared/crypto';
 import type { Message, MessageContentType } from '@ahub/shared/types';
 
 const SCROLL_THRESHOLD = 150;
@@ -58,6 +61,7 @@ export function ChatScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isLoading,
   } = useMessages(conversationId ?? '');
   const sendMessage = useSendMessage(conversationId ?? '');
   const addReaction = useAddReaction();
@@ -67,6 +71,7 @@ export function ChatScreen() {
   const { typingUsers, recordingUsers, presenceMap } = useMessageWebSocket(conversationId ?? '');
   const { handleTextChange, stopTyping } = useTyping(conversationId ?? '');
   const { emit } = useWebSocket();
+  const { encryptForDirect, encryptForGroup, decryptMessage } = useEncryption();
 
   const handleRecordingChange = useCallback((isRecording: boolean) => {
     emit(isRecording ? 'recording.start' : 'recording.stop', { conversationId });
@@ -77,6 +82,12 @@ export function ChatScreen() {
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const prevMessageCount = useRef(0);
+  const [e2eReady, setE2eReady] = useState(false);
+
+  // Check if E2E encryption is available
+  useEffect(() => {
+    hasEncryptionKeys().then(setE2eReady);
+  }, []);
 
   useEffect(() => {
     if (conversationId) {
@@ -84,7 +95,41 @@ export function ChatScreen() {
     }
   }, [conversationId]);
 
-  const messages = messagesData?.pages.flatMap((page) => page.data) ?? [];
+  const rawMessages = messagesData?.pages.flatMap((page) => page.data) ?? [];
+
+  // Decrypt encrypted messages
+  const [decryptedMap, setDecryptedMap] = useState<Map<string, Message>>(new Map());
+  const decryptionInFlight = useRef(new Set<string>());
+
+  const convType = conversation?.type ?? 'DIRECT';
+  const otherParticipantForE2E = conversation?.participants.find((p) => p.id !== user?.id);
+
+  useEffect(() => {
+    const encrypted = rawMessages.filter(
+      (m) => m.isEncrypted && m.encryptedContent && !decryptedMap.has(m.id) && !decryptionInFlight.current.has(m.id)
+    );
+    if (encrypted.length === 0) return;
+
+    encrypted.forEach((m) => decryptionInFlight.current.add(m.id));
+
+    Promise.all(
+      encrypted.map((msg) =>
+        decryptMessage(msg, convType, otherParticipantForE2E?.id).then((decrypted) => [msg.id, decrypted] as const)
+      )
+    ).then((results) => {
+      setDecryptedMap((prev) => {
+        const next = new Map(prev);
+        for (const [id, decrypted] of results) {
+          next.set(id, decrypted);
+          decryptionInFlight.current.delete(id);
+        }
+        return next;
+      });
+    });
+  }, [rawMessages, convType, otherParticipantForE2E?.id, decryptMessage]);
+
+  // Use decrypted messages when available
+  const messages = rawMessages.map((m) => decryptedMap.get(m.id) ?? m);
 
   // Build list items with clustering and date separators
   const listItems = useMemo((): ListItem[] => {
@@ -173,20 +218,42 @@ export function ChatScreen() {
   })();
 
   const handleSend = useCallback(
-    (data: {
+    async (data: {
       content?: string;
       contentType: MessageContentType;
       mediaUrl?: string | undefined;
       mediaDuration?: number | undefined;
       replyTo?: string | undefined;
     }) => {
-      sendMessage.mutate(data);
+      let sendData = { ...data };
+
+      // E2E encrypt content if keys are available
+      if (e2eReady) {
+        try {
+          const payload = buildMessagePayload(data.content ?? '');
+          const encrypted = isGroup
+            ? await encryptForGroup(payload, conversationId ?? '')
+            : await encryptForDirect(payload, otherParticipantForE2E?.id ?? '');
+
+          sendData = {
+            ...data,
+            content: data.content, // Keep for optimistic UI
+            encryptedContent: encrypted.ciphertext,
+            nonce: encrypted.nonce,
+            isEncrypted: true,
+          } as typeof data & { encryptedContent: string; nonce: string; isEncrypted: boolean };
+        } catch (err) {
+          console.warn('[E2E] Encryption failed, sending unencrypted:', err);
+        }
+      }
+
+      sendMessage.mutate(sendData);
       stopTyping();
       setTimeout(() => {
         flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
       }, 100);
     },
-    [sendMessage, stopTyping]
+    [sendMessage, stopTyping, e2eReady, isGroup, conversationId, otherParticipantForE2E?.id, encryptForDirect, encryptForGroup]
   );
 
   const handleLongPress = useCallback((message: Message) => {
@@ -334,7 +401,7 @@ export function ChatScreen() {
         <YStack flex={1} backgroundColor={chatBg}>
           {/* Header */}
           <Pressable onPress={handleHeaderPress}>
-            <ScreenHeader onBack={() => router.back()} borderBottom>
+            <ScreenHeader onBack={() => router.back()} borderBottom {...(isDark ? { iconColor: '#FFFFFF' } : {})}>
               {isGroup ? (
                 <Avatar
                   src={conversation?.group?.imageUrl}
@@ -358,15 +425,18 @@ export function ChatScreen() {
               ) : null}
 
               <YStack flex={1}>
-                <Text weight="semibold" size="sm" numberOfLines={1}>
+                <Text weight="semibold" size="sm" numberOfLines={1}
+                  {...(isDark ? { style: { color: '#FFFFFF' } } : {})}
+                >
                   {headerTitle}
                 </Text>
                 {headerSubtitle && (
                   <Text
-                    color={
-                      hasActivityIndicator ? 'accent' : isGroup ? 'secondary' : 'success'
-                    }
                     size="xs"
+                    {...(isDark
+                      ? { style: { color: hasActivityIndicator ? '#06B6D4' : isGroup ? 'rgba(255,255,255,0.6)' : '#86EFAC' } }
+                      : { color: hasActivityIndicator ? 'accent' : isGroup ? 'secondary' : 'success' }
+                    )}
                   >
                     {headerSubtitle}
                   </Text>
@@ -398,22 +468,34 @@ export function ChatScreen() {
               ListHeaderComponent={
                 <TypingIndicator typingUsers={typingUsers} recordingUsers={recordingUsers} />
               }
-              ListEmptyComponent={
-                <EmptyChatState
-                  onIceBreaker={handleIceBreaker}
-                  participantName={otherParticipant?.name?.split(' ')[0]}
-                />
+              ListFooterComponent={
+                e2eReady && messages.length > 0 ? (
+                  <YStack alignItems="center" paddingVertical="$4" paddingHorizontal="$6">
+                    <XStack alignItems="center" gap="$1.5" opacity={0.5}>
+                      <Icon icon="LockSimple" size={12} color="secondary" />
+                      <Text size="xs" color="secondary" align="center">
+                        As mensagens sao protegidas com encriptacao ponta a ponta
+                      </Text>
+                    </XStack>
+                  </YStack>
+                ) : undefined
               }
-              contentContainerStyle={
-                listItems.length === 0
-                  ? [styles.messagesList, styles.emptyList]
-                  : styles.messagesList
-              }
+              contentContainerStyle={styles.messagesList}
               maxToRenderPerBatch={15}
               windowSize={11}
               removeClippedSubviews={Platform.OS === 'android'}
               initialNumToRender={20}
             />
+
+            {/* Empty state overlay — only when loaded and no messages */}
+            {!isLoading && messages.length === 0 && (
+              <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+                <EmptyChatState
+                  onIceBreaker={handleIceBreaker}
+                  {...(otherParticipant?.name ? { participantName: otherParticipant.name.split(' ')[0] } : {})}
+                />
+              </View>
+            )}
 
             {/* Scroll to bottom button - glassmorphism */}
             {!isNearBottom && (
@@ -490,10 +572,6 @@ const styles = StyleSheet.create({
   },
   messagesList: {
     paddingVertical: 8,
-  },
-  emptyList: {
-    flex: 1,
-    justifyContent: 'center',
   },
   scrollToBottomBtn: {
     position: 'absolute',

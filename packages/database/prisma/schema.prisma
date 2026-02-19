@@ -47,6 +47,12 @@ model User {
   lastLoginAt       DateTime?  @map("last_login_at")
   usernameChangedAt DateTime?  @map("username_changed_at")
 
+  // E2E Encryption
+  encryptionPublicKey      String?  @map("encryption_public_key")
+  encryptedPrivateKey      String?  @db.Text @map("encrypted_private_key")
+  encryptedPrivateKeyNonce String?  @map("encrypted_private_key_nonce")
+  encryptionKeySalt        String?  @map("encryption_key_salt")
+
   // Associação
   associationId String      @map("association_id")
   association   Association @relation(fields: [associationId], references: [id])
@@ -77,6 +83,7 @@ model User {
   messagesSent          Message[]
   messageReactions      MessageReaction[]
   groupsCreated         ConversationGroup[]
+  conversationKeyBundles ConversationKeyBundle[]
 
   // Phase 7 - Support
   tickets      Ticket[]
@@ -928,6 +935,7 @@ model Conversation {
   participants ConversationParticipant[]
   messages     Message[]
   group        ConversationGroup?
+  keyBundles   ConversationKeyBundle[]
 
   @@map("conversations")
 }
@@ -981,6 +989,11 @@ model Message {
   mediaUrl      String?          @map("media_url")
   mediaDuration Int?             @map("media_duration")
 
+  // E2E Encryption
+  encryptedContent String?  @db.Text @map("encrypted_content")
+  nonce            String?
+  isEncrypted      Boolean  @default(false) @map("is_encrypted")
+
   // Reply reference
   replyToId String?  @map("reply_to_id")
   replyTo   Message? @relation("MessageReplies", fields: [replyToId], references: [id])
@@ -1011,6 +1024,25 @@ model MessageReaction {
 
   @@unique([messageId, userId, emoji])
   @@map("message_reactions")
+}
+
+model ConversationKeyBundle {
+  id              String       @id @default(cuid())
+  conversationId  String       @map("conversation_id")
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId          String       @map("user_id")
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  encryptedKey    String  @db.Text @map("encrypted_key")
+  nonce           String
+  senderPublicKey String  @map("sender_public_key")
+  version         Int     @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([conversationId, userId, version])
+  @@index([userId])
+  @@map("conversation_key_bundles")
 }
 
 // ===========================================

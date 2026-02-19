@@ -237,3 +237,69 @@ export async function promoteToAdmin(
     { user_id: userId }
   );
 }
+
+// ─── E2E Encryption ─────────────────────────────────────────
+
+export interface EncryptionKeysPayload {
+  publicKey: string;
+  encryptedPrivateKey?: string;
+  encryptedPrivateKeyNonce?: string;
+  encryptionKeySalt?: string;
+}
+
+export interface EncryptionKeyBackup {
+  encryptedPrivateKey: string;
+  nonce: string;
+  salt: string;
+}
+
+export interface UserPublicKey {
+  userId: string;
+  publicKey: string;
+}
+
+export interface KeyBundlePayload {
+  userId: string;
+  encryptedKey: string;
+  nonce: string;
+  senderPublicKey: string;
+}
+
+export interface ConversationKeyBundleResponse {
+  encryptedKey: string;
+  nonce: string;
+  senderPublicKey: string;
+  version: number;
+}
+
+export async function updateEncryptionKeys(
+  data: EncryptionKeysPayload
+): Promise<{ updated: boolean }> {
+  return put<{ updated: boolean }>('/user/encryption-keys', data);
+}
+
+export async function getEncryptionKeyBackup(): Promise<EncryptionKeyBackup> {
+  return get<EncryptionKeyBackup>('/user/encryption-keys/backup');
+}
+
+export async function getUserPublicKey(userId: string): Promise<UserPublicKey> {
+  return get<UserPublicKey>(`/user/${userId}/public-key`);
+}
+
+export async function getConversationKeyBundle(
+  conversationId: string
+): Promise<ConversationKeyBundleResponse> {
+  return get<ConversationKeyBundleResponse>(
+    `/conversations/${conversationId}/key-bundle`
+  );
+}
+
+export async function createConversationKeyBundles(
+  conversationId: string,
+  bundles: KeyBundlePayload[]
+): Promise<{ created: number }> {
+  return post<{ created: number }>(
+    `/conversations/${conversationId}/key-bundles`,
+    { bundles }
+  );
+}

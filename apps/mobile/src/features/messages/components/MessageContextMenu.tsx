@@ -145,7 +145,10 @@ export function MessageContextMenu({
                     />
                     <Text
                       size="sm"
-                      style={action.destructive ? { color: '#EF4444' } : undefined}
+                      style={action.destructive
+                        ? { color: '#EF4444' }
+                        : isDark ? { color: '#E5E7EB' } : undefined
+                      }
                     >
                       {action.label}
                     </Text>

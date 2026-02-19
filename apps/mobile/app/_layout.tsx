@@ -15,6 +15,7 @@ import { SafeStripeProvider } from '@/providers/StripeProvider';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useThemeContext } from '@/providers/ThemeProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useEncryptionSetup } from '@/hooks/useEncryptionSetup';
 
 // Keep splash screen visible while loading
 SplashScreen.preventAutoHideAsync();
@@ -22,6 +23,9 @@ SplashScreen.preventAutoHideAsync();
 function RootLayoutContent() {
   const { isHydrated } = useAuthContext();
   const { theme } = useThemeContext();
+
+  // Initialize E2E encryption keys after auth hydration
+  useEncryptionSetup();
 
   useEffect(() => {
     if (isHydrated) {

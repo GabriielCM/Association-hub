@@ -34,6 +34,7 @@ import { JwtPayload } from '../../common/types';
 import { sanitizeFilename } from '../../common/utils';
 import { MessagesService } from './messages.service';
 import { AddReactionDto } from './dto/add-reaction.dto';
+import { ForwardMessageDto } from './dto/forward-message.dto';
 
 @ApiTags('Mensagens')
 @ApiBearerAuth()
@@ -88,6 +89,20 @@ export class MessagesController {
     const url = `${protocol}://${host}/uploads/messages/${user.sub}/${fileName}`;
 
     return { success: true, data: { url } };
+  }
+
+  @Post(':id/forward')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Encaminhar mensagem para outras conversas' })
+  @ApiParam({ name: 'id', description: 'ID da mensagem' })
+  @ApiResponse({ status: 200, description: 'Mensagem encaminhada' })
+  async forwardMessage(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body() dto: ForwardMessageDto
+  ) {
+    const result = await this.messagesService.forwardMessage(user.sub, id, dto.conversation_ids);
+    return { success: true, data: result };
   }
 
   @Delete(':id')

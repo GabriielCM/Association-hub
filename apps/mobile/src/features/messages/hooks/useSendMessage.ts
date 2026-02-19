@@ -43,6 +43,7 @@ export function useSendMessage(conversationId: string) {
         reactions: [],
         status: 'SENDING',
         createdAt: new Date().toISOString(),
+        isEncrypted: data.isEncrypted,
       };
 
       queryClient.setQueryData<InfiniteData<MessagesListResponse>>(

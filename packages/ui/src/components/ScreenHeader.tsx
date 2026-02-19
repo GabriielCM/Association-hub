@@ -16,6 +16,7 @@ export interface ScreenHeaderProps {
   borderBottom?: boolean;
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
+  iconColor?: string;
 }
 
 export function ScreenHeader({
@@ -29,6 +30,7 @@ export function ScreenHeader({
   borderBottom = false,
   children,
   style,
+  iconColor,
 }: ScreenHeaderProps) {
   const isOverlay = variant === 'overlay';
   const theme = useTheme();
@@ -71,7 +73,7 @@ export function ScreenHeader({
           <Icon
             icon={CaretLeft}
             size="lg"
-            color={isOverlay ? '#FFFFFF' : theme.color.val}
+            color={isOverlay ? '#FFFFFF' : iconColor ?? theme.color.val}
             weight="bold"
           />
         </Pressable>

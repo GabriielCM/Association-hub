@@ -239,6 +239,7 @@ export function MessageInput({
         gap="$1.5"
         paddingHorizontal="$2"
         paddingVertical="$2"
+        flexWrap="nowrap"
       >
         {isRecording ? (
           /* Recording mode */
@@ -286,14 +287,15 @@ export function MessageInput({
                 onToggle={() => setAttachMenuOpen((v) => !v)}
                 onGallery={handleImagePick}
                 onCamera={handleCameraLaunch}
-                onAudio={handleStartRecording}
-                onDocument={() => {/* TODO: document picker */}}
+                onAudio={() => Alert.alert('Em breve', 'Envio de arquivos de audio sera disponibilizado em breve.')}
+                onDocument={() => Alert.alert('Em breve', 'Envio de arquivos sera disponibilizado em breve.')}
               />
             )}
 
             {/* Text Input - solid pill */}
             <View
               flex={1}
+              minWidth={0}
               borderRadius="$full"
               backgroundColor={isDark ? messageGlass.inputFieldDark : messageGlass.inputFieldLight}
               paddingHorizontal="$3"

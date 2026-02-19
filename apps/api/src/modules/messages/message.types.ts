@@ -61,6 +61,10 @@ export interface MessageWithSender {
   reactions: ReactionSummary[];
   createdAt: Date;
   deletedAt?: Date;
+  // E2E Encryption
+  encryptedContent?: string;
+  nonce?: string;
+  isEncrypted?: boolean;
 }
 
 export interface ReactionSummary {

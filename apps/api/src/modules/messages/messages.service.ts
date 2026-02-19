@@ -199,6 +199,7 @@ export class MessagesService {
                 senderId: lastMessage.senderId,
                 senderName: lastMessage.sender.name,
                 createdAt: lastMessage.createdAt,
+                isEncrypted: lastMessage.isEncrypted,
               }
             : undefined,
           unreadCount,
@@ -355,7 +356,16 @@ export class MessagesService {
   ): Promise<MessageWithSender> {
     await this.findConversation(userId, conversationId);
 
-    const { content = '', contentType = MessageContentType.TEXT, mediaUrl, mediaDuration, replyToId } = dto;
+    const {
+      content = '',
+      contentType = MessageContentType.TEXT,
+      mediaUrl,
+      mediaDuration,
+      replyToId,
+      encryptedContent,
+      nonce,
+      isEncrypted = false,
+    } = dto;
 
     // Validate reply
     if (replyToId) {
@@ -372,12 +382,15 @@ export class MessagesService {
       data: {
         conversationId,
         senderId: userId,
-        content,
+        content: isEncrypted ? '[encrypted]' : content,
         contentType,
         mediaUrl,
         mediaDuration: mediaDuration ? Math.round(mediaDuration) : undefined,
         replyToId,
         status: MessageStatus.SENT,
+        encryptedContent: isEncrypted ? encryptedContent : undefined,
+        nonce: isEncrypted ? nonce : undefined,
+        isEncrypted,
       },
       include: {
         sender: {
@@ -415,6 +428,52 @@ export class MessagesService {
       where: { id: messageId },
       data: { deletedAt: new Date() },
     });
+  }
+
+  async forwardMessage(
+    userId: string,
+    messageId: string,
+    conversationIds: string[]
+  ): Promise<{ forwarded: number }> {
+    const original = await this.prisma.message.findFirst({
+      where: { id: messageId, deletedAt: null },
+      include: { conversation: { include: { participants: true } } },
+    });
+
+    if (!original) {
+      throw new NotFoundException('Mensagem não encontrada');
+    }
+
+    const isParticipant = original.conversation.participants.some(
+      (p) => p.userId === userId && p.leftAt === null
+    );
+
+    if (!isParticipant) {
+      throw new ForbiddenException('Você não tem acesso a esta mensagem');
+    }
+
+    let forwarded = 0;
+    for (const convId of conversationIds) {
+      await this.findConversation(userId, convId);
+      await this.prisma.message.create({
+        data: {
+          conversationId: convId,
+          senderId: userId,
+          content: original.content,
+          contentType: original.contentType,
+          mediaUrl: original.mediaUrl,
+          mediaDuration: original.mediaDuration,
+          status: MessageStatus.SENT,
+        },
+      });
+      await this.prisma.conversation.update({
+        where: { id: convId },
+        data: { updatedAt: new Date() },
+      });
+      forwarded++;
+    }
+
+    return { forwarded };
   }
 
   async markConversationAsRead(userId: string, conversationId: string): Promise<void> {
@@ -649,6 +708,10 @@ export class MessagesService {
       reactions,
       createdAt: message.createdAt,
       deletedAt: message.deletedAt || undefined,
+      // E2E Encryption
+      encryptedContent: message.encryptedContent || undefined,
+      nonce: message.nonce || undefined,
+      isEncrypted: message.isEncrypted,
     };
   }
 
@@ -700,5 +763,57 @@ export class MessagesService {
       select: { id: true },
     });
     return conversations.map((c) => c.id);
+  }
+
+  // ─── E2E Encryption Key Bundles ────────────────────────────
+
+  async getKeyBundle(userId: string, conversationId: string) {
+    await this.findConversation(userId, conversationId);
+
+    const bundle = await this.prisma.conversationKeyBundle.findFirst({
+      where: { conversationId, userId },
+      orderBy: { version: 'desc' },
+    });
+
+    if (!bundle) {
+      return null;
+    }
+
+    return {
+      encryptedKey: bundle.encryptedKey,
+      nonce: bundle.nonce,
+      senderPublicKey: bundle.senderPublicKey,
+      version: bundle.version,
+    };
+  }
+
+  async createKeyBundles(
+    userId: string,
+    conversationId: string,
+    bundles: { userId: string; encryptedKey: string; nonce: string; senderPublicKey: string }[]
+  ) {
+    await this.findConversation(userId, conversationId);
+
+    // Get current max version
+    const maxVersion = await this.prisma.conversationKeyBundle.findFirst({
+      where: { conversationId },
+      orderBy: { version: 'desc' },
+      select: { version: true },
+    });
+    const version = (maxVersion?.version ?? 0) + 1;
+
+    const created = await this.prisma.conversationKeyBundle.createMany({
+      data: bundles.map((b) => ({
+        conversationId,
+        userId: b.userId,
+        encryptedKey: b.encryptedKey,
+        nonce: b.nonce,
+        senderPublicKey: b.senderPublicKey,
+        version,
+      })),
+      skipDuplicates: true,
+    });
+
+    return { created: created.count, version };
   }
 }

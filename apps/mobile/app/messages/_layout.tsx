@@ -6,6 +6,7 @@ export default function MessagesLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="new" />
       <Stack.Screen name="create-group" />
+      <Stack.Screen name="forward" />
       <Stack.Screen name="[conversationId]" />
     </Stack>
   );

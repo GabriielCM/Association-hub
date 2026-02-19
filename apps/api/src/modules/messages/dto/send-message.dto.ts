@@ -1,16 +1,17 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
   IsString,
   IsOptional,
   IsNumber,
+  IsBoolean,
   MaxLength,
 } from 'class-validator';
 import { MessageContentType } from '@prisma/client';
 
 export class SendMessageDto {
   @ApiPropertyOptional({
-    description: 'Conteúdo da mensagem',
+    description: 'Conteúdo da mensagem (plaintext ou placeholder para mensagens encriptadas)',
     maxLength: 4000,
     example: 'Olá, tudo bem?',
   })
@@ -48,4 +49,28 @@ export class SendMessageDto {
   @IsOptional()
   @IsString()
   replyToId?: string;
+
+  // E2E Encryption fields
+
+  @ApiPropertyOptional({
+    description: 'Conteúdo encriptado (base64 ciphertext)',
+  })
+  @IsOptional()
+  @IsString()
+  encryptedContent?: string;
+
+  @ApiPropertyOptional({
+    description: 'Nonce usado na encriptação (base64)',
+  })
+  @IsOptional()
+  @IsString()
+  nonce?: string;
+
+  @ApiPropertyOptional({
+    description: 'Se a mensagem é encriptada E2E',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isEncrypted?: boolean;
 }
