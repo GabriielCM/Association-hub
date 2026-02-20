@@ -6,6 +6,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, Spinner, ScreenHeader } from '@ahub/ui';
 import { useEventComments } from '@/features/events/hooks/useEvents';
 import { useCreateComment } from '@/features/events/hooks/useEventMutations';
+import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 import type { CommentInput as CommentInputData } from '@/features/events/hooks/useEventMutations';
 import { CommentItem } from '@/features/events/components/CommentItem';
 import { CommentInput } from '@/features/events/components/CommentInput';
@@ -14,6 +15,7 @@ import type { EventComment } from '@ahub/shared/types';
 export default function EventCommentsScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const router = useRouter();
+  const et = useEventsTheme();
 
   const { data, isLoading, isRefetching, refetch } = useEventComments(
     eventId,
@@ -41,13 +43,18 @@ export default function EventCommentsScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: et.screenBg }} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* Header */}
-        <ScreenHeader title="Comentarios" onBack={() => router.back()} borderBottom />
+        <ScreenHeader
+          title="Comentarios"
+          onBack={() => router.back()}
+          borderBottom
+          style={{ borderBottomColor: et.borderColor }}
+        />
 
         {/* Comments List */}
         <FlatList
@@ -55,8 +62,15 @@ export default function EventCommentsScreen() {
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           contentContainerStyle={{ padding: 16, gap: 16 }}
+          style={{ backgroundColor: et.screenBg }}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor={et.accent}
+              colors={[et.accent]}
+              progressBackgroundColor={et.sheetBg}
+            />
           }
           ListEmptyComponent={
             isLoading ? (
@@ -65,7 +79,7 @@ export default function EventCommentsScreen() {
               </YStack>
             ) : (
               <YStack alignItems="center" paddingVertical="$6">
-                <Text color="secondary">
+                <Text color="secondary" style={{ color: et.textSecondary }}>
                   Nenhum comentario ainda. Seja o primeiro!
                 </Text>
               </YStack>

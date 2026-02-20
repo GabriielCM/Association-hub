@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { XStack, YStack } from 'tamagui';
-import { TextInput, StyleSheet } from 'react-native';
+import { TextInput } from 'react-native';
 import { Badge } from '@ahub/ui';
+import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 import type { EventFilter, EventCategory } from '@ahub/shared/types';
 
 interface EventFiltersProps {
@@ -27,6 +28,7 @@ export function EventFilters({
   onFilterChange,
   onSearchChange,
 }: EventFiltersProps) {
+  const et = useEventsTheme();
   const [searchText, setSearchText] = useState(search);
 
   const handleSearchSubmit = useCallback(() => {
@@ -37,8 +39,18 @@ export function EventFilters({
     <YStack gap="$3">
       {/* Search */}
       <TextInput
-        style={styles.searchInput}
+        style={{
+          borderWidth: 1,
+          borderColor: et.inputBorder,
+          borderRadius: 8,
+          paddingHorizontal: 12,
+          paddingVertical: 10,
+          fontSize: 14,
+          color: et.inputText,
+          backgroundColor: et.inputBg,
+        }}
         placeholder="Buscar eventos..."
+        placeholderTextColor={et.inputPlaceholder}
         value={searchText}
         onChangeText={setSearchText}
         onSubmitEditing={handleSearchSubmit}
@@ -60,14 +72,3 @@ export function EventFilters({
     </YStack>
   );
 }
-
-const styles = StyleSheet.create({
-  searchInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-  },
-});

@@ -454,8 +454,8 @@ Após implementar, verificar **ambos os modos**:
 | Wallet/Points | `useWalletTheme` | Implementado |
 | Profile | `useProfileTheme` | Implementado |
 | Messages | Tokens diretos | Implementado |
-| Card (carteirinha) | — | Parcial (tokens globais) |
-| **Events** | — | **Pendente** |
+| Card (carteirinha) | `useCardTheme` | Implementado |
+| Events | `useEventsTheme` | Implementado |
 | **Store** | — | **Pendente** |
 | **Subscriptions** | — | **Pendente** |
 | **Bookings/Spaces** | — | **Pendente** |

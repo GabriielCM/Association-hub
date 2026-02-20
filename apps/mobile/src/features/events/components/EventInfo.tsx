@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { XStack, YStack, View } from 'tamagui';
 import { Text, Card, Icon } from '@ahub/ui';
 import { EVENT_ICONS } from '@ahub/ui/src/icons';
+import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 import type { EventDetail } from '@ahub/shared/types';
 
 interface EventInfoProps {
@@ -68,6 +69,7 @@ function EventCountdown({ startDate }: { startDate: Date }) {
 }
 
 export function EventInfo({ event }: EventInfoProps) {
+  const et = useEventsTheme();
   const pointsPerCheckin = Math.floor(
     event.pointsTotal / event.checkinsCount
   );
@@ -76,17 +78,27 @@ export function EventInfo({ event }: EventInfoProps) {
     new Date(event.startDate).getTime() > Date.now();
 
   return (
-    <Card variant="flat">
+    <Card
+      variant="flat"
+      {...(et.cardBg ? {
+        backgroundColor: et.cardBg,
+        borderWidth: 1,
+        borderColor: et.cardBorder,
+        shadowOpacity: 0,
+      } : {})}
+    >
       <YStack gap="$3" padding="$1">
         {/* Countdown */}
         {showCountdown && <EventCountdown startDate={event.startDate} />}
 
         {/* Date & Time */}
         <XStack gap="$3" alignItems="flex-start">
-          <Icon icon={EVENT_ICONS.date} size="md" color="secondary" />
+          <Icon icon={EVENT_ICONS.date} size="md" color={et.iconColor} />
           <YStack flex={1}>
-            <Text weight="semibold">{formatDate(event.startDate)}</Text>
-            <Text color="secondary" size="sm">
+            <Text weight="semibold" style={{ color: et.textPrimary }}>
+              {formatDate(event.startDate)}
+            </Text>
+            <Text color="secondary" size="sm" style={{ color: et.textSecondary }}>
               {formatTime(event.startDate)} - {formatTime(event.endDate)}
             </Text>
           </YStack>
@@ -94,11 +106,13 @@ export function EventInfo({ event }: EventInfoProps) {
 
         {/* Location */}
         <XStack gap="$3" alignItems="flex-start">
-          <Icon icon={EVENT_ICONS.location} size="md" color="secondary" />
+          <Icon icon={EVENT_ICONS.location} size="md" color={et.iconColor} />
           <YStack flex={1}>
-            <Text weight="semibold">{event.locationName}</Text>
+            <Text weight="semibold" style={{ color: et.textPrimary }}>
+              {event.locationName}
+            </Text>
             {event.locationAddress && (
-              <Text color="secondary" size="sm">
+              <Text color="secondary" size="sm" style={{ color: et.textSecondary }}>
                 {event.locationAddress}
               </Text>
             )}
@@ -107,12 +121,12 @@ export function EventInfo({ event }: EventInfoProps) {
 
         {/* Points */}
         <XStack gap="$3" alignItems="flex-start">
-          <Icon icon={EVENT_ICONS.rating} size="md" color="secondary" />
+          <Icon icon={EVENT_ICONS.rating} size="md" color={et.iconColor} />
           <YStack flex={1}>
-            <Text weight="semibold">
+            <Text weight="semibold" style={{ color: et.textPrimary }}>
               {event.pointsTotal} pontos totais
             </Text>
-            <Text color="secondary" size="sm">
+            <Text color="secondary" size="sm" style={{ color: et.textSecondary }}>
               {event.checkinsCount} check-ins ({pointsPerCheckin} pts cada)
               {event.checkinInterval > 0 &&
                 ` • Intervalo: ${event.checkinInterval} min`}
@@ -123,9 +137,9 @@ export function EventInfo({ event }: EventInfoProps) {
         {/* Capacity */}
         {event.capacity && (
           <XStack gap="$3" alignItems="flex-start">
-            <Icon icon={EVENT_ICONS.attendees} size="md" color="secondary" />
+            <Icon icon={EVENT_ICONS.attendees} size="md" color={et.iconColor} />
             <YStack flex={1}>
-              <Text weight="semibold">
+              <Text weight="semibold" style={{ color: et.textPrimary }}>
                 {event.confirmationsCount}/{event.capacity} confirmados
               </Text>
             </YStack>
@@ -135,11 +149,13 @@ export function EventInfo({ event }: EventInfoProps) {
         {/* Badge */}
         {event.badge && (
           <XStack gap="$3" alignItems="flex-start">
-            <Icon icon={EVENT_ICONS.prize} size="md" color="secondary" />
+            <Icon icon={EVENT_ICONS.prize} size="md" color={et.iconColor} />
             <YStack flex={1}>
-              <Text weight="semibold">{event.badge.name}</Text>
+              <Text weight="semibold" style={{ color: et.textPrimary }}>
+                {event.badge.name}
+              </Text>
               {event.badge.description && (
-                <Text color="secondary" size="sm">
+                <Text color="secondary" size="sm" style={{ color: et.textSecondary }}>
                   {event.badge.description}
                 </Text>
               )}
@@ -150,9 +166,9 @@ export function EventInfo({ event }: EventInfoProps) {
         {/* External Link */}
         {event.externalLink && (
           <XStack gap="$3" alignItems="flex-start">
-            <Icon icon={EVENT_ICONS.link} size="md" color="secondary" />
+            <Icon icon={EVENT_ICONS.link} size="md" color={et.iconColor} />
             <YStack flex={1}>
-              <Text weight="semibold" color="accent">
+              <Text weight="semibold" style={{ color: et.accent }}>
                 Link externo
               </Text>
             </YStack>

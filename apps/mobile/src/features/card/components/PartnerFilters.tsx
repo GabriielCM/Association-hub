@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TextInput,
   View,
-  useColorScheme,
 } from 'react-native';
 import { XStack, YStack } from 'tamagui';
 import { Text, Icon } from '@ahub/ui';
@@ -16,6 +15,8 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
+import { useCardTheme } from '../hooks/useCardTheme';
+import type { CardTheme } from '../hooks/useCardTheme';
 import type { PartnerCategory } from '@ahub/shared/types';
 
 export type SortMode = 'featured' | 'distance' | 'recent' | 'name';
@@ -50,7 +51,7 @@ export function PartnerFilters({
   onMapToggle,
   isMapMode = false,
 }: PartnerFiltersProps) {
-  const isDark = useColorScheme() === 'dark';
+  const ct = useCardTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
@@ -85,7 +86,7 @@ export function PartnerFilters({
       {/* Row 1: Title + Search + Map toggle */}
       <XStack alignItems="center" justifyContent="space-between" height={40}>
         {!isSearchOpen && (
-          <Text style={[styles.title, isDark && styles.titleDark]}>
+          <Text style={{ fontSize: 22, fontWeight: '700', color: ct.textPrimary }}>
             Benefícios
           </Text>
         )}
@@ -93,20 +94,25 @@ export function PartnerFilters({
         <XStack alignItems="center" gap={8} flex={isSearchOpen ? 1 : undefined}>
           {isSearchOpen && (
             <Animated.View style={[styles.searchContainer, searchAnimStyle]}>
-              <View style={[styles.searchInputWrap, isDark && styles.searchInputWrapDark]}>
-                <Icon icon={MagnifyingGlass} size={16} color="#9CA3AF" />
+              <View
+                style={[
+                  styles.searchInputWrap,
+                  { backgroundColor: ct.inputBg },
+                ]}
+              >
+                <Icon icon={MagnifyingGlass} size={16} color={ct.inputPlaceholder} />
                 <TextInput
                   ref={inputRef}
                   value={searchQuery}
                   onChangeText={onSearchChange}
                   placeholder="Buscar parceiros..."
-                  placeholderTextColor="#9CA3AF"
-                  style={[styles.searchInput, isDark && styles.searchInputDark]}
+                  placeholderTextColor={ct.inputPlaceholder}
+                  style={[styles.searchInput, { color: ct.inputText }]}
                   autoCapitalize="none"
                   returnKeyType="search"
                 />
                 <Pressable onPress={closeSearch} hitSlop={8}>
-                  <Icon icon={X} size={16} color="#9CA3AF" />
+                  <Icon icon={X} size={16} color={ct.inputPlaceholder} />
                 </Pressable>
               </View>
             </Animated.View>
@@ -114,7 +120,7 @@ export function PartnerFilters({
 
           {!isSearchOpen && (
             <Pressable onPress={openSearch} style={styles.iconBtn} hitSlop={8}>
-              <Icon icon={MagnifyingGlass} size={20} color={isDark ? '#D1D5DB' : '#6B7280'} />
+              <Icon icon={MagnifyingGlass} size={20} color={ct.searchIconColor} />
             </Pressable>
           )}
 
@@ -138,7 +144,7 @@ export function PartnerFilters({
           label="Todos"
           isSelected={!selectedCategory}
           onPress={() => onCategoryChange(undefined)}
-          isDark={isDark}
+          ct={ct}
         />
         {categories.map((cat) => (
           <CategoryChip
@@ -147,7 +153,7 @@ export function PartnerFilters({
             label={cat.name}
             isSelected={selectedCategory === cat.slug}
             onPress={() => onCategoryChange(cat.slug)}
-            isDark={isDark}
+            ct={ct}
           />
         ))}
       </ScrollView>
@@ -157,7 +163,7 @@ export function PartnerFilters({
         options={SORT_OPTIONS}
         selected={sortBy}
         onSelect={onSortChange}
-        isDark={isDark}
+        ct={ct}
       />
     </YStack>
   );
@@ -170,34 +176,33 @@ function CategoryChip({
   label,
   isSelected,
   onPress,
-  isDark,
+  ct,
 }: {
   icon?: string;
   label: string;
   isSelected: boolean;
   onPress: () => void;
-  isDark: boolean;
+  ct: CardTheme;
 }) {
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.chip,
-        isDark && styles.chipDark,
-        isSelected && styles.chipSelected,
+        { backgroundColor: isSelected ? ct.chipActiveBg : ct.chipBg },
       ]}
     >
       {icon ? (
         <Text style={styles.chipIcon}>{icon}</Text>
       ) : (
-        <Icon icon={Tag} size={14} color={isSelected ? '#fff' : '#8B5CF6'} />
+        <Icon icon={Tag} size={14} color={isSelected ? ct.chipActiveIcon : ct.chipIcon} />
       )}
       <Text
-        style={[
-          styles.chipText,
-          isDark && styles.chipTextDark,
-          isSelected && styles.chipTextSelected,
-        ]}
+        style={{
+          fontSize: 13,
+          fontWeight: '600',
+          color: isSelected ? ct.chipActiveText : ct.chipText,
+        }}
       >
         {label}
       </Text>
@@ -211,12 +216,12 @@ function SegmentedControl({
   options,
   selected,
   onSelect,
-  isDark,
+  ct,
 }: {
   options: { key: SortMode; label: string }[];
   selected: SortMode;
   onSelect: (key: SortMode) => void;
-  isDark: boolean;
+  ct: CardTheme;
 }) {
   const selectedIndex = options.findIndex((o) => o.key === selected);
   const pillPosition = useSharedValue(selectedIndex);
@@ -234,8 +239,14 @@ function SegmentedControl({
   }));
 
   return (
-    <View style={[styles.segmentContainer, isDark && styles.segmentContainerDark]}>
-      <Animated.View style={[styles.segmentPill, isDark && styles.segmentPillDark, pillStyle]} />
+    <View style={[styles.segmentContainer, { backgroundColor: ct.segmentBg }]}>
+      <Animated.View
+        style={[
+          styles.segmentPill,
+          { backgroundColor: ct.segmentPillBg },
+          pillStyle,
+        ]}
+      />
       {options.map((opt) => (
         <Pressable
           key={opt.key}
@@ -243,12 +254,11 @@ function SegmentedControl({
           onPress={() => onSelect(opt.key)}
         >
           <Text
-            style={[
-              styles.segmentText,
-              isDark && styles.segmentTextDark,
-              selected === opt.key && styles.segmentTextActive,
-              selected === opt.key && isDark && styles.segmentTextActiveDark,
-            ]}
+            style={{
+              fontSize: 13,
+              fontWeight: '600',
+              color: selected === opt.key ? ct.segmentActiveText : ct.segmentText,
+            }}
           >
             {opt.label}
           </Text>
@@ -261,15 +271,6 @@ function SegmentedControl({
 // ─── Styles ──────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  titleDark: {
-    color: '#F3F4F6',
-  },
-
   // Search
   iconBtn: {
     width: 36,
@@ -286,23 +287,15 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 40,
     gap: 8,
   },
-  searchInputWrapDark: {
-    backgroundColor: '#374151',
-  },
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: '#1F2937',
     padding: 0,
-  },
-  searchInputDark: {
-    color: '#F3F4F6',
   },
   mapIcon: {
     fontSize: 18,
@@ -323,54 +316,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(139, 92, 246, 0.08)',
-  },
-  chipDark: {
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
-  },
-  chipSelected: {
-    backgroundColor: '#8B5CF6',
   },
   chipIcon: {
     fontSize: 14,
-  },
-  chipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  chipTextDark: {
-    color: '#D1D5DB',
-  },
-  chipTextSelected: {
-    color: '#fff',
   },
 
   // Segmented Control
   segmentContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F3F4F6',
     borderRadius: 12,
     padding: 3,
     position: 'relative',
-  },
-  segmentContainerDark: {
-    backgroundColor: '#1F2937',
   },
   segmentPill: {
     position: 'absolute',
     top: 3,
     bottom: 3,
     borderRadius: 10,
-    backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 2,
-  },
-  segmentPillDark: {
-    backgroundColor: '#374151',
   },
   segmentOption: {
     flex: 1,
@@ -378,19 +345,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     zIndex: 1,
-  },
-  segmentText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#9CA3AF',
-  },
-  segmentTextDark: {
-    color: '#6B7280',
-  },
-  segmentTextActive: {
-    color: '#1F2937',
-  },
-  segmentTextActiveDark: {
-    color: '#F3F4F6',
   },
 });

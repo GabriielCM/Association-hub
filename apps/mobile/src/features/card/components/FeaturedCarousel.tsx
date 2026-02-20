@@ -5,10 +5,10 @@ import {
   Pressable,
   StyleSheet,
   useWindowDimensions,
-  useColorScheme,
 } from 'react-native';
 import { Text, SafeImage } from '@ahub/ui';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useCardTheme } from '../hooks/useCardTheme';
 import type { PartnerListItem } from '@ahub/shared/types';
 
 interface FeaturedCarouselProps {
@@ -21,7 +21,7 @@ export const FeaturedCarousel = memo(function FeaturedCarousel({
   onPress,
 }: FeaturedCarouselProps) {
   const { width } = useWindowDimensions();
-  const isDark = useColorScheme() === 'dark';
+  const ct = useCardTheme();
   const cardWidth = width - 48;
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
@@ -40,7 +40,9 @@ export const FeaturedCarousel = memo(function FeaturedCarousel({
 
   return (
     <View style={styles.wrapper}>
-      <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>Em Destaque</Text>
+      <Text style={{ fontSize: 18, fontWeight: '700', color: ct.textPrimary, marginBottom: 12 }}>
+        Em Destaque
+      </Text>
       <FlatList
         ref={flatListRef}
         data={partners}
@@ -97,7 +99,11 @@ export const FeaturedCarousel = memo(function FeaturedCarousel({
           {partners.map((_, i) => (
             <View
               key={i}
-              style={[styles.dot, i === activeIndex && styles.dotActive]}
+              style={[
+                styles.dot,
+                { backgroundColor: ct.dotColor },
+                i === activeIndex && { backgroundColor: ct.dotActiveColor, width: 18 },
+              ]}
             />
           ))}
         </View>
@@ -109,15 +115,6 @@ export const FeaturedCarousel = memo(function FeaturedCarousel({
 const styles = StyleSheet.create({
   wrapper: {
     marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 12,
-  },
-  sectionTitleDark: {
-    color: '#F3F4F6',
   },
   card: {
     height: 180,
@@ -170,10 +167,5 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#D1D5DB',
-  },
-  dotActive: {
-    backgroundColor: '#8B5CF6',
-    width: 18,
   },
 });

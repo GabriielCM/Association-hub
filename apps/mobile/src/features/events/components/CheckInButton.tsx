@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { YStack } from 'tamagui';
 import { Button, Text } from '@ahub/ui';
+import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 import type { EventDetail } from '@ahub/shared/types';
 
 interface CheckInButtonProps {
@@ -17,6 +18,7 @@ function formatCountdown(ms: number): string {
 
 export function CheckInButton({ event }: CheckInButtonProps) {
   const router = useRouter();
+  const et = useEventsTheme();
   const [now, setNow] = useState(Date.now());
 
   const isOngoing = event.status === 'ONGOING';
@@ -85,7 +87,7 @@ export function CheckInButton({ event }: CheckInButtonProps) {
         >
           Check-in {currentCheckin - 1} realizado
         </Button>
-        <Text color="secondary" size="sm">
+        <Text color="secondary" size="sm" style={{ color: et.textSecondary }}>
           Proximo check-in em {formatCountdown(remaining)}
         </Text>
       </YStack>

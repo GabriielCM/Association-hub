@@ -1,7 +1,8 @@
 import { memo, useMemo, useCallback, useRef } from 'react';
-import { View, Pressable, StyleSheet, useColorScheme } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
 import { Text, Avatar, Icon } from '@ahub/ui';
 import { MapPin } from '@ahub/ui/src/icons';
+import { useCardTheme } from '../hooks/useCardTheme';
 import type { PartnerListItem } from '@ahub/shared/types';
 
 // Try to load react-native-maps at module level.
@@ -30,7 +31,7 @@ export const BenefitsMapView = memo(function BenefitsMapView({
   userLocation,
   onPartnerPress,
 }: BenefitsMapViewProps) {
-  const isDark = useColorScheme() === 'dark';
+  const ct = useCardTheme();
   const mapRef = useRef<any>(null);
 
   // Only show partners that have coordinates
@@ -83,12 +84,12 @@ export const BenefitsMapView = memo(function BenefitsMapView({
 
   if (!RNMapView || !RNMarker || !RNCallout) {
     return (
-      <View style={[styles.container, styles.fallback, isDark && styles.fallbackDark]}>
-        <Icon icon={MapPin} size={48} color="#8B5CF6" />
-        <Text style={[styles.fallbackTitle, isDark && styles.fallbackTitleDark]}>
+      <View style={[styles.container, styles.fallback, { backgroundColor: ct.mapFallbackBg }]}>
+        <Icon icon={MapPin} size={48} color={ct.accent} />
+        <Text style={{ fontSize: 16, fontWeight: '600', color: ct.textPrimary }}>
           Mapa indisponível
         </Text>
-        <Text style={[styles.fallbackText, isDark && styles.fallbackTextDark]}>
+        <Text style={{ fontSize: 13, color: ct.textSecondary, textAlign: 'center', lineHeight: 18 }}>
           O mapa requer um development build.{'\n'}Use a lista para ver os parceiros.
         </Text>
       </View>
@@ -107,7 +108,7 @@ export const BenefitsMapView = memo(function BenefitsMapView({
         initialRegion={initialRegion}
         showsUserLocation
         showsMyLocationButton
-        userInterfaceStyle={isDark ? 'dark' : 'light'}
+        userInterfaceStyle={ct.mapStyle}
       >
         {mappablePartners.map((partner) => {
           const coords = partner as unknown as { lat: number; lng: number };
@@ -120,7 +121,7 @@ export const BenefitsMapView = memo(function BenefitsMapView({
               }}
             >
               {/* Custom marker */}
-              <View style={styles.markerOuter}>
+              <View style={[styles.markerOuter, { backgroundColor: ct.accent }]}>
                 <Avatar
                   src={partner.logoUrl}
                   name={partner.name}
@@ -128,27 +129,29 @@ export const BenefitsMapView = memo(function BenefitsMapView({
                   style={styles.markerAvatar}
                 />
               </View>
-              <View style={styles.markerArrow} />
+              <View style={[styles.markerArrow, { borderTopColor: ct.accent }]} />
 
               {/* Callout */}
               <CalloutComponent
                 tooltip
                 onPress={() => handleCalloutPress(partner)}
               >
-                <Pressable style={[styles.callout, isDark && styles.calloutDark]}>
+                <Pressable style={[styles.callout, { backgroundColor: ct.surfaceBg }]}>
                   <Text
-                    style={[styles.calloutName, isDark && styles.calloutNameDark]}
+                    style={{ fontSize: 15, fontWeight: '600', color: ct.textPrimary, marginBottom: 2 }}
                     numberOfLines={1}
                   >
                     {partner.name}
                   </Text>
                   <Text
-                    style={[styles.calloutBenefit, isDark && styles.calloutBenefitDark]}
+                    style={{ fontSize: 12, color: ct.textSecondary, lineHeight: 16, marginBottom: 6 }}
                     numberOfLines={2}
                   >
                     {partner.benefit}
                   </Text>
-                  <Text style={styles.calloutCta}>Ver detalhes →</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: ct.accent }}>
+                    Ver detalhes →
+                  </Text>
                 </Pressable>
               </CalloutComponent>
             </MarkerComponent>
@@ -158,8 +161,8 @@ export const BenefitsMapView = memo(function BenefitsMapView({
 
       {mappablePartners.length === 0 && (
         <View style={styles.emptyOverlay}>
-          <View style={[styles.emptyCard, isDark && styles.emptyCardDark]}>
-            <Text style={[styles.emptyText, isDark && styles.emptyTextDark]}>
+          <View style={[styles.emptyCard, { backgroundColor: ct.surfaceBg }]}>
+            <Text style={{ fontSize: 14, color: ct.textSecondary, textAlign: 'center' }}>
               Nenhum parceiro com localização disponível
             </Text>
           </View>
@@ -184,7 +187,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#8B5CF6',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -206,7 +208,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 8,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: '#8B5CF6',
     alignSelf: 'center',
     marginTop: -1,
   },
@@ -214,7 +215,6 @@ const styles = StyleSheet.create({
   // Callout
   callout: {
     width: 220,
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 12,
     shadowColor: '#000',
@@ -222,32 +222,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 5,
-  },
-  calloutDark: {
-    backgroundColor: '#1F1F1F',
-  },
-  calloutName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 2,
-  },
-  calloutNameDark: {
-    color: '#F3F4F6',
-  },
-  calloutBenefit: {
-    fontSize: 12,
-    color: '#6B7280',
-    lineHeight: 16,
-    marginBottom: 6,
-  },
-  calloutBenefitDark: {
-    color: '#9CA3AF',
-  },
-  calloutCta: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#8B5CF6',
   },
 
   // Empty
@@ -258,7 +232,6 @@ const styles = StyleSheet.create({
     pointerEvents: 'none',
   },
   emptyCard: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     paddingHorizontal: 20,
     paddingVertical: 14,
@@ -268,44 +241,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  emptyCardDark: {
-    backgroundColor: '#1F1F1F',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
-  },
-  emptyTextDark: {
-    color: '#9CA3AF',
-  },
 
   // Fallback (Expo Go)
   fallback: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(139, 92, 246, 0.04)',
     gap: 12,
     padding: 32,
-  },
-  fallbackDark: {
-    backgroundColor: 'rgba(139, 92, 246, 0.08)',
-  },
-  fallbackTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  fallbackTitleDark: {
-    color: '#F3F4F6',
-  },
-  fallbackText: {
-    fontSize: 13,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  fallbackTextDark: {
-    color: '#9CA3AF',
   },
 });

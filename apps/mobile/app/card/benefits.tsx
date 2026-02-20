@@ -4,7 +4,6 @@ import {
   RefreshControl,
   StyleSheet,
   View,
-  useColorScheme,
 } from 'react-native';
 import { router } from 'expo-router';
 import { YStack } from 'tamagui';
@@ -13,6 +12,7 @@ import { Spinner } from '@ahub/ui';
 import { useBenefitsList, useCategories } from '@/features/card/hooks/useBenefits';
 import { useUserLocation, calculateDistance, formatDistance } from '@/features/card/hooks/useLocation';
 import { useBookmarksStore } from '@/stores/bookmarks.store';
+import { useCardTheme } from '@/features/card/hooks/useCardTheme';
 import { PartnerBigCard } from '@/features/card/components/PartnerBigCard';
 import { FeaturedCarousel } from '@/features/card/components/FeaturedCarousel';
 import { PartnerCardSkeleton } from '@/features/card/components/PartnerCardSkeleton';
@@ -22,7 +22,7 @@ import { BenefitsMapView } from '@/features/card/components/BenefitsMapView';
 import type { PartnerListItem } from '@ahub/shared/types';
 
 export default function BenefitsScreen() {
-  const isDark = useColorScheme() === 'dark';
+  const ct = useCardTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [sortBy, setSortBy] = useState<SortMode>('featured');
@@ -163,7 +163,7 @@ export default function BenefitsScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, isDark && styles.safeAreaDark]}
+      style={{ flex: 1, backgroundColor: ct.screenBgSolid }}
       edges={['top']}
     >
       <YStack flex={1} paddingHorizontal={16}>
@@ -202,8 +202,8 @@ export default function BenefitsScreen() {
               <RefreshControl
                 refreshing={isRefetching}
                 onRefresh={refetch}
-                tintColor="#8B5CF6"
-                colors={['#8B5CF6']}
+                tintColor={ct.refreshTint}
+                colors={[ct.refreshTint]}
               />
             }
             onEndReached={() => {
@@ -227,13 +227,6 @@ export default function BenefitsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  safeAreaDark: {
-    backgroundColor: '#111',
-  },
   filtersWrap: {
     paddingTop: 8,
     paddingBottom: 4,

@@ -4,6 +4,7 @@ import { XStack, YStack, View } from 'tamagui';
 import { router } from 'expo-router';
 import { Card, Text, Badge, Icon } from '@ahub/ui';
 import { EVENT_ICONS } from '@ahub/ui/src/icons';
+import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 import type { EventListItem } from '@ahub/shared/types';
 import { resolveUploadUrl } from '@/config/constants';
 
@@ -36,6 +37,7 @@ function formatEventDate(date: Date): string {
 }
 
 export function EventCard({ event }: EventCardProps) {
+  const et = useEventsTheme();
   const isOngoing = event.status === 'ONGOING';
   const isEnded = event.status === 'ENDED';
 
@@ -90,7 +92,15 @@ export function EventCard({ event }: EventCardProps) {
 
   return (
     <Pressable onPress={handlePress}>
-      <Card variant="elevated">
+      <Card
+        variant="elevated"
+        {...(et.cardBg ? {
+          backgroundColor: et.cardBg,
+          borderWidth: 1,
+          borderColor: et.cardBorder,
+          shadowOpacity: 0,
+        } : {})}
+      >
         <YStack gap="$2">
           {/* Banner */}
           {banners.length > 0 ? (
@@ -152,25 +162,25 @@ export function EventCard({ event }: EventCardProps) {
             alignItems="flex-start"
           >
             <YStack flex={1} gap="$1">
-              <Text weight="bold" size="lg" numberOfLines={2}>
+              <Text weight="bold" size="lg" numberOfLines={2} style={{ color: et.textPrimary }}>
                 {event.title}
               </Text>
               <XStack gap="$1" alignItems="center">
-                <Icon icon={EVENT_ICONS.location} size="sm" color="secondary" />
-                <Text color="secondary" size="sm">
+                <Icon icon={EVENT_ICONS.location} size="sm" color={et.iconColor} />
+                <Text color="secondary" size="sm" style={{ color: et.textSecondary }}>
                   {event.locationName}
                 </Text>
               </XStack>
               <XStack gap="$1" alignItems="center">
-                <Icon icon={EVENT_ICONS.date} size="sm" color="secondary" />
-                <Text color="secondary" size="sm">
+                <Icon icon={EVENT_ICONS.date} size="sm" color={et.iconColor} />
+                <Text color="secondary" size="sm" style={{ color: et.textSecondary }}>
                   {formatEventDate(event.startDate)}
                 </Text>
               </XStack>
             </YStack>
             <YStack alignItems="flex-end" gap="$1">
               <Badge variant="success">+{event.pointsTotal} pts</Badge>
-              <Text color="secondary" size="xs">
+              <Text color="secondary" size="xs" style={{ color: et.textSecondary }}>
                 {event.confirmationsCount} confirmados
               </Text>
             </YStack>

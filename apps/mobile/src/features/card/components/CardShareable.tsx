@@ -1,4 +1,4 @@
-import { View, StyleSheet, useWindowDimensions, useColorScheme } from 'react-native';
+import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { YStack } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, Avatar, Icon } from '@ahub/ui';
@@ -6,6 +6,7 @@ import { Crown, SealCheck } from '@ahub/ui/src/icons';
 import { cardGradients } from '@ahub/ui/src/themes/tokens';
 import { CardPattern } from './CardPattern';
 import { CardGlassView } from './CardGlassView';
+import { useCardTheme } from '../hooks/useCardTheme';
 import type { MemberCard } from '@ahub/shared/types';
 
 interface CardShareableProps {
@@ -20,8 +21,7 @@ interface CardShareableProps {
 export function CardShareable({ card, subscription }: CardShareableProps) {
   const { width } = useWindowDimensions();
   const cardWidth = width - 48;
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useCardTheme();
   const gradient = isDark ? cardGradients.dark.front : cardGradients.light.front;
 
   return (

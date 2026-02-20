@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { QrCodeDisplay } from './QrCodeDisplay';
 import { CardGlassView } from './CardGlassView';
+import { useCardTheme } from '../hooks/useCardTheme';
 
 interface QrCodeGlowProps {
   data: string;
@@ -21,6 +22,7 @@ interface QrCodeGlowProps {
  * The glow indicates the QR is ready to be scanned.
  */
 export function QrCodeGlow({ data, size = 130 }: QrCodeGlowProps) {
+  const ct = useCardTheme();
   const glowOpacity = useSharedValue(0.3);
   const glowScale = useSharedValue(1);
 
@@ -57,7 +59,7 @@ export function QrCodeGlow({ data, size = 130 }: QrCodeGlowProps) {
       <Animated.View
         style={[
           styles.glowRing,
-          { width: size + 24, height: size + 24 },
+          { width: size + 24, height: size + 24, backgroundColor: ct.qrGlowColor },
           glowStyle,
         ]}
       />
@@ -80,7 +82,6 @@ const styles = StyleSheet.create({
   glowRing: {
     position: 'absolute',
     borderRadius: 20,
-    backgroundColor: 'rgba(139, 92, 246, 0.25)',
   },
   glassContainer: {
     padding: 4,

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { View, StyleSheet, useWindowDimensions, useColorScheme } from 'react-native';
+import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, Avatar, Icon } from '@ahub/ui';
@@ -10,6 +10,7 @@ import { CardPattern } from './CardPattern';
 import { CardShine } from './CardShine';
 import { CardGlassView } from './CardGlassView';
 import { useGyroscope } from '../hooks/useGyroscope';
+import { useCardTheme } from '../hooks/useCardTheme';
 import type { MemberCard, CardQrCode } from '@ahub/shared/types';
 
 interface CardFrontProps {
@@ -27,8 +28,7 @@ export const CardFront = memo(function CardFront({
 }: CardFrontProps) {
   const { width } = useWindowDimensions();
   const cardWidth = width - 48;
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useCardTheme();
   const gradient = isDark ? cardGradients.dark.front : cardGradients.light.front;
   const { rotateX, rotateY } = useGyroscope(gyroscopeEnabled);
 

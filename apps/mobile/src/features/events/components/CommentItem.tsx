@@ -1,6 +1,7 @@
 import { XStack, YStack, View } from 'tamagui';
 import { Text, Avatar } from '@ahub/ui';
 import { ImageMessage } from '@/features/messages/components/ImageMessage';
+import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 import { resolveUploadUrl } from '@/config/constants';
 import type { EventComment } from '@ahub/shared/types';
 
@@ -23,6 +24,8 @@ function timeAgo(date: Date): string {
 }
 
 export function CommentItem({ comment }: CommentItemProps) {
+  const et = useEventsTheme();
+
   return (
     <XStack gap="$3" alignItems="flex-start">
       <Avatar
@@ -34,10 +37,10 @@ export function CommentItem({ comment }: CommentItemProps) {
       {/* Content */}
       <YStack flex={1} gap="$1">
         <XStack gap="$2" alignItems="center">
-          <Text weight="semibold" size="sm">
+          <Text weight="semibold" size="sm" style={{ color: et.textPrimary }}>
             {comment.author.name}
           </Text>
-          <Text color="secondary" size="xs">
+          <Text color="secondary" size="xs" style={{ color: et.textSecondary }}>
             {timeAgo(comment.createdAt)}
           </Text>
         </XStack>
@@ -46,7 +49,11 @@ export function CommentItem({ comment }: CommentItemProps) {
             <ImageMessage mediaUrl={resolveUploadUrl(comment.mediaUrl)!} />
           </View>
         )}
-        {comment.text && <Text size="sm">{comment.text}</Text>}
+        {comment.text && (
+          <Text size="sm" style={{ color: et.textPrimary }}>
+            {comment.text}
+          </Text>
+        )}
       </YStack>
     </XStack>
   );

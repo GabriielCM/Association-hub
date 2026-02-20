@@ -1,5 +1,6 @@
 import { XStack, YStack, View } from 'tamagui';
 import { Text } from '@ahub/ui';
+import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 
 interface CheckInProgressProps {
   completedCheckins: number[];
@@ -12,6 +13,7 @@ export function CheckInProgress({
   total,
   pointsTotal,
 }: CheckInProgressProps) {
+  const et = useEventsTheme();
   const completed = completedCheckins.length;
   const completedSet = new Set(completedCheckins);
   const percentage = total > 0 ? (completed / total) * 100 : 0;
@@ -22,10 +24,10 @@ export function CheckInProgress({
   return (
     <YStack gap="$2">
       <XStack justifyContent="space-between" alignItems="center">
-        <Text weight="semibold" size="sm">
+        <Text weight="semibold" size="sm" style={{ color: et.textPrimary }}>
           Progresso: {completed}/{total} check-ins
         </Text>
-        <Text color="accent" size="sm" weight="semibold">
+        <Text color="accent" size="sm" weight="semibold" style={{ color: et.accent }}>
           {pointsEarned}/{pointsTotal} pts
         </Text>
       </XStack>
@@ -62,7 +64,7 @@ export function CheckInProgress({
             <Text
               size="xs"
               style={{
-                color: completedSet.has(i + 1) ? '#fff' : undefined,
+                color: completedSet.has(i + 1) ? '#fff' : et.textSecondary,
               }}
             >
               {i + 1}

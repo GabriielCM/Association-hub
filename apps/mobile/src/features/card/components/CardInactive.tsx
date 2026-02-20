@@ -1,10 +1,11 @@
 import { memo } from 'react';
-import { View, StyleSheet, Pressable, useWindowDimensions, useColorScheme } from 'react-native';
+import { View, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
 import { YStack } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, Avatar } from '@ahub/ui';
 import { cardGradients } from '@ahub/ui/src/themes/tokens';
 import { CardPattern } from './CardPattern';
+import { useCardTheme } from '../hooks/useCardTheme';
 import type { MemberCard } from '@ahub/shared/types';
 
 interface CardInactiveProps {
@@ -28,8 +29,7 @@ export const CardInactive = memo(function CardInactive({
 }: CardInactiveProps) {
   const { width } = useWindowDimensions();
   const cardWidth = width - 48;
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useCardTheme();
   const gradient = isDark ? cardGradients.dark.front : cardGradients.light.front;
   const statusLabel = STATUS_LABELS[card.status] || card.status;
 
@@ -96,6 +96,7 @@ export const CardInactive = memo(function CardInactive({
             onPress={onRegularize}
             style={({ pressed }) => [
               styles.button,
+              { backgroundColor: isDark ? '#1A0A2E' : '#fff' },
               pressed && styles.buttonPressed,
             ]}
           >

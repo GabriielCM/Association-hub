@@ -14,6 +14,7 @@ import { useCard, useCardQrCode } from '@/features/card/hooks/useCard';
 import { useMySubscription } from '@/features/subscriptions/hooks/useMySubscription';
 import { useCachedCard, useCachedQrCode } from '@/stores/card.store';
 import { useShareCard } from '@/features/card/hooks/useShareCard';
+import { useCardTheme } from '@/features/card/hooks/useCardTheme';
 import { FlipCard } from '@/features/card/components/FlipCard';
 import { CardFront } from '@/features/card/components/CardFront';
 import { CardBack } from '@/features/card/components/CardBack';
@@ -23,6 +24,7 @@ import { BrightnessIndicator } from '@/features/card/components/BrightnessIndica
 import { QuickActionCard } from '@/features/card/components/QuickActionCard';
 
 export default function CarteirinhaScreen() {
+  const ct = useCardTheme();
   const { data: card, isLoading, refetch } = useCard();
   const { data: qrCode } = useCardQrCode();
   const { data: subscription } = useMySubscription();
@@ -56,7 +58,7 @@ export default function CarteirinhaScreen() {
   // Loading state — skeleton shimmer
   if (isLoading && !displayCard) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: ct.screenBg }} edges={['top']}>
         <YStack padding="$4" paddingTop="$2">
           <CardSkeleton />
         </YStack>
@@ -67,10 +69,10 @@ export default function CarteirinhaScreen() {
   // Error state
   if (!displayCard) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: ct.screenBg }} edges={['top']}>
         <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" gap="$4">
-          <Icon icon={CreditCard} weight="duotone" size="xl" color="muted" />
-          <Text color="secondary" align="center">
+          <Icon icon={CreditCard} weight="duotone" size="xl" color={ct.iconColor} />
+          <Text style={{ color: ct.textSecondary, textAlign: 'center' }}>
             Não foi possível carregar sua carteirinha.
           </Text>
           <Button variant="outline" onPress={() => refetch()}>
@@ -82,10 +84,16 @@ export default function CarteirinhaScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: ct.screenBg }} edges={['top']}>
       <ScrollView
+        style={{ backgroundColor: ct.screenBg }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={ct.refreshTint}
+            colors={[ct.refreshTint]}
+          />
         }
       >
         <YStack paddingHorizontal="$4" paddingTop="$2" gap="$3">
@@ -113,8 +121,8 @@ export default function CarteirinhaScreen() {
             alignSelf="center"
           >
             <XStack alignItems="center" gap={6}>
-              <Icon icon={ShareNetwork} size="sm" color="#8B5CF6" />
-              <Text style={{ fontSize: 13, color: '#8B5CF6', fontWeight: '500' }}>
+              <Icon icon={ShareNetwork} size="sm" color={ct.accent} />
+              <Text style={{ fontSize: 13, color: ct.accent, fontWeight: '500' }}>
                 Compartilhar
               </Text>
             </XStack>

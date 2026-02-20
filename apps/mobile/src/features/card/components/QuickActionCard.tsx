@@ -3,6 +3,7 @@ import { XStack } from 'tamagui';
 import { Text, Icon } from '@ahub/ui';
 import { CaretRight } from '@ahub/ui/src/icons';
 import { CardGlassView } from './CardGlassView';
+import { useCardTheme } from '../hooks/useCardTheme';
 import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 
 interface QuickActionCardProps {
@@ -20,6 +21,8 @@ export function QuickActionCard({
   icon,
   onPress,
 }: QuickActionCardProps) {
+  const ct = useCardTheme();
+
   return (
     <Pressable
       onPress={onPress}
@@ -27,7 +30,7 @@ export function QuickActionCard({
     >
       <CardGlassView
         borderRadius={16}
-        tint="dark"
+        tint={ct.glassTint}
         intensity={12}
         style={styles.card}
       >
@@ -38,10 +41,12 @@ export function QuickActionCard({
           paddingVertical={14}
         >
           <XStack gap={10} alignItems="center">
-            <Icon icon={icon} size="md" color="#8B5CF6" />
-            <Text style={styles.title}>{title}</Text>
+            <Icon icon={icon} size="md" color={ct.accent} />
+            <Text style={{ fontSize: 15, fontWeight: '600', color: ct.textPrimary }}>
+              {title}
+            </Text>
           </XStack>
-          <Icon icon={CaretRight} size="sm" color="#9CA3AF" />
+          <Icon icon={CaretRight} size="sm" color={ct.textTertiary} />
         </XStack>
       </CardGlassView>
     </Pressable>
@@ -51,11 +56,6 @@ export function QuickActionCard({
 const styles = StyleSheet.create({
   card: {
     minHeight: 52,
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1F2937',
   },
   pressed: {
     opacity: 0.85,

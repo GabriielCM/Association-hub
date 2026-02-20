@@ -3,6 +3,7 @@ import { YStack } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Loading } from '@ahub/ui';
 import { cardGradients } from '@ahub/ui/src/themes/tokens';
+import { useCardTheme } from '../hooks/useCardTheme';
 
 /**
  * Shimmer skeleton that mimics the card layout while data loads.
@@ -11,11 +12,13 @@ import { cardGradients } from '@ahub/ui/src/themes/tokens';
 export function CardSkeleton() {
   const { width } = useWindowDimensions();
   const cardWidth = width - 48;
+  const { isDark } = useCardTheme();
+  const gradient = isDark ? cardGradients.dark.front : cardGradients.light.front;
 
   return (
     <View style={[styles.card, { width: cardWidth }]}>
       <LinearGradient
-        colors={[cardGradients.light.front.start, cardGradients.light.front.end]}
+        colors={[gradient.start, gradient.end]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}

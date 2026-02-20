@@ -3,6 +3,7 @@ import { Image, StyleSheet } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { Heading, Badge, Icon } from '@ahub/ui';
 import { EVENT_ICONS } from '@ahub/ui/src/icons';
+import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 import type { EventDetail } from '@ahub/shared/types';
 import { resolveUploadUrl } from '@/config/constants';
 
@@ -31,6 +32,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export function EventHeader({ event }: EventHeaderProps) {
+  const et = useEventsTheme();
   const isOngoing = event.status === 'ONGOING';
 
   // Only bannerDisplay images rotate; bannerFeed is a separate static fallback
@@ -141,7 +143,7 @@ export function EventHeader({ event }: EventHeaderProps) {
           )}
         </YStack>
 
-        <Heading level={2}>{event.title}</Heading>
+        <Heading level={2} style={{ color: et.textPrimary }}>{event.title}</Heading>
       </YStack>
     </YStack>
   );

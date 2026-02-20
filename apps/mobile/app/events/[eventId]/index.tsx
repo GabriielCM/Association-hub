@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, Heading, Button, Card, Spinner, ScreenHeader } from '@ahub/ui';
 import { useEvent, useEventComments } from '@/features/events/hooks/useEvents';
+import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 import {
   useConfirmEvent,
   useRemoveConfirmation,
@@ -18,6 +19,7 @@ import { CelebrationOverlay } from '@/features/events/components/CelebrationOver
 export default function EventDetailScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const router = useRouter();
+  const et = useEventsTheme();
 
   const { data: event, isLoading } = useEvent(eventId);
   const { data: commentsData } = useEventComments(eventId, {
@@ -29,7 +31,7 @@ export default function EventDetailScreen() {
 
   if (isLoading || !event) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: et.screenBg }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center">
           <Spinner size="lg" />
         </YStack>
@@ -51,8 +53,8 @@ export default function EventDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
-      <ScrollView>
+    <SafeAreaView style={{ flex: 1, backgroundColor: et.screenBg }} edges={['top', 'bottom']}>
+      <ScrollView style={{ backgroundColor: et.screenBg }}>
         <ScreenHeader title="Voltar" onBack={() => router.back()} style={{ position: 'absolute', zIndex: 10 }} />
 
         {/* Header */}
@@ -60,14 +62,22 @@ export default function EventDetailScreen() {
 
         <YStack padding="$4" gap="$4">
           {/* Description */}
-          <Text>{event.description}</Text>
+          <Text style={{ color: et.textPrimary }}>{event.description}</Text>
 
           {/* Event Info */}
           <EventInfo event={event} />
 
           {/* Check-in Progress */}
           {event.userCheckInsCompleted > 0 && (
-            <Card variant="flat">
+            <Card
+              variant="flat"
+              {...(et.cardBg ? {
+                backgroundColor: et.cardBg,
+                borderWidth: 1,
+                borderColor: et.cardBorder,
+                shadowOpacity: 0,
+              } : {})}
+            >
               <YStack padding="$3">
                 <CheckInProgress
                   completedCheckins={event.userCheckIns.map(ci => ci.checkinNumber)}
@@ -121,7 +131,7 @@ export default function EventDetailScreen() {
               justifyContent="space-between"
               alignItems="center"
             >
-              <Heading level={4}>
+              <Heading level={4} style={{ color: et.textPrimary }}>
                 Comentarios ({event.commentsCount})
               </Heading>
               {event.commentsCount > 5 && (
@@ -144,7 +154,7 @@ export default function EventDetailScreen() {
                 ))}
               </YStack>
             ) : (
-              <Text color="secondary" size="sm">
+              <Text color="secondary" size="sm" style={{ color: et.textSecondary }}>
                 Nenhum comentario ainda
               </Text>
             )}

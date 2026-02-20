@@ -5,6 +5,7 @@ import { Button } from '@ahub/ui';
 import ImageSquare from 'phosphor-react-native/src/icons/ImageSquare';
 import X from 'phosphor-react-native/src/icons/X';
 import * as ImagePicker from 'expo-image-picker';
+import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 import type { CommentInput as CommentInputData } from '../hooks/useEventMutations';
 
 interface CommentInputProps {
@@ -13,6 +14,7 @@ interface CommentInputProps {
 }
 
 export function CommentInput({ onSubmit, isLoading }: CommentInputProps) {
+  const et = useEventsTheme();
   const [text, setText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -61,7 +63,7 @@ export function CommentInput({ onSubmit, isLoading }: CommentInputProps) {
   const canSend = selectedImage || text.trim().length > 0;
 
   return (
-    <YStack>
+    <YStack borderTopWidth={1} borderTopColor={et.borderColor} backgroundColor={et.screenBg}>
       {selectedImage && (
         <XStack padding="$2" paddingHorizontal="$3">
           <View position="relative">
@@ -79,14 +81,26 @@ export function CommentInput({ onSubmit, isLoading }: CommentInputProps) {
 
       <XStack gap="$2" alignItems="flex-end" padding="$3">
         <Pressable onPress={handlePickImage} style={styles.imageBtn}>
-          <ImageSquare size={24} color="#888" />
+          <ImageSquare size={24} color={et.iconColor} />
         </Pressable>
 
         <TextInput
-          style={styles.input}
+          style={{
+            flex: 1,
+            borderWidth: 1,
+            borderColor: et.inputBorder,
+            borderRadius: 8,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            fontSize: 14,
+            maxHeight: 100,
+            color: et.inputText,
+            backgroundColor: et.inputBg,
+          }}
           placeholder={
             selectedImage ? 'Adicionar legenda...' : 'Escreva um comentario...'
           }
+          placeholderTextColor={et.inputPlaceholder}
           value={text}
           onChangeText={setText}
           multiline
@@ -107,16 +121,6 @@ export function CommentInput({ onSubmit, isLoading }: CommentInputProps) {
 }
 
 const styles = StyleSheet.create({
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-    maxHeight: 100,
-  },
   imageBtn: {
     width: 40,
     height: 40,

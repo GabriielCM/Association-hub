@@ -3,9 +3,11 @@ import { Modal, StyleSheet } from 'react-native';
 import { YStack } from 'tamagui';
 import { Text, Heading, Button, Icon } from '@ahub/ui';
 import { Trophy, Confetti, Medal } from '@ahub/ui/src/icons';
+import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 import { useCheckinCelebration, useEventsStore } from '@/stores/events.store';
 
 export function CelebrationOverlay() {
+  const et = useEventsTheme();
   const celebration = useCheckinCelebration();
   const hideCelebration = useEventsStore((s) => s.hideCheckinCelebration);
 
@@ -29,10 +31,10 @@ export function CelebrationOverlay() {
         flex={1}
         alignItems="center"
         justifyContent="center"
-        style={styles.overlay}
+        style={{ backgroundColor: et.overlayBg }}
       >
         <YStack
-          backgroundColor="$surface"
+          backgroundColor={et.sheetBg}
           borderRadius="$lg"
           padding="$6"
           gap="$4"
@@ -47,26 +49,28 @@ export function CelebrationOverlay() {
             weight="duotone"
           />
 
-          <Heading level={3}>Check-in realizado!</Heading>
+          <Heading level={3} style={{ color: et.textPrimary }}>
+            Check-in realizado!
+          </Heading>
 
-          <Heading level={2} color="accent">
+          <Heading level={2} style={{ color: et.accent }}>
             +{celebration.pointsAwarded} pontos
           </Heading>
 
-          <Text color="secondary" align="center">
+          <Text color="secondary" align="center" style={{ color: et.textSecondary }}>
             {celebration.progress.completed} de{' '}
             {celebration.progress.total} check-ins completos
           </Text>
 
           {celebration.badgeAwarded && (
             <YStack
-              backgroundColor="$backgroundHover"
+              backgroundColor={et.accentBg}
               borderRadius="$md"
               padding="$3"
               alignItems="center"
             >
               <Icon icon={Medal} size="lg" color="warning" weight="fill" />
-              <Text weight="bold" size="sm">
+              <Text weight="bold" size="sm" style={{ color: et.textPrimary }}>
                 Badge conquistado!
               </Text>
             </YStack>
@@ -85,9 +89,3 @@ export function CelebrationOverlay() {
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-});

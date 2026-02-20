@@ -1,12 +1,13 @@
-import { View, StyleSheet, useColorScheme } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { Skeleton } from '@ahub/ui';
+import { useCardTheme } from '../hooks/useCardTheme';
 
 export function PartnerCardSkeleton() {
-  const isDark = useColorScheme() === 'dark';
+  const ct = useCardTheme();
 
   return (
-    <View style={[styles.container, isDark && styles.containerDark]}>
+    <View style={[styles.container, { backgroundColor: ct.surfaceBg, ...ct.cardShadow }]}>
       {/* Banner skeleton */}
       <Skeleton width="100%" height={0} style={styles.banner} />
 
@@ -25,17 +26,8 @@ export function PartnerCardSkeleton() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  containerDark: {
-    backgroundColor: '#1F1F1F',
   },
   banner: {
     aspectRatio: 16 / 9,

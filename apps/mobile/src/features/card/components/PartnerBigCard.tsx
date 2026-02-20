@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect } from 'react';
-import { Pressable, View, StyleSheet, useColorScheme } from 'react-native';
+import { Pressable, View, StyleSheet } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { Text, Avatar, Icon, SafeImage } from '@ahub/ui';
 import { Tag, MapPin, Lock, BookmarkSimple } from '@ahub/ui/src/icons';
@@ -12,6 +12,7 @@ import Animated, {
   withSpring,
   Easing,
 } from 'react-native-reanimated';
+import { useCardTheme } from '../hooks/useCardTheme';
 import type { PartnerListItem } from '@ahub/shared/types';
 
 interface PartnerBigCardProps {
@@ -30,8 +31,7 @@ export const PartnerBigCard = memo(function PartnerBigCard({
   distance,
 }: PartnerBigCardProps) {
   const isLocked = !partner.isEligible;
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const ct = useCardTheme();
 
   // Fade-in on mount
   const fadeOpacity = useSharedValue(0);
@@ -69,7 +69,7 @@ export const PartnerBigCard = memo(function PartnerBigCard({
       onPress={handlePress}
       style={({ pressed }) => [
         styles.container,
-        isDark && styles.containerDark,
+        { backgroundColor: ct.surfaceBg, ...ct.cardShadow },
         pressed && styles.pressed,
       ]}
     >
@@ -101,7 +101,7 @@ export const PartnerBigCard = memo(function PartnerBigCard({
             src={partner.logoUrl}
             name={partner.name}
             size="lg"
-            style={styles.logo}
+            style={[styles.logo, { borderColor: ct.logoBorderColor }]}
           />
         </View>
 
@@ -131,7 +131,7 @@ export const PartnerBigCard = memo(function PartnerBigCard({
               <Icon
                 icon={BookmarkSimple}
                 size="sm"
-                color={isBookmarked ? '#8B5CF6' : '#fff'}
+                color={isBookmarked ? ct.bookmarkColor : '#fff'}
                 weight={isBookmarked ? 'fill' : 'regular'}
               />
             </Pressable>
@@ -142,14 +142,14 @@ export const PartnerBigCard = memo(function PartnerBigCard({
       {/* Info section */}
       <YStack padding={14} gap={4} style={isLocked && styles.lockedContent}>
         <Text
-          style={[styles.name, isDark && styles.nameDark]}
+          style={{ fontSize: 16, fontWeight: '600', color: ct.textPrimary, marginTop: 6 }}
           numberOfLines={1}
         >
           {partner.name}
         </Text>
 
         <Text
-          style={[styles.benefit, isDark && styles.benefitDark]}
+          style={{ fontSize: 13, color: ct.textSecondary, lineHeight: 18 }}
           numberOfLines={2}
         >
           {partner.benefit}
@@ -159,20 +159,22 @@ export const PartnerBigCard = memo(function PartnerBigCard({
           {partner.category.icon ? (
             <Text style={{ fontSize: 12 }}>{partner.category.icon}</Text>
           ) : (
-            <Icon icon={Tag} size={12} color={isDark ? '#9CA3AF' : '#6B7280'} />
+            <Icon icon={Tag} size={12} color={ct.textSecondary} />
           )}
-          <Text style={[styles.meta, isDark && styles.metaDark]}>
+          <Text style={{ fontSize: 12, color: ct.textSecondary }}>
             {partner.category.name}
           </Text>
           {distance && (
             <>
-              <Text style={[styles.meta, isDark && styles.metaDark]}> · </Text>
-              <Icon icon={MapPin} size={12} color="#8B5CF6" />
-              <Text style={styles.distance}>{distance}</Text>
+              <Text style={{ fontSize: 12, color: ct.textSecondary }}> · </Text>
+              <Icon icon={MapPin} size={12} color={ct.distanceColor} />
+              <Text style={{ fontSize: 12, color: ct.distanceColor, fontWeight: '500' }}>
+                {distance}
+              </Text>
             </>
           )}
           {!distance && partner.city && (
-            <Text style={[styles.meta, isDark && styles.metaDark]}>
+            <Text style={{ fontSize: 12, color: ct.textSecondary }}>
               · {partner.city}
             </Text>
           )}
@@ -185,17 +187,8 @@ export const PartnerBigCard = memo(function PartnerBigCard({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  containerDark: {
-    backgroundColor: '#1F1F1F',
   },
   pressed: {
     opacity: 0.9,
@@ -222,7 +215,6 @@ const styles = StyleSheet.create({
   },
   logo: {
     borderWidth: 3,
-    borderColor: '#fff',
     borderRadius: 12,
   },
   badgeRow: {
@@ -268,34 +260,5 @@ const styles = StyleSheet.create({
   },
   lockedContent: {
     opacity: 0.5,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginTop: 6,
-  },
-  nameDark: {
-    color: '#F3F4F6',
-  },
-  benefit: {
-    fontSize: 13,
-    color: '#6B7280',
-    lineHeight: 18,
-  },
-  benefitDark: {
-    color: '#9CA3AF',
-  },
-  meta: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  metaDark: {
-    color: '#9CA3AF',
-  },
-  distance: {
-    fontSize: 12,
-    color: '#8B5CF6',
-    fontWeight: '500',
   },
 });

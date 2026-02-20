@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { View, StyleSheet, Pressable, Linking, useWindowDimensions, useColorScheme } from 'react-native';
+import { View, StyleSheet, Pressable, Linking, useWindowDimensions } from 'react-native';
 import { YStack } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, Icon } from '@ahub/ui';
@@ -7,6 +7,7 @@ import { Phone, Globe, MapPin, PaperPlaneTilt, Calendar } from '@ahub/ui/src/ico
 import { cardGradients } from '@ahub/ui/src/themes/tokens';
 import { CardPattern } from './CardPattern';
 import { CardGlassView } from './CardGlassView';
+import { useCardTheme } from '../hooks/useCardTheme';
 import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import type { MemberCard } from '@ahub/shared/types';
 
@@ -18,8 +19,7 @@ export const CardBack = memo(function CardBack({ card }: CardBackProps) {
   const { association } = card;
   const { width } = useWindowDimensions();
   const cardWidth = width - 48;
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useCardTheme();
   const gradient = isDark ? cardGradients.dark.back : cardGradients.light.back;
 
   const openUrl = (url: string) => {

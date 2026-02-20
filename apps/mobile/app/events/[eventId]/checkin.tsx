@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef, useEffect } from 'react';
+import { useCallback, useState, useRef, useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ import { Text, Button, Spinner, ScreenHeader, Icon } from '@ahub/ui';
 import { Camera } from '@ahub/ui/src/icons';
 import { useEvent } from '@/features/events/hooks/useEvents';
 import { useCheckin } from '@/features/events/hooks/useEventMutations';
+import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 import { useEventsStore, useCheckinCelebration } from '@/stores/events.store';
 import { CelebrationOverlay } from '@/features/events/components/CelebrationOverlay';
 import type { CheckinResponse } from '@ahub/shared/types';
@@ -17,6 +18,7 @@ import type { CheckinResponse } from '@ahub/shared/types';
 export default function CheckInScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const router = useRouter();
+  const et = useEventsTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [error, setError] = useState<string | null>(null);
   const [scanned, setScanned] = useState(false);
@@ -103,10 +105,19 @@ export default function CheckInScreen() {
     ? Math.floor(event.pointsTotal / event.checkinsCount)
     : 0;
 
+  const dynamicStyles = useMemo(() => ({
+    corner: {
+      borderColor: et.checkinCornerColor,
+    },
+    processingOverlay: {
+      backgroundColor: et.overlayBg,
+    },
+  }), [et.checkinCornerColor, et.overlayBg]);
+
   // Permission states
   if (!permission) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: et.screenBg }} edges={['top', 'bottom']}>
         <YStack flex={1} justifyContent="center" alignItems="center">
           <Spinner />
         </YStack>
@@ -116,7 +127,7 @@ export default function CheckInScreen() {
 
   if (!permission.granted) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: et.screenBg }} edges={['top', 'bottom']}>
         <YStack
           flex={1}
           justifyContent="center"
@@ -124,8 +135,8 @@ export default function CheckInScreen() {
           padding="$4"
           gap="$4"
         >
-          <Icon icon={Camera} size={48} color="muted" weight="duotone" />
-          <Text align="center">
+          <Icon icon={Camera} size={48} color={et.iconColor} weight="duotone" />
+          <Text align="center" style={{ color: et.textPrimary }}>
             Permissao de camera necessaria para escanear QR Codes.
           </Text>
           <Button variant="primary" onPress={requestPermission}>
@@ -140,14 +151,14 @@ export default function CheckInScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: et.screenBg }} edges={['top', 'bottom']}>
       {/* Header */}
       <ScreenHeader title="Check-in" variant="overlay" onBack={() => router.back()} />
 
       {/* Camera */}
       <View style={styles.container}>
         {checkinMutation.isPending ? (
-          <View style={styles.processingOverlay}>
+          <View style={[styles.processingOverlay, dynamicStyles.processingOverlay]}>
             <Spinner size="lg" />
             <Text style={styles.processingText}>
               Processando check-in...
@@ -165,10 +176,10 @@ export default function CheckInScreen() {
         {/* Viewfinder */}
         <View style={styles.overlay}>
           <View style={styles.viewfinder}>
-            <View style={[styles.corner, styles.cornerTL]} />
-            <View style={[styles.corner, styles.cornerTR]} />
-            <View style={[styles.corner, styles.cornerBL]} />
-            <View style={[styles.corner, styles.cornerBR]} />
+            <View style={[styles.corner, styles.cornerTL, dynamicStyles.corner]} />
+            <View style={[styles.corner, styles.cornerTR, dynamicStyles.corner]} />
+            <View style={[styles.corner, styles.cornerBL, dynamicStyles.corner]} />
+            <View style={[styles.corner, styles.cornerBR, dynamicStyles.corner]} />
           </View>
         </View>
       </View>
@@ -185,7 +196,7 @@ export default function CheckInScreen() {
       >
         {error ? (
           <YStack
-            backgroundColor="rgba(220,38,38,0.9)"
+            backgroundColor={et.errorBg}
             borderRadius="$md"
             padding="$3"
             alignItems="center"
@@ -200,7 +211,7 @@ export default function CheckInScreen() {
           </YStack>
         ) : (
           <YStack
-            backgroundColor="rgba(0,0,0,0.7)"
+            backgroundColor={et.infoPanelBg}
             borderRadius="$md"
             padding="$3"
             alignItems="center"
@@ -212,7 +223,7 @@ export default function CheckInScreen() {
             <Text style={{ color: '#fff' }} weight="bold">
               CHECK-IN {currentCheckin} de {event?.checkinsCount ?? '?'}
             </Text>
-            <Text style={{ color: '#7C3AED' }} weight="semibold">
+            <Text style={{ color: et.accent }} weight="semibold">
               +{pointsPerCheckin} pontos
             </Text>
           </YStack>
@@ -244,7 +255,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 30,
     height: 30,
-    borderColor: '#7C3AED',
     borderWidth: 3,
   },
   cornerTL: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0 },
@@ -253,7 +263,6 @@ const styles = StyleSheet.create({
   cornerBR: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0 },
   processingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 12,
