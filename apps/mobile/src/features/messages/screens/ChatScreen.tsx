@@ -115,13 +115,16 @@ export function ChatScreen() {
 
     Promise.all(
       encrypted.map((msg) =>
-        decryptMessage(msg, convType, otherParticipantForE2E?.id).then((decrypted) => [msg.id, decrypted] as const)
+        decryptMessage(msg, convType, otherParticipantForE2E?.id).then((decrypted) => [msg.id, msg.content, decrypted] as const)
       )
     ).then((results) => {
       setDecryptedMap((prev) => {
         const next = new Map(prev);
-        for (const [id, decrypted] of results) {
-          next.set(id, decrypted);
+        for (const [id, originalContent, decrypted] of results) {
+          // Only cache if decryption actually changed the content (avoid caching failures)
+          if (decrypted.content !== originalContent) {
+            next.set(id, decrypted);
+          }
           decryptionInFlight.current.delete(id);
         }
         return next;
@@ -396,7 +399,7 @@ export function ChatScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: chatBg }]} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
       >
         <YStack flex={1} backgroundColor={chatBg}>

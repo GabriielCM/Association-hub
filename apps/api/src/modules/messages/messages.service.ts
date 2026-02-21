@@ -382,7 +382,7 @@ export class MessagesService {
       data: {
         conversationId,
         senderId: userId,
-        content: isEncrypted ? '[encrypted]' : content,
+        content: content || (isEncrypted ? '[encrypted]' : ''),
         contentType,
         mediaUrl,
         mediaDuration: mediaDuration ? Math.round(mediaDuration) : undefined,

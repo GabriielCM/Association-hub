@@ -33,15 +33,6 @@ function getPreviewData(conversation: Conversation): {
       ? `${conversation.lastMessage.senderName.split(' ')[0]}: `
       : '';
 
-  // Show encrypted indicator for E2E messages
-  if (conversation.lastMessage.isEncrypted) {
-    return {
-      prefix,
-      contentType: conversation.lastMessage.contentType,
-      text: '\uD83D\uDD12 Mensagem encriptada',
-    };
-  }
-
   return {
     prefix,
     contentType: conversation.lastMessage.contentType,
