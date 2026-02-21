@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Image, Pressable, Modal, Dimensions, StyleSheet } from 'react-native';
 import { View } from 'tamagui';
-import X from 'phosphor-react-native/src/icons/X';
-
+import { X } from 'phosphor-react-native';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface ImageMessageProps {

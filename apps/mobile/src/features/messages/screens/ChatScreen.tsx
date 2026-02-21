@@ -13,6 +13,7 @@ import {
 import { YStack, XStack, View } from 'tamagui';
 import { Text, Avatar, ScreenHeader, Icon } from '@ahub/ui';
 import { ArrowDown } from '@ahub/ui/src/icons';
+import { LockSimple } from 'phosphor-react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
@@ -472,7 +473,7 @@ export function ChatScreen() {
                 e2eReady && messages.length > 0 ? (
                   <YStack alignItems="center" paddingVertical="$4" paddingHorizontal="$6">
                     <XStack alignItems="center" gap="$1.5" opacity={0.5}>
-                      <Icon icon="LockSimple" size={12} color="secondary" />
+                      <Icon icon={LockSimple} size={12} color="secondary" />
                       <Text size="xs" color="secondary" align="center">
                         As mensagens sao protegidas com encriptacao ponta a ponta
                       </Text>

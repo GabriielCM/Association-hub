@@ -23,15 +23,13 @@ import * as Sharing from 'expo-sharing';
 
 import { Text, Avatar, Icon, Spinner } from '@ahub/ui';
 import { Heart, ChatCircle, ShareNetwork } from '@ahub/ui/src/icons';
-import DotsThree from 'phosphor-react-native/src/icons/DotsThree';
-import SealCheck from 'phosphor-react-native/src/icons/SealCheck';
 import { useUserPosts } from '@/features/dashboard/hooks/useDashboard';
 import { useLikePost } from '@/features/dashboard/hooks/useFeedMutations';
 import { PostOptionsMenu } from '@/features/dashboard/components/PostOptionsMenu';
 import { ShareCard } from '@/features/dashboard/components/ShareCard';
 import { resolveUploadUrl } from '@/config/constants';
 import type { FeedPost } from '@ahub/shared/types';
-
+import { DotsThree, SealCheck } from 'phosphor-react-native';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const IMAGE_SIZE = SCREEN_WIDTH;
 const ESTIMATED_ITEM_HEIGHT = IMAGE_SIZE + 160;

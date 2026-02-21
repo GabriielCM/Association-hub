@@ -1,6 +1,12 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
-import * as ScreenCapture from 'expo-screen-capture';
+
+let ScreenCapture: typeof import('expo-screen-capture') | null = null;
+try {
+  ScreenCapture = require('expo-screen-capture');
+} catch {
+  // Native module not available (e.g. dev client without expo-screen-capture)
+}
 
 const PROTECTION_KEY = 'carteirinha';
 
@@ -23,6 +29,8 @@ export function useScreenCaptureProtection({
   const protectionActiveRef = useRef(false);
 
   useEffect(() => {
+    if (!ScreenCapture) return;
+
     if (!enabled) {
       if (protectionActiveRef.current) {
         ScreenCapture.allowScreenCaptureAsync(PROTECTION_KEY).catch(() => {});
@@ -45,7 +53,7 @@ export function useScreenCaptureProtection({
     }
 
     return () => {
-      ScreenCapture.allowScreenCaptureAsync(PROTECTION_KEY).catch(() => {});
+      ScreenCapture?.allowScreenCaptureAsync(PROTECTION_KEY).catch(() => {});
       protectionActiveRef.current = false;
       subscription?.remove();
     };
@@ -53,7 +61,7 @@ export function useScreenCaptureProtection({
 
   const withProtectionDisabled = useCallback(
     async <T,>(fn: () => Promise<T>): Promise<T> => {
-      if (Platform.OS === 'ios' || !protectionActiveRef.current) {
+      if (!ScreenCapture || Platform.OS === 'ios' || !protectionActiveRef.current) {
         return fn();
       }
 

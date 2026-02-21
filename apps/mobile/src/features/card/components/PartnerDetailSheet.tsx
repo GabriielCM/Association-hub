@@ -2,10 +2,10 @@ import { Modal, ScrollView, Pressable, Linking, StyleSheet, View } from 'react-n
 import { YStack, XStack } from 'tamagui';
 import { Text, Heading, Button, Avatar, Spinner, Badge, Icon } from '@ahub/ui';
 import { Globe, ChatCircle, Camera } from '@ahub/ui/src/icons';
-import Phone from 'phosphor-react-native/src/icons/Phone';
+
 import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import { usePartnerDetails } from '../hooks/useBenefits';
-
+import { Phone } from 'phosphor-react-native';
 interface PartnerDetailSheetProps {
   partnerId: string | null;
   visible: boolean;

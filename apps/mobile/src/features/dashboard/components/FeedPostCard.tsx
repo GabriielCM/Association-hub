@@ -15,15 +15,15 @@ import * as Sharing from 'expo-sharing';
 
 import { Text, Card, Avatar, Icon } from '@ahub/ui';
 import { Heart, ChatCircle, ShareNetwork } from '@ahub/ui/src/icons';
-import DotsThree from 'phosphor-react-native/src/icons/DotsThree';
-import SealCheck from 'phosphor-react-native/src/icons/SealCheck';
+
+
 import { useLikePost } from '../hooks/useFeedMutations';
 import { resolveUploadUrl } from '@/config/constants';
 import { PostOptionsMenu } from './PostOptionsMenu';
 import { ShareCard } from './ShareCard';
 import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import type { FeedPost } from '@ahub/shared/types';
-
+import { DotsThree, SealCheck } from 'phosphor-react-native';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const IMAGE_WIDTH = SCREEN_WIDTH - 48;
 const DOUBLE_TAP_DELAY = 300;

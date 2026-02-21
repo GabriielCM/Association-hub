@@ -9,9 +9,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Icon } from '@ahub/ui';
 import { Plus, ImageSquare, Camera, File } from '@ahub/ui/src/icons';
-import MusicNote from 'phosphor-react-native/src/icons/MusicNote';
-import { MORPH_SPRING, FAN_OUT_STAGGER } from '../utils/animations';
 
+import { MORPH_SPRING, FAN_OUT_STAGGER } from '../utils/animations';
+import { MusicNote } from 'phosphor-react-native';
 interface AttachmentMenuProps {
   visible: boolean;
   onToggle: () => void;

@@ -13,14 +13,14 @@ import * as ImagePicker from 'expo-image-picker';
 
 import { Text, Icon } from '@ahub/ui';
 import { Camera } from '@ahub/ui/src/icons';
-import ImageSquare from 'phosphor-react-native/src/icons/ImageSquare';
-import PencilSimple from 'phosphor-react-native/src/icons/PencilSimple';
+
+
 import {
   useCreateTextStory,
   useCreateMediaStory,
 } from '../hooks/useStoryMutations';
 import { useDashboardTheme } from '../hooks/useDashboardTheme';
-
+import { ImageSquare, PencilSimple } from 'phosphor-react-native';
 const BG_COLORS = [
   '#6366F1',
   '#EC4899',

@@ -27,8 +27,20 @@ config.resolver.sourceExts = [...config.resolver.sourceExts, 'mjs'];
 // Tamagui v2 resolveRequest hook for proper module resolution.
 // Adds 'react-native' condition so Tamagui's package.json "exports" resolves
 // to .native.js files instead of web .mjs files.
+// Native-only modules that need a web shim to avoid bundler errors
+const NATIVE_ONLY_MODULES = [
+  'react-native-pager-view',
+  '@stripe/stripe-react-native',
+];
+
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (platform === 'web') {
+    if (NATIVE_ONLY_MODULES.includes(moduleName)) {
+      return {
+        type: 'sourceFile',
+        filePath: path.resolve(projectRoot, 'src/shims/empty-native-module.web.js'),
+      };
+    }
     return context.resolveRequest(context, moduleName, platform);
   }
 

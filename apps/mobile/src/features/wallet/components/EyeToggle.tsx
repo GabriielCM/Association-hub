@@ -1,12 +1,11 @@
 import { Pressable, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, {
-  useSharedValue,
+useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import Eye from 'phosphor-react-native/src/icons/Eye';
-import EyeSlash from 'phosphor-react-native/src/icons/EyeSlash';
+import { Eye, EyeSlash } from 'phosphor-react-native';
 
 interface EyeToggleProps {
   hidden: boolean;

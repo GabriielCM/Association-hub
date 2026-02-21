@@ -6,9 +6,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { XStack } from 'tamagui';
 import { Text } from '@ahub/ui';
-import WifiSlash from 'phosphor-react-native/src/icons/WifiSlash';
 import { useWalletTheme } from '../hooks/useWalletTheme';
-
+import { WifiSlash } from 'phosphor-react-native';
 interface OfflineBannerProps {
   visible: boolean;
 }

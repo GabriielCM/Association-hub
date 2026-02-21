@@ -1,9 +1,9 @@
 import { View, StyleSheet } from 'react-native';
 import { YStack } from 'tamagui';
 import { Text, Button, Icon } from '@ahub/ui';
-import MagnifyingGlass from 'phosphor-react-native/src/icons/MagnifyingGlass';
-import { useCardTheme } from '../hooks/useCardTheme';
 
+import { useCardTheme } from '../hooks/useCardTheme';
+import { MagnifyingGlass } from 'phosphor-react-native';
 interface BenefitsEmptyStateProps {
   onClearFilters?: () => void;
   hasActiveFilters?: boolean;

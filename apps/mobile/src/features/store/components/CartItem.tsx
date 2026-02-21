@@ -2,11 +2,11 @@ import { Pressable, StyleSheet, Image } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { Text, Icon } from '@ahub/ui';
 import { Storefront } from '@ahub/ui/src/icons';
-import X from 'phosphor-react-native/src/icons/X';
+
 import { formatPoints, formatCurrency } from '@ahub/shared/utils';
 import { QuantityControl } from './QuantityControl';
 import type { CartItemData } from '@ahub/shared/types';
-
+import { X } from 'phosphor-react-native';
 interface CartItemProps {
   item: CartItemData;
   onUpdateQuantity: (itemId: string, quantity: number) => void;

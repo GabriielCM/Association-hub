@@ -7,7 +7,6 @@ import { CopilotProvider, CopilotStep } from 'react-native-copilot';
 
 import { Text, Heading, Avatar, Icon } from '@ahub/ui';
 import { Note } from '@ahub/ui/src/icons';
-import Plus from 'phosphor-react-native/src/icons/Plus';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useDashboardSummary, useFeed } from '@/features/dashboard/hooks/useDashboard';
 import { useDashboardWebSocket } from '@/features/dashboard/hooks/useDashboardWebSocket';
@@ -35,7 +34,7 @@ import {
 } from '@/features/dashboard/components/HomeSkeletons';
 
 import type { FeedPost } from '@ahub/shared/types';
-
+import { Plus } from 'phosphor-react-native';
 function CopilotView({ copilot, children }: { copilot?: any; children: React.ReactNode }) {
   const setRef = React.useCallback(
     (node: View | null) => {

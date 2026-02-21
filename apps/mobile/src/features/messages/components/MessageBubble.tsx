@@ -4,7 +4,7 @@ import { XStack, YStack, View } from 'tamagui';
 import { Text, Avatar, Icon } from '@ahub/ui';
 import { Check, Checks, CircleNotch, Camera, Microphone, ArrowBendUpLeft } from '@ahub/ui/src/icons';
 import type { Message, MessageStatus } from '@ahub/shared/types';
-import type { Icon as PhosphorIcon } from 'phosphor-react-native';
+import { LockSimple, type Icon as PhosphorIcon } from 'phosphor-react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -365,7 +365,7 @@ export const MessageBubble = memo(function MessageBubble({
                     <XStack alignItems="center" justifyContent="flex-end" gap="$1">
                       {message.isEncrypted && (
                         <Icon
-                          icon="LockSimple"
+                          icon={LockSimple}
                           size={10}
                           color={textTimeColor ?? 'secondary'}
                         />

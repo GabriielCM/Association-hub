@@ -1,8 +1,7 @@
 import { Pressable, View, StyleSheet, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Avatar, Text } from '@ahub/ui';
-import Camera from 'phosphor-react-native/src/icons/Camera';
-
+import { Camera } from 'phosphor-react-native';
 interface AvatarPickerProps {
   currentAvatarUrl?: string | undefined;
   name?: string | undefined;

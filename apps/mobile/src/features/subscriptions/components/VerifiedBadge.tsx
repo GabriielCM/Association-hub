@@ -1,7 +1,7 @@
 import { View } from 'react-native';
-import SealCheck from 'phosphor-react-native/src/icons/SealCheck';
-import { useBenefits } from '../hooks/useMySubscription';
 
+import { useBenefits } from '../hooks/useMySubscription';
+import { SealCheck } from 'phosphor-react-native';
 interface VerifiedBadgeProps {
   size?: 'sm' | 'md';
   isVerified?: boolean;

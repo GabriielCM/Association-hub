@@ -4,12 +4,11 @@ import { YStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Text, Spinner, ScreenHeader, Icon } from '@ahub/ui';
-import MagnifyingGlass from 'phosphor-react-native/src/icons/MagnifyingGlass';
 import { useProducts } from '@/features/store/hooks/useProducts';
 import { useCategoryBySlug } from '@/features/store/hooks/useCategories';
 import { ProductCard } from '@/features/store/components/ProductCard';
 import type { StoreProductsFilter } from '@ahub/shared/types';
-
+import { MagnifyingGlass } from 'phosphor-react-native';
 export default function CategoryScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const [page, setPage] = useState(1);

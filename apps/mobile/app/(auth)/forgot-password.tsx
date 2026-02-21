@@ -7,10 +7,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Input, Text, Heading, Card, Icon } from '@ahub/ui';
-import CheckCircle from 'phosphor-react-native/src/icons/CheckCircle';
 import { resetPasswordSchema, type ResetPasswordInput } from '@ahub/shared/validation';
 import { useAuth } from '@/hooks/useAuth';
-
+import { CheckCircle } from 'phosphor-react-native';
 export default function ForgotPasswordScreen() {
   const { requestPasswordReset, isLoading, error, clearError } = useAuth();
   const [emailSent, setEmailSent] = useState(false);

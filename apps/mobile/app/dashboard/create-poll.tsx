@@ -13,10 +13,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { Text, Icon } from '@ahub/ui';
-import X from 'phosphor-react-native/src/icons/X';
+
 import { colors } from '@ahub/ui/themes';
 import { useCreatePoll } from '@/features/dashboard/hooks/useFeedMutations';
-
+import { X } from 'phosphor-react-native';
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 4;
 

@@ -12,8 +12,8 @@ import { YStack, XStack } from 'tamagui';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
 import { Text, Avatar } from '@ahub/ui';
-import Trash from 'phosphor-react-native/src/icons/Trash';
-import X from 'phosphor-react-native/src/icons/X';
+
+
 import { useAuthContext } from '@/providers/AuthProvider';
 import { resolveUploadUrl } from '@/config/constants';
 import { useUserStories } from '@/features/dashboard/hooks/useDashboard';
@@ -22,7 +22,7 @@ import {
   useDeleteStory,
 } from '@/features/dashboard/hooks/useStoryMutations';
 import type { StoryResponse } from '@ahub/shared/types';
-
+import { Trash, X } from 'phosphor-react-native';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const STORY_DURATION = 5000;
 

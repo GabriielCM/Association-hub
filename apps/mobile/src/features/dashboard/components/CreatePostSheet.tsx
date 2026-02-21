@@ -14,11 +14,11 @@ import { YStack, XStack } from 'tamagui';
 import * as ImagePicker from 'expo-image-picker';
 
 import { Text, Icon } from '@ahub/ui';
-import X from 'phosphor-react-native/src/icons/X';
-import ImageSquare from 'phosphor-react-native/src/icons/ImageSquare';
+
+
 import { useCreatePost } from '../hooks/useFeedMutations';
 import { useDashboardTheme } from '../hooks/useDashboardTheme';
-
+import { ImageSquare, X } from 'phosphor-react-native';
 const MAX_DESCRIPTION_LENGTH = 500;
 
 interface CreatePostSheetProps {

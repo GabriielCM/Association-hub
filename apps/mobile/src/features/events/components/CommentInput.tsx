@@ -2,12 +2,12 @@ import { useState, useCallback } from 'react';
 import { TextInput, Pressable, Image, Alert, StyleSheet } from 'react-native';
 import { XStack, YStack, View } from 'tamagui';
 import { Button } from '@ahub/ui';
-import ImageSquare from 'phosphor-react-native/src/icons/ImageSquare';
-import X from 'phosphor-react-native/src/icons/X';
+
+
 import * as ImagePicker from 'expo-image-picker';
 import { useEventsTheme } from '@/features/events/hooks/useEventsTheme';
 import type { CommentInput as CommentInputData } from '../hooks/useEventMutations';
-
+import { ImageSquare, X } from 'phosphor-react-native';
 interface CommentInputProps {
   onSubmit: (data: CommentInputData) => void;
   isLoading?: boolean;

@@ -4,13 +4,13 @@ import { YStack, XStack } from 'tamagui';
 
 import { Text, Card, Avatar, Icon } from '@ahub/ui';
 import { ChartBar } from '@ahub/ui/src/icons';
-import SealCheck from 'phosphor-react-native/src/icons/SealCheck';
-import CheckSquare from 'phosphor-react-native/src/icons/CheckSquare';
-import Square from 'phosphor-react-native/src/icons/Square';
+
+
+
 import { useVotePoll } from '../hooks/useFeedMutations';
 import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import type { FeedPost } from '@ahub/shared/types';
-
+import { CheckSquare, SealCheck, Square } from 'phosphor-react-native';
 function timeAgo(date: Date): string {
   const now = new Date();
   const diffMs = now.getTime() - new Date(date).getTime();

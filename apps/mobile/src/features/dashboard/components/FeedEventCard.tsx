@@ -5,10 +5,10 @@ import { useRouter } from 'expo-router';
 
 import { Text, Card, Badge, Icon } from '@ahub/ui';
 import { Heart, ChatCircle, Calendar, MapPin, Confetti } from '@ahub/ui/src/icons';
-import Shield from 'phosphor-react-native/src/icons/Shield';
+
 import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import type { FeedPost } from '@ahub/shared/types';
-
+import { Shield } from 'phosphor-react-native';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 function timeAgo(date: Date): string {

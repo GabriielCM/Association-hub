@@ -14,7 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { Text, Icon } from '@ahub/ui';
 import { ChatCircle } from '@ahub/ui/src/icons';
-import X from 'phosphor-react-native/src/icons/X';
+
 import { colors } from '@ahub/ui/themes';
 import { getComments } from '@/features/dashboard/api/dashboard.api';
 import {
@@ -23,7 +23,7 @@ import {
 } from '@/features/dashboard/hooks/useFeedMutations';
 import { CommentItem } from '@/features/dashboard/components/CommentItem';
 import type { FeedComment, CommentsListResponse } from '@ahub/shared/types';
-
+import { X } from 'phosphor-react-native';
 export default function CommentsScreen() {
   const router = useRouter();
   const { postId } = useLocalSearchParams<{ postId: string }>();

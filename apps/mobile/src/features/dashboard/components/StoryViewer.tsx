@@ -12,13 +12,13 @@ import {
 import { YStack, XStack } from 'tamagui';
 
 import { Text, Avatar } from '@ahub/ui';
-import Trash from 'phosphor-react-native/src/icons/Trash';
-import X from 'phosphor-react-native/src/icons/X';
+
+
 import { resolveUploadUrl } from '@/config/constants';
 import { useUserStories } from '../hooks/useDashboard';
 import { useRecordStoryView, useDeleteStory } from '../hooks/useStoryMutations';
 import type { StoryResponse, StoryUserListItem } from '@ahub/shared/types';
-
+import { Trash, X } from 'phosphor-react-native';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const STORY_DURATION = 5000; // 5s per story
 

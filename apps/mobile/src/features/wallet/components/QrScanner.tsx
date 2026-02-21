@@ -3,8 +3,8 @@ import { StyleSheet, View, Pressable } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { Text } from '@ahub/ui';
 import { Camera } from '@ahub/ui/src/icons';
-import Flashlight from 'phosphor-react-native/src/icons/Flashlight';
-import Lightbulb from 'phosphor-react-native/src/icons/Lightbulb';
+
+
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import type { BarcodeScanningResult } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
@@ -20,7 +20,7 @@ import Animated, {
 import { useWalletStore, useScanHistory } from '@/stores/wallet.store';
 import { GlassPanel } from './GlassPanel';
 import { useWalletTheme } from '../hooks/useWalletTheme';
-
+import { Flashlight, Lightbulb } from 'phosphor-react-native';
 interface QrScannerProps {
   onScan: (data: string) => void;
   isProcessing: boolean;

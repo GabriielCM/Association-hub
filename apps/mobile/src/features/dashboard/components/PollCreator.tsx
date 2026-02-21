@@ -12,10 +12,10 @@ import {
 import { YStack, XStack } from 'tamagui';
 
 import { Text, Icon } from '@ahub/ui';
-import X from 'phosphor-react-native/src/icons/X';
+
 import { useCreatePoll } from '../hooks/useFeedMutations';
 import { useDashboardTheme } from '../hooks/useDashboardTheme';
-
+import { X } from 'phosphor-react-native';
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 4;
 

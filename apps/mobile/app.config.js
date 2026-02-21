@@ -1,35 +1,3 @@
-const path = require('path');
-
-const monorepoRoot = path.resolve(__dirname, '../..');
-
-/**
- * Resolve an Expo config plugin, checking local node_modules first,
- * then falling back to monorepo root node_modules.
- * Needed for EAS Build with pnpm monorepos.
- */
-function resolvePlugin(pluginEntry) {
-  if (Array.isArray(pluginEntry)) {
-    const [name, options] = pluginEntry;
-    return [resolvePluginName(name), options];
-  }
-  return resolvePluginName(pluginEntry);
-}
-
-function resolvePluginName(name) {
-  const searchPaths = [__dirname, monorepoRoot];
-  for (const searchPath of searchPaths) {
-    try {
-      const pkgJsonPath = require.resolve(name + '/package.json', {
-        paths: [searchPath],
-      });
-      return path.dirname(pkgJsonPath);
-    } catch {
-      // continue
-    }
-  }
-  return name;
-}
-
 module.exports = {
   expo: {
     name: 'A-hub',
@@ -129,7 +97,7 @@ module.exports = {
           enableGooglePay: true,
         },
       ],
-    ].map(resolvePlugin),
+    ],
     experiments: {
       typedRoutes: true,
     },

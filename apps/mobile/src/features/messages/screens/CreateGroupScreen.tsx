@@ -12,16 +12,13 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { YStack, XStack, View } from 'tamagui';
 import { Text, Avatar, Button, ScreenHeader } from '@ahub/ui';
-import Check from 'phosphor-react-native/src/icons/Check';
-import Camera from 'phosphor-react-native/src/icons/Camera';
-import X from 'phosphor-react-native/src/icons/X';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSearchUsers } from '@/features/points/hooks/useRecipientSearch';
 import { useCreateConversation } from '../hooks/useConversations';
 import { uploadMedia } from '../api/messages.api';
 import type { UserSearchResult } from '@ahub/shared/types';
-
+import { Camera, Check, X } from 'phosphor-react-native';
 type Step = 'participants' | 'details';
 
 export function CreateGroupScreen() {

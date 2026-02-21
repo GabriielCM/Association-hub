@@ -3,7 +3,7 @@ import { Pressable, type StyleProp, type ViewStyle } from 'react-native';
 import { XStack, YStack, useTheme } from 'tamagui';
 import { Text, Heading } from './Text';
 import { Icon } from './Icon';
-import CaretLeft from 'phosphor-react-native/src/icons/CaretLeft';
+import { CaretLeft } from 'phosphor-react-native';
 
 export interface ScreenHeaderProps {
   title?: string;

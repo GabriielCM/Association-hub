@@ -13,7 +13,7 @@ import { YStack, XStack } from 'tamagui';
 import { useQuery } from '@tanstack/react-query';
 
 import { Text, Avatar, Icon } from '@ahub/ui';
-import X from 'phosphor-react-native/src/icons/X';
+
 import { getComments } from '../api/dashboard.api';
 import {
   useCreateComment,
@@ -23,7 +23,7 @@ import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import { CommentItem } from './CommentItem';
 import { ReactionBar } from './ReactionBar';
 import type { FeedComment, CommentsListResponse } from '@ahub/shared/types';
-
+import { X } from 'phosphor-react-native';
 interface CommentsModalProps {
   visible: boolean;
   postId: string | null;

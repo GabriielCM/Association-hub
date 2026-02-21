@@ -3,7 +3,6 @@ import { ScrollView, StyleSheet } from 'react-native';
 import { YStack, XStack, View } from 'tamagui';
 import { Text, Heading, Avatar, Card, Button, ScreenHeader, Icon } from '@ahub/ui';
 import { SpeakerSlash, Bell, Warning } from '@ahub/ui/src/icons';
-import Prohibit from 'phosphor-react-native/src/icons/Prohibit';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/auth.store';
@@ -11,7 +10,7 @@ import { useConversation, useUpdateConversationSettings } from '@/features/messa
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import { OnlineStatus } from '@/features/messages/components/OnlineStatus';
 import { colors } from '@ahub/ui/themes';
-
+import { Prohibit } from 'phosphor-react-native';
 export default function ContactDetailScreen() {
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
   const user = useAuthStore((s) => s.user);

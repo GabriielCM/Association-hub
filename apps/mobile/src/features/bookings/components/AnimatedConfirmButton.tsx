@@ -15,8 +15,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { colors } from '@ahub/ui/themes';
 import { NativeViewFallback } from '@ahub/ui';
-import Check from 'phosphor-react-native/src/icons/Check';
-
+import { Check } from 'phosphor-react-native';
 interface AnimatedConfirmButtonProps {
   price: number | null;
   originalPrice?: number | null;
