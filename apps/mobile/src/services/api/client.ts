@@ -12,6 +12,7 @@ import {
   clearTokens,
 } from '@/services/storage/secure-store';
 import type { AuthTokens, ApiResponse } from '@ahub/shared/types';
+import { useAuthStore } from '@/stores/auth.store';
 
 // Queue for failed requests during token refresh
 interface QueueItem {
@@ -48,6 +49,11 @@ api.interceptors.request.use(
     const accessToken = await getAccessToken();
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    // Add association ID header for multi-tenant filtering
+    const user = useAuthStore.getState().user;
+    if (user?.associationId && config.headers) {
+      config.headers['x-association-id'] = user.associationId;
     }
     return config;
   },

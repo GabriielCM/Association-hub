@@ -49,22 +49,27 @@ export class StoreController {
   @ApiQuery({ name: 'promotional', required: false, type: Boolean })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
-  async getProducts(@Query() query: ProductQueryDto) {
-    return this.productsService.findAll(query);
+  async getProducts(
+    @Headers('x-association-id') associationId: string,
+    @Query() query: ProductQueryDto,
+  ) {
+    return this.productsService.findAll(query, associationId);
   }
 
   @Get('products/featured')
   @ApiOperation({ summary: 'Listar produtos em destaque' })
   @ApiResponse({ status: 200, description: 'Lista de produtos em destaque' })
-  async getFeaturedProducts() {
-    return this.productsService.findAll({ featured: true, limit: 10 });
+  async getFeaturedProducts(@Headers('x-association-id') associationId: string) {
+    const result = await this.productsService.findAll({ featured: true, limit: 10 }, associationId);
+    return result.data;
   }
 
   @Get('products/promotional')
   @ApiOperation({ summary: 'Listar produtos promocionais' })
   @ApiResponse({ status: 200, description: 'Lista de produtos em promoção' })
-  async getPromotionalProducts() {
-    return this.productsService.findAll({ promotional: true, limit: 20 });
+  async getPromotionalProducts(@Headers('x-association-id') associationId: string) {
+    const result = await this.productsService.findAll({ promotional: true, limit: 20 }, associationId);
+    return result.data;
   }
 
   @Get('products/:slug')

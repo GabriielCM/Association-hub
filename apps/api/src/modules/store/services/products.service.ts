@@ -27,8 +27,8 @@ export class ProductsService {
   /**
    * Find all products with filters (public)
    */
-  async findAll(query: ProductQueryDto) {
-    return this.getProducts(query);
+  async findAll(query: ProductQueryDto, associationId?: string) {
+    return this.getProducts(query, associationId);
   }
 
   /**
@@ -187,13 +187,14 @@ export class ProductsService {
   /**
    * Get products with filters
    */
-  async getProducts(query: ProductQueryDto) {
+  async getProducts(query: ProductQueryDto, associationId?: string) {
     const { categoryId, type, search, featured, promotional, page = 1, limit = 20 } = query;
 
     const where: any = {
       isActive: true,
     };
 
+    if (associationId) where.category = { associationId };
     if (categoryId) where.categoryId = categoryId;
     if (type) where.type = type;
     if (featured) where.isFeatured = true;
@@ -223,10 +224,10 @@ export class ProductsService {
 
     return {
       data: products.map((p) => this.formatProductSummary(p)),
-      pagination: {
-        page,
-        limit,
-        total,
+      meta: {
+        currentPage: page,
+        perPage: limit,
+        totalCount: total,
         totalPages: Math.ceil(total / limit),
       },
     };
