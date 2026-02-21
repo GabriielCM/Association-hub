@@ -3,6 +3,7 @@ import { Pressable } from 'react-native';
 import { XStack } from 'tamagui';
 
 import { Text } from '@ahub/ui';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import { addReaction, removeReaction } from '../api/dashboard.api';
 import { useQueryClient } from '@tanstack/react-query';
 import type { CommentReactions, ReactionType } from '@ahub/shared/types';
@@ -30,6 +31,7 @@ export function ReactionBar({
   commentId,
 }: ReactionBarProps) {
   const queryClient = useQueryClient();
+  const dt = useDashboardTheme();
 
   // Optimistic local state — normalized to lowercase
   const [localReactions, setLocalReactions] = useState<CommentReactions>(reactions);
@@ -111,7 +113,7 @@ export function ReactionBar({
                 {count > 0 && (
                   <Text
                     size="xs"
-                    color={isActive ? 'white' : 'secondary'}
+                    style={{ color: isActive ? '#FFF' : dt.textSecondary }}
                   >
                     {count}
                   </Text>
@@ -125,7 +127,7 @@ export function ReactionBar({
       {/* Quick add reaction */}
       {!localMyReaction && (
         <Pressable onPress={() => handleReaction('heart')}>
-          <Text size="xs" color="secondary">
+          <Text size="xs" style={{ color: dt.textSecondary }}>
             ❤️
           </Text>
         </Pressable>

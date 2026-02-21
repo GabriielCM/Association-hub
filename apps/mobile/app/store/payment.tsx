@@ -8,6 +8,7 @@ import { MISC_ICONS } from '@ahub/ui/src/icons';
 import { formatPoints } from '@ahub/shared/utils';
 import { isStripeAvailable } from '@/providers/StripeProvider';
 import { useProcessCheckout } from '@/features/store/hooks/useCheckout';
+import { useStoreTheme } from '@/features/store/hooks/useStoreTheme';
 import { BiometricConfirm } from '@/features/store/components/BiometricConfirm';
 import { PaymentStatusPolling } from '@/features/store/components/PaymentStatusPolling';
 import type {
@@ -44,6 +45,7 @@ type PaymentStep =
   | 'error';
 
 export default function PaymentScreen() {
+  const st = useStoreTheme();
   const { method, pointsToUse } = useLocalSearchParams<{
     method: string;
     pointsToUse?: string;
@@ -182,9 +184,7 @@ export default function PaymentScreen() {
 
     if (presentError) {
       if (presentError.code === 'Canceled') {
-        // User cancelled the PaymentSheet
         if (paymentMethod === 'MIXED') {
-          // Points were already debited - warn user
           Alert.alert(
             'Pagamento cancelado',
             'Os pontos utilizados serao devolvidos automaticamente caso o pagamento nao seja concluido.',
@@ -203,7 +203,6 @@ export default function PaymentScreen() {
       return;
     }
 
-    // Payment succeeded - start polling for webhook confirmation
     setStep('polling');
   };
 
@@ -264,11 +263,11 @@ export default function PaymentScreen() {
   if (step === 'biometric') {
     const biometricAmount =
       paymentMethod === 'POINTS'
-        ? 0 // Will show total from checkout
+        ? 0
         : pointsAmount ?? 0;
 
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>
         <BiometricConfirm
           visible
           onConfirm={handleBiometricConfirm}
@@ -287,13 +286,13 @@ export default function PaymentScreen() {
   // Processing state
   if (step === 'processing' || step === 'stripe') {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$4" padding="$6">
           <Spinner />
-          <Text size="lg" weight="semibold">
+          <Text size="lg" weight="semibold" style={{ color: st.textPrimary }}>
             {step === 'stripe' ? 'Abrindo pagamento...' : 'Processando...'}
           </Text>
-          <Text size="sm" color="secondary" align="center">
+          <Text size="sm" align="center" style={{ color: st.textSecondary }}>
             {paymentMethod === 'POINTS'
               ? 'Debitando pontos da sua conta'
               : 'Preparando pagamento com cartao'}
@@ -306,7 +305,7 @@ export default function PaymentScreen() {
   // Polling state (after Stripe PaymentSheet success)
   if (step === 'polling') {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>
         <PaymentStatusPolling
           onConfirmed={handlePollingConfirmed}
           onTimeout={handlePollingTimeout}
@@ -318,11 +317,11 @@ export default function PaymentScreen() {
   // Error state
   if (step === 'error') {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$4" padding="$6">
           <Icon icon={MISC_ICONS.error} size="xl" color="error" weight="duotone" />
-          <Heading level={4}>Erro no pagamento</Heading>
-          <Text size="sm" color="secondary" align="center">
+          <Heading level={4} style={{ color: st.textPrimary }}>Erro no pagamento</Heading>
+          <Text size="sm" align="center" style={{ color: st.textSecondary }}>
             {errorMessage || 'Ocorreu um erro inesperado'}
           </Text>
           <YStack gap="$2" width="100%">
@@ -350,10 +349,10 @@ export default function PaymentScreen() {
 
   // Idle / initial state (brief, should transition quickly)
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>
       <YStack flex={1} alignItems="center" justifyContent="center" gap="$3">
         <Spinner />
-        <Text size="sm" color="secondary">
+        <Text size="sm" style={{ color: st.textSecondary }}>
           Iniciando pagamento...
         </Text>
       </YStack>

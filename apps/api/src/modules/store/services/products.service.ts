@@ -324,6 +324,7 @@ export class ProductsService {
         voucherValidityDays: dto.voucherValidityDays,
         pickupLocation: dto.pickupLocation,
         eligiblePlans: dto.eligiblePlans || [],
+        isFeatured: dto.isFeatured ?? false,
       },
       include: {
         category: true,
@@ -348,11 +349,21 @@ export class ProductsService {
       data: {
         categoryId: dto.categoryId,
         name: dto.name,
+        slug: dto.slug,
         shortDescription: dto.shortDescription,
         longDescription: dto.longDescription,
+        type: dto.type,
         pricePoints: dto.pricePoints,
         priceMoney: dto.priceMoney !== undefined ? new Decimal(dto.priceMoney) : undefined,
+        paymentOptions: dto.paymentOptions,
+        allowMixedPayment: dto.allowMixedPayment,
+        stockType: dto.stockType,
         stockCount: dto.stockCount,
+        limitPerUser: dto.limitPerUser,
+        cashbackPercent: dto.cashbackPercent !== undefined ? new Decimal(dto.cashbackPercent) : undefined,
+        voucherValidityDays: dto.voucherValidityDays,
+        pickupLocation: dto.pickupLocation,
+        eligiblePlans: dto.eligiblePlans,
         isActive: dto.isActive,
         isFeatured: dto.isFeatured,
       },
@@ -454,6 +465,55 @@ export class ProductsService {
     return this.prisma.productVariant.update({
       where: { id: variantId },
       data: { isActive: false },
+    });
+  }
+
+  // =====================
+  // IMAGES
+  // =====================
+
+  async addImage(productId: string, url: string, altText?: string) {
+    const product = await this.prisma.storeProduct.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Produto não encontrado');
+    }
+
+    const maxOrder = await this.prisma.productImage.aggregate({
+      where: { productId },
+      _max: { displayOrder: true },
+    });
+
+    return this.prisma.productImage.create({
+      data: {
+        productId,
+        url,
+        altText,
+        displayOrder: (maxOrder._max.displayOrder ?? -1) + 1,
+      },
+    });
+  }
+
+  async deleteImage(productId: string, imageId: string) {
+    const image = await this.prisma.productImage.findFirst({
+      where: { id: imageId, productId },
+    });
+
+    if (!image) {
+      throw new NotFoundException('Imagem não encontrada');
+    }
+
+    return this.prisma.productImage.delete({
+      where: { id: imageId },
+    });
+  }
+
+  async getProductImages(productId: string) {
+    return this.prisma.productImage.findMany({
+      where: { productId },
+      orderBy: { displayOrder: 'asc' },
     });
   }
 

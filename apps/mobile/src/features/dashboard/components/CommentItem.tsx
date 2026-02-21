@@ -3,6 +3,7 @@ import { YStack, XStack } from 'tamagui';
 
 import { Text, Avatar } from '@ahub/ui';
 import { useAuthContext } from '@/providers/AuthProvider';
+import { useDashboardTheme } from '../hooks/useDashboardTheme';
 import { ReactionBar } from './ReactionBar';
 import type { FeedComment } from '@ahub/shared/types';
 
@@ -35,6 +36,7 @@ export function CommentItem({
   isReply = false,
 }: CommentItemProps) {
   const { user } = useAuthContext();
+  const dt = useDashboardTheme();
   const isOwn = user?.id === comment.author.id;
 
   return (
@@ -51,15 +53,15 @@ export function CommentItem({
         />
         <YStack flex={1} gap="$1">
           <XStack alignItems="center" gap="$2">
-            <Text weight="semibold" size="xs">
+            <Text weight="semibold" size="xs" style={{ color: dt.textPrimary }}>
               {comment.author.name}
             </Text>
-            <Text color="secondary" size="xs">
+            <Text size="xs" style={{ color: dt.textSecondary }}>
               {timeAgo(comment.created_at)}
             </Text>
           </XStack>
 
-          <Text size="sm">{comment.text}</Text>
+          <Text size="sm" style={{ color: dt.textPrimary }}>{comment.text}</Text>
 
           {/* Actions */}
           <XStack alignItems="center" gap="$3">
@@ -71,7 +73,7 @@ export function CommentItem({
 
             {!isReply && (
               <Pressable onPress={() => onReply(comment)}>
-                <Text size="xs" color="accent">
+                <Text size="xs" style={{ color: dt.accent }}>
                   Responder
                 </Text>
               </Pressable>
@@ -79,7 +81,7 @@ export function CommentItem({
 
             {isOwn && (
               <Pressable onPress={() => onDelete(comment.id)}>
-                <Text size="xs" color="error">
+                <Text size="xs" style={{ color: '#EF4444' }}>
                   Excluir
                 </Text>
               </Pressable>

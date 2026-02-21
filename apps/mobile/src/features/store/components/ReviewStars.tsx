@@ -1,6 +1,7 @@
 import { YStack, XStack } from 'tamagui';
 import { Text, Card, Icon } from '@ahub/ui';
 import { Star } from '@ahub/ui/src/icons';
+import { useStoreTheme } from '../hooks/useStoreTheme';
 import type { ProductReview } from '@ahub/shared/types';
 
 interface ReviewStarsProps {
@@ -11,6 +12,7 @@ interface ReviewStarsProps {
 const sizeMap = { sm: 12, md: 16, lg: 20 };
 
 export function ReviewStars({ rating, size = 'md' }: ReviewStarsProps) {
+  const st = useStoreTheme();
   const fontSize = sizeMap[size];
 
   return (
@@ -20,7 +22,7 @@ export function ReviewStars({ rating, size = 'md' }: ReviewStarsProps) {
           key={i}
           icon={Star}
           size={fontSize}
-          color={i < Math.round(rating) ? '#F59E0B' : '#D1D5DB'}
+          color={i < Math.round(rating) ? st.starFilled : st.starEmpty}
           weight={i < Math.round(rating) ? 'fill' : 'regular'}
         />
       ))}
@@ -34,10 +36,12 @@ interface ReviewListProps {
 }
 
 export function ReviewList({ reviews }: ReviewListProps) {
+  const st = useStoreTheme();
+
   if (reviews.length === 0) {
     return (
       <YStack alignItems="center" paddingVertical="$4">
-        <Text color="secondary" size="sm">
+        <Text size="sm" style={{ color: st.textSecondary }}>
           Nenhuma avaliação ainda
         </Text>
       </YStack>
@@ -47,21 +51,30 @@ export function ReviewList({ reviews }: ReviewListProps) {
   return (
     <YStack gap="$3">
       {reviews.map((review) => (
-        <Card key={review.id} variant="flat">
+        <Card
+          key={review.id}
+          variant="flat"
+          {...(st.cardBg ? {
+            backgroundColor: st.cardBg,
+            borderWidth: 1,
+            borderColor: st.cardBorder,
+            shadowOpacity: 0,
+          } : {})}
+        >
           <YStack gap="$2">
             <XStack justifyContent="space-between" alignItems="center">
               <XStack gap="$2" alignItems="center">
-                <Text weight="semibold" size="sm">
+                <Text weight="semibold" size="sm" style={{ color: st.textPrimary }}>
                   {review.user.name}
                 </Text>
                 <ReviewStars rating={review.rating} size="sm" />
               </XStack>
-              <Text size="xs" color="secondary">
+              <Text size="xs" style={{ color: st.textSecondary }}>
                 {new Date(review.createdAt).toLocaleDateString('pt-BR')}
               </Text>
             </XStack>
             {review.comment && (
-              <Text size="sm" color="secondary">
+              <Text size="sm" style={{ color: st.textSecondary }}>
                 {review.comment}
               </Text>
             )}

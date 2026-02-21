@@ -417,3 +417,56 @@ export async function reorderCategories(categoryIds: string[]): Promise<void> {
     throw extractApiError(error, 'Falha ao reordenar categorias');
   }
 }
+
+// ===========================================
+// PRODUCT IMAGES
+// ===========================================
+
+export interface ProductImage {
+  id: string;
+  productId: string;
+  url: string;
+  altText?: string;
+  displayOrder: number;
+  createdAt: string;
+}
+
+export async function getProductImages(productId: string): Promise<ProductImage[]> {
+  try {
+    const response = await api.get(`/admin/store/products/${productId}/images`);
+    return response.data;
+  } catch (error) {
+    throw extractApiError(error, 'Falha ao buscar imagens do produto');
+  }
+}
+
+export async function uploadProductImage(
+  productId: string,
+  file: File,
+  altText?: string
+): Promise<ProductImage> {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (altText) formData.append('altText', altText);
+    const response = await api.post(
+      `/admin/store/products/${productId}/images`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    return response.data;
+  } catch (error) {
+    throw extractApiError(error, 'Falha ao enviar imagem');
+  }
+}
+
+export async function deleteProductImage(
+  productId: string,
+  imageId: string
+): Promise<void> {
+  try {
+    await api.delete(`/admin/store/products/${productId}/images/${imageId}`);
+  } catch (error) {
+    throw extractApiError(error, 'Falha ao excluir imagem');
+  }
+}

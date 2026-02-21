@@ -4,6 +4,7 @@ import Slider from '@react-native-community/slider';
 import { YStack, XStack, View } from 'tamagui';
 import { Text } from '@ahub/ui';
 import { formatPoints, formatCurrency } from '@ahub/shared/utils';
+import { useStoreTheme } from '../hooks/useStoreTheme';
 
 interface MixedPaymentSliderProps {
   totalPoints: number;
@@ -23,8 +24,8 @@ export function MixedPaymentSlider({
   pointsRate = POINTS_TO_MONEY_RATE,
   onPointsChange,
 }: MixedPaymentSliderProps) {
-  // Max points: limited by user balance and total needed
-  // Also ensure remaining money >= R$1.00 for Stripe
+  const st = useStoreTheme();
+
   const maxPointsByBalance = Math.min(totalPoints, userBalance);
   const maxPointsByMinMoney = Math.floor(
     (totalMoney - MIN_STRIPE_AMOUNT) / (pointsRate * 100),
@@ -33,7 +34,7 @@ export function MixedPaymentSlider({
 
   const [pointsToUse, setPointsToUse] = useState(Math.floor(maxPoints / 2));
 
-  const moneyRemaining = totalMoney - pointsToUse * pointsRate * 100; // in centavos
+  const moneyRemaining = totalMoney - pointsToUse * pointsRate * 100;
   const pointsPercent = maxPoints > 0 ? pointsToUse / maxPoints : 0;
 
   const handleChange = (value: number) => {
@@ -45,7 +46,7 @@ export function MixedPaymentSlider({
   if (maxPoints <= 0) {
     return (
       <YStack gap="$2">
-        <Text size="sm" color="secondary">
+        <Text size="sm" style={{ color: st.textSecondary }}>
           Pagamento misto não disponível para este valor.
         </Text>
       </YStack>
@@ -54,7 +55,7 @@ export function MixedPaymentSlider({
 
   return (
     <YStack gap="$3">
-      <Text weight="semibold" size="sm">
+      <Text weight="semibold" size="sm" style={{ color: st.textPrimary }}>
         Dividir pagamento
       </Text>
 
@@ -65,39 +66,39 @@ export function MixedPaymentSlider({
         step={1}
         value={pointsToUse}
         onValueChange={handleChange}
-        minimumTrackTintColor="#7C3AED"
-        maximumTrackTintColor="#E5E7EB"
-        thumbTintColor="#7C3AED"
+        minimumTrackTintColor={st.sliderMinTrack}
+        maximumTrackTintColor={st.sliderMaxTrack}
+        thumbTintColor={st.sliderThumb}
       />
 
       {/* Visual split bar */}
       <XStack height={8} borderRadius={4} overflow="hidden">
         <View
           style={{ flex: pointsPercent }}
-          backgroundColor="#7C3AED"
+          backgroundColor={st.pointsColor}
         />
         <View
           style={{ flex: 1 - pointsPercent }}
-          backgroundColor="#3B82F6"
+          backgroundColor={st.moneyColor}
         />
       </XStack>
 
       {/* Labels */}
       <XStack justifyContent="space-between">
         <YStack alignItems="flex-start">
-          <Text size="xs" color="secondary">
+          <Text size="xs" style={{ color: st.textSecondary }}>
             Pontos
           </Text>
-          <Text size="sm" weight="semibold" style={{ color: '#7C3AED' }}>
+          <Text size="sm" weight="semibold" style={{ color: st.pointsColor }}>
             {formatPoints(pointsToUse)} pts
           </Text>
         </YStack>
 
         <YStack alignItems="flex-end">
-          <Text size="xs" color="secondary">
+          <Text size="xs" style={{ color: st.textSecondary }}>
             Cartão
           </Text>
-          <Text size="sm" weight="semibold" style={{ color: '#3B82F6' }}>
+          <Text size="sm" weight="semibold" style={{ color: st.moneyColor }}>
             {formatCurrency(moneyRemaining)}
           </Text>
         </YStack>

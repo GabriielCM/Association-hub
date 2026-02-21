@@ -15,7 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Text, Icon } from '@ahub/ui';
 import { ChatCircle } from '@ahub/ui/src/icons';
 
-import { colors } from '@ahub/ui/themes';
+import { useDashboardTheme } from '@/features/dashboard/hooks/useDashboardTheme';
 import { getComments } from '@/features/dashboard/api/dashboard.api';
 import {
   useCreateComment,
@@ -24,8 +24,10 @@ import {
 import { CommentItem } from '@/features/dashboard/components/CommentItem';
 import type { FeedComment, CommentsListResponse } from '@ahub/shared/types';
 import { X } from 'phosphor-react-native';
+
 export default function CommentsScreen() {
   const router = useRouter();
+  const dt = useDashboardTheme();
   const { postId } = useLocalSearchParams<{ postId: string }>();
   const [text, setText] = useState('');
   const [replyTo, setReplyTo] = useState<{
@@ -79,7 +81,7 @@ export default function CommentsScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF' }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: dt.screenBg }} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         behavior="padding"
         style={{ flex: 1 }}
@@ -90,16 +92,15 @@ export default function CommentsScreen() {
           alignItems="center"
           justifyContent="space-between"
           padding="$4"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
+          style={{ borderBottomWidth: 1, borderBottomColor: dt.borderColor }}
         >
           <Pressable onPress={() => router.back()}>
-            <Text color="secondary">← Voltar</Text>
+            <Text style={{ color: dt.textSecondary }}>← Voltar</Text>
           </Pressable>
-          <Text weight="bold" size="lg">
+          <Text weight="bold" size="lg" style={{ color: dt.textPrimary }}>
             Comentarios
           </Text>
-          <Text size="sm" color="secondary">
+          <Text size="sm" style={{ color: dt.textSecondary }}>
             {data?.total ?? 0}
           </Text>
         </XStack>
@@ -107,7 +108,7 @@ export default function CommentsScreen() {
         {/* Comments list */}
         {isLoading ? (
           <YStack padding="$8" alignItems="center" flex={1}>
-            <ActivityIndicator />
+            <ActivityIndicator color={dt.accent} />
           </YStack>
         ) : (
           <FlatList
@@ -129,10 +130,10 @@ export default function CommentsScreen() {
                 flex={1}
               >
                 <Icon icon={ChatCircle} size="xl" color="muted" weight="duotone" />
-                <Text color="secondary" weight="semibold">
+                <Text style={{ color: dt.textSecondary }} weight="semibold">
                   Nenhum comentario ainda
                 </Text>
-                <Text color="secondary" size="xs">
+                <Text style={{ color: dt.textSecondary }} size="xs">
                   Seja o primeiro a comentar!
                 </Text>
               </YStack>
@@ -147,13 +148,13 @@ export default function CommentsScreen() {
             paddingVertical="$1"
             alignItems="center"
             gap="$2"
-            backgroundColor="$background"
+            style={{ backgroundColor: dt.inputBg }}
           >
-            <Text size="xs" color="secondary">
+            <Text size="xs" style={{ color: dt.textSecondary }}>
               Respondendo a @{replyTo.name}
             </Text>
             <Pressable onPress={() => setReplyTo(null)}>
-              <Icon icon={X} size="sm" color="primary" />
+              <X size={16} color={dt.accent} />
             </Pressable>
           </XStack>
         )}
@@ -163,8 +164,7 @@ export default function CommentsScreen() {
           padding="$4"
           gap="$2"
           alignItems="flex-end"
-          borderTopWidth={1}
-          borderTopColor="$borderColor"
+          style={{ borderTopWidth: 1, borderTopColor: dt.borderColor }}
         >
           <TextInput
             value={text}
@@ -174,7 +174,15 @@ export default function CommentsScreen() {
                 ? `Respondendo a @${replyTo.name}...`
                 : 'Adicione um comentario...'
             }
-            style={styles.input}
+            placeholderTextColor={dt.inputPlaceholder}
+            style={[
+              styles.input,
+              {
+                borderColor: dt.inputBorder,
+                color: dt.inputText,
+                backgroundColor: dt.inputBg,
+              },
+            ]}
             multiline
             maxLength={500}
           />
@@ -183,14 +191,15 @@ export default function CommentsScreen() {
             disabled={!text.trim() || createComment.isPending}
             style={[
               styles.sendBtn,
+              { backgroundColor: dt.isDark ? '#00E5FF' : dt.accent },
               (!text.trim() || createComment.isPending) &&
                 styles.sendBtnDisabled,
             ]}
           >
             {createComment.isPending ? (
-              <ActivityIndicator color="#FFF" size="small" />
+              <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <Text style={{ color: '#FFF' }} weight="semibold" size="sm">
+              <Text style={{ color: '#FFFFFF' }} weight="semibold" size="sm">
                 Enviar
               </Text>
             )}
@@ -205,7 +214,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -213,7 +221,6 @@ const styles = StyleSheet.create({
     maxHeight: 80,
   },
   sendBtn: {
-    backgroundColor: colors.accentDark,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,

@@ -812,11 +812,13 @@ export interface StoreProductListItem {
   isPromotional: boolean;
   promotionalPricePoints?: number;
   promotionalPriceMoney?: number;
+  promotionalEndsAt?: string;
   averageRating?: number;
   reviewCount: number;
   thumbnailUrl?: string;
   isAvailable: boolean;
   isFavorited?: boolean;
+  eligiblePlans?: string[];
 }
 
 export interface StoreProductsFilter {
@@ -825,6 +827,7 @@ export interface StoreProductsFilter {
   search?: string;
   featured?: boolean;
   promotional?: boolean;
+  sort?: 'recent' | 'price_asc' | 'price_desc' | 'best_selling' | 'name_asc';
   page?: number;
   limit?: number;
 }

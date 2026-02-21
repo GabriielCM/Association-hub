@@ -2,6 +2,7 @@ import { Pressable, StyleSheet } from 'react-native';
 import { Icon } from '@ahub/ui';
 import { Heart } from '@ahub/ui/src/icons';
 import { useToggleFavorite } from '../hooks/useFavorites';
+import { useStoreTheme } from '../hooks/useStoreTheme';
 
 interface FavoriteButtonProps {
   productId: string;
@@ -12,6 +13,7 @@ export function FavoriteButton({
   productId,
   isFavorited,
 }: FavoriteButtonProps) {
+  const st = useStoreTheme();
   const toggleFavorite = useToggleFavorite();
 
   const handlePress = () => {
@@ -21,7 +23,7 @@ export function FavoriteButton({
   return (
     <Pressable
       onPress={handlePress}
-      style={styles.button}
+      style={[styles.button, { backgroundColor: st.favBtnBg }]}
       hitSlop={8}
       disabled={toggleFavorite.isPending}
     >
@@ -35,7 +37,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.9)',
     alignItems: 'center',
     justifyContent: 'center',
   },

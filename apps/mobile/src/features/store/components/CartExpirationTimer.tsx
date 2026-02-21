@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { XStack } from 'tamagui';
 import { Text, Icon } from '@ahub/ui';
 import { Timer, Warning } from '@ahub/ui/src/icons';
+import { useStoreTheme } from '../hooks/useStoreTheme';
 
 interface CartExpirationTimerProps {
   reservedUntil: string;
@@ -12,6 +13,7 @@ export function CartExpirationTimer({
   reservedUntil,
   onExpired,
 }: CartExpirationTimerProps) {
+  const st = useStoreTheme();
   const [secondsLeft, setSecondsLeft] = useState(() =>
     Math.max(
       0,
@@ -50,7 +52,7 @@ export function CartExpirationTimer({
       paddingVertical="$2"
       marginHorizontal="$4"
       borderRadius={8}
-      backgroundColor={isUrgent ? '#FEE2E2' : '#FEF3C7'}
+      backgroundColor={isUrgent ? st.urgentBg : st.warningBg}
       alignItems="center"
     >
       <Icon icon={isUrgent ? Warning : Timer} size="sm" color={isUrgent ? 'error' : 'warning'} />

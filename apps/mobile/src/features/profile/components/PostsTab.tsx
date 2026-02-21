@@ -22,7 +22,8 @@ export function PostsTab({ userId }: PostsTabProps) {
   const { data, fetchNextPage, hasNextPage, isLoading } =
     useUserPosts(userId);
 
-  const posts = data?.pages.flatMap((page) => page.posts) ?? [];
+  const posts = data?.pages.flatMap((page) => page.posts)
+    .filter((post) => !!post.content.image_url) ?? [];
 
   if (!isLoading && posts.length === 0) {
     return (

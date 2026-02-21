@@ -7,17 +7,25 @@ import {
   Body,
   Param,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
   Request,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
+import { UploadService } from '../../../common/services/upload.service';
 import { CategoriesService } from '../services/categories.service';
 import { ProductsService } from '../services/products.service';
 import { ReviewsService } from '../services/reviews.service';
@@ -41,6 +49,7 @@ export class StoreAdminController {
     private readonly categoriesService: CategoriesService,
     private readonly productsService: ProductsService,
     private readonly reviewsService: ReviewsService,
+    private readonly uploadService: UploadService,
   ) {}
 
   // =====================
@@ -128,6 +137,51 @@ export class StoreAdminController {
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
   async deleteProduct(@Param('id') id: string) {
     return this.productsService.delete(id);
+  }
+
+  // =====================
+  // IMAGENS
+  // =====================
+
+  @Get('products/:id/images')
+  @ApiOperation({ summary: 'Listar imagens do produto' })
+  @ApiResponse({ status: 200, description: 'Lista de imagens' })
+  async getProductImages(@Param('id') id: string) {
+    return this.productsService.getProductImages(id);
+  }
+
+  @Post('products/:id/images')
+  @ApiOperation({ summary: 'Upload de imagem do produto' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Imagem adicionada' })
+  @ApiResponse({ status: 404, description: 'Produto não encontrado' })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadProductImage(
+    @Param('id') id: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body() body: { altText?: string },
+  ) {
+    const upload = await this.uploadService.uploadProductImage(file);
+    return this.productsService.addImage(id, upload.url, body.altText);
+  }
+
+  @Delete('products/:productId/images/:imageId')
+  @ApiOperation({ summary: 'Excluir imagem do produto' })
+  @ApiResponse({ status: 200, description: 'Imagem excluída' })
+  @ApiResponse({ status: 404, description: 'Imagem não encontrada' })
+  async deleteProductImage(
+    @Param('productId') productId: string,
+    @Param('imageId') imageId: string,
+  ) {
+    return this.productsService.deleteImage(productId, imageId);
   }
 
   // =====================

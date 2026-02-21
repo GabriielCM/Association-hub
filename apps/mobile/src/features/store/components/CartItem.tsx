@@ -5,6 +5,7 @@ import { Storefront } from '@ahub/ui/src/icons';
 
 import { formatPoints, formatCurrency } from '@ahub/shared/utils';
 import { QuantityControl } from './QuantityControl';
+import { useStoreTheme } from '../hooks/useStoreTheme';
 import type { CartItemData } from '@ahub/shared/types';
 import { X } from 'phosphor-react-native';
 interface CartItemProps {
@@ -12,6 +13,7 @@ interface CartItemProps {
   onUpdateQuantity: (itemId: string, quantity: number) => void;
   onRemove: (itemId: string) => void;
   disabled?: boolean;
+  unavailable?: boolean;
 }
 
 export function CartItem({
@@ -19,9 +21,20 @@ export function CartItem({
   onUpdateQuantity,
   onRemove,
   disabled = false,
+  unavailable = false,
 }: CartItemProps) {
+  const st = useStoreTheme();
+
   return (
-    <XStack gap="$3" paddingVertical="$2" paddingHorizontal="$4">
+    <XStack
+      gap="$3"
+      paddingVertical="$2"
+      paddingHorizontal="$4"
+      style={unavailable ? [styles.unavailableRow, {
+        backgroundColor: st.unavailableBg,
+        borderLeftColor: '#EF4444',
+      }] : undefined}
+    >
       {/* Thumbnail */}
       {item.product.imageUrl ? (
         <Image
@@ -30,7 +43,7 @@ export function CartItem({
           resizeMode="cover"
         />
       ) : (
-        <View style={styles.imagePlaceholder}>
+        <View style={[styles.imagePlaceholder, { backgroundColor: st.placeholderBg }]}>
           <Icon icon={Storefront} size="lg" color="muted" />
         </View>
       )}
@@ -39,11 +52,11 @@ export function CartItem({
       <YStack flex={1} gap="$1">
         <XStack justifyContent="space-between" alignItems="flex-start">
           <YStack flex={1} gap={2}>
-            <Text weight="semibold" size="sm" numberOfLines={2}>
+            <Text weight="semibold" size="sm" numberOfLines={2} style={{ color: st.textPrimary }}>
               {item.product.name}
             </Text>
             {item.variant && (
-              <Text size="xs" color="secondary">
+              <Text size="xs" style={{ color: st.textSecondary }}>
                 {item.variant.name}
               </Text>
             )}
@@ -55,7 +68,7 @@ export function CartItem({
             hitSlop={8}
             style={styles.removeButton}
           >
-            <Icon icon={X} size="sm" color="secondary" />
+            <Icon icon={X} size="sm" color={st.iconColor} />
           </Pressable>
         </XStack>
 
@@ -68,17 +81,23 @@ export function CartItem({
 
           <YStack alignItems="flex-end">
             {item.totalPoints > 0 && (
-              <Text color="accent" weight="bold" size="sm">
+              <Text weight="bold" size="sm" style={{ color: st.accent }}>
                 {formatPoints(item.totalPoints)} pts
               </Text>
             )}
             {item.totalMoney > 0 && (
-              <Text size="xs" color="secondary">
+              <Text size="xs" style={{ color: st.textSecondary }}>
                 {formatCurrency(item.totalMoney)}
               </Text>
             )}
           </YStack>
         </XStack>
+
+        {unavailable && (
+          <Text size="xs" color="error">
+            Este item não está mais disponível
+          </Text>
+        )}
       </YStack>
     </XStack>
   );
@@ -94,11 +113,13 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 8,
-    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
   removeButton: {
     padding: 4,
+  },
+  unavailableRow: {
+    borderLeftWidth: 3,
   },
 });

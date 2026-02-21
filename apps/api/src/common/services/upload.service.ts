@@ -58,6 +58,18 @@ export class UploadService {
     return this.saveFile(file, 'covers');
   }
 
+  async uploadProductImage(file: Express.Multer.File): Promise<UploadResult> {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException('Tipo de arquivo não permitido. Use JPG, PNG ou WebP.');
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      throw new BadRequestException('Imagem muito grande. Máximo 10MB.');
+    }
+
+    return this.saveFile(file, 'products');
+  }
+
   async uploadAvatar(file: Express.Multer.File): Promise<UploadResult> {
     if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
       throw new BadRequestException('Tipo de arquivo não permitido. Use JPG, PNG ou WebP.');

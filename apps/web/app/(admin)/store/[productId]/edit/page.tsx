@@ -41,6 +41,7 @@ export default function EditProductPage() {
       {/* Form */}
       <div className="rounded-lg border bg-card p-6">
         <ProductForm
+          productId={productId}
           initialData={{
             name: product.name,
             slug: product.slug,

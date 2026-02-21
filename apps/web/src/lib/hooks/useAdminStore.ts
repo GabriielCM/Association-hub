@@ -20,6 +20,9 @@ import {
   updateVariantStock,
   getPendingReviews,
   moderateReview,
+  getProductImages,
+  uploadProductImage,
+  deleteProductImage,
 } from '@/lib/api/store.api';
 import type {
   CreateCategoryInput,
@@ -297,6 +300,53 @@ export function useModerateReview() {
       id: string;
       status: 'APPROVED' | 'REJECTED';
     }) => moderateReview(id, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: storeAdminKeys.all });
+    },
+  });
+}
+
+// ===========================================
+// PRODUCT IMAGES
+// ===========================================
+
+export function useProductImages(productId: string | null) {
+  return useQuery({
+    queryKey: [...storeAdminKeys.productDetail(productId || ''), 'images'],
+    queryFn: () => getProductImages(productId!),
+    enabled: !!productId,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useUploadProductImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      productId,
+      file,
+      altText,
+    }: {
+      productId: string;
+      file: File;
+      altText?: string;
+    }) => uploadProductImage(productId, file, altText),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: storeAdminKeys.all });
+    },
+  });
+}
+
+export function useDeleteProductImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      productId,
+      imageId,
+    }: {
+      productId: string;
+      imageId: string;
+    }) => deleteProductImage(productId, imageId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: storeAdminKeys.all });
     },

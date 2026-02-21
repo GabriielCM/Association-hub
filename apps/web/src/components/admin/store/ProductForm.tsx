@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
+import { ImagePlus, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui';
-import { useAdminCategories } from '@/lib/hooks/useAdminStore';
-import type { CreateProductInput } from '@/lib/api/store.api';
+import { useAdminCategories, useProductImages, useUploadProductImage, useDeleteProductImage } from '@/lib/hooks/useAdminStore';
+import type { CreateProductInput, ProductImage } from '@/lib/api/store.api';
 import type { ProductType, PaymentOptions } from '@ahub/shared/types';
 
 interface ProductFormProps {
   initialData?: Partial<CreateProductInput> & { isFeatured?: boolean };
-  onSubmit: (data: CreateProductInput & { isFeatured?: boolean }) => void;
+  productId?: string;
+  onSubmit: (data: CreateProductInput & { isFeatured?: boolean }, pendingFiles?: File[]) => void;
   isPending: boolean;
   submitLabel?: string;
 }
@@ -26,12 +28,21 @@ function toSlug(text: string): string {
 
 export function ProductForm({
   initialData,
+  productId,
   onSubmit,
   isPending,
   submitLabel = 'Salvar',
 }: ProductFormProps) {
   const { data: categories } = useAdminCategories();
+  const { data: existingImages } = useProductImages(productId ?? null);
+  const uploadImage = useUploadProductImage();
+  const deleteImage = useDeleteProductImage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(0);
+
+  // Pending files for create mode (no productId yet)
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
 
   // Step 1: Basic info
   const [name, setName] = useState(initialData?.name ?? '');
@@ -68,6 +79,41 @@ export function ProductForm({
     setName(value);
     if (!initialData?.slug) {
       setSlug(toSlug(value));
+    }
+  };
+
+  const handleFileSelect = useCallback(
+    (files: FileList | null) => {
+      if (!files) return;
+      const newFiles = Array.from(files).filter(
+        (f) => /\.(jpe?g|png|webp)$/i.test(f.name) && f.size <= 10 * 1024 * 1024
+      );
+      if (newFiles.length === 0) return;
+
+      if (productId) {
+        // Edit mode: upload immediately
+        newFiles.forEach((file) => {
+          uploadImage.mutate({ productId, file });
+        });
+      } else {
+        // Create mode: store for later
+        setPendingFiles((prev) => [...prev, ...newFiles]);
+        const previews = newFiles.map((f) => URL.createObjectURL(f));
+        setPendingPreviews((prev) => [...prev, ...previews]);
+      }
+    },
+    [productId, uploadImage]
+  );
+
+  const removePendingFile = (index: number) => {
+    URL.revokeObjectURL(pendingPreviews[index]);
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index));
+    setPendingPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDeleteImage = (imageId: string) => {
+    if (productId) {
+      deleteImage.mutate({ productId, imageId });
     }
   };
 
@@ -117,7 +163,7 @@ export function ProductForm({
       ...(type === 'VOUCHER' && { voucherValidityDays }),
     };
 
-    onSubmit(data);
+    onSubmit(data, pendingFiles.length > 0 ? pendingFiles : undefined);
   };
 
   return (
@@ -230,6 +276,81 @@ export function ProductForm({
               placeholder="Ex: Secretaria - 2o andar"
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label className="mb-2 block text-sm font-medium">Imagens do produto</label>
+
+            {/* Existing images (edit mode) */}
+            {existingImages && existingImages.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-3">
+                {existingImages.map((img: ProductImage) => (
+                  <div key={img.id} className="group relative h-24 w-24 overflow-hidden rounded-lg border">
+                    <img
+                      src={img.url}
+                      alt={img.altText || 'Imagem do produto'}
+                      className="h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteImage(img.id)}
+                      className="absolute right-1 top-1 hidden rounded-full bg-red-500 p-0.5 text-white group-hover:block"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pending previews (create mode) */}
+            {pendingPreviews.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-3">
+                {pendingPreviews.map((preview, index) => (
+                  <div key={index} className="group relative h-24 w-24 overflow-hidden rounded-lg border">
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePendingFile(index)}
+                      className="absolute right-1 top-1 hidden rounded-full bg-red-500 p-0.5 text-white group-hover:block"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={(e) => handleFileSelect(e.target.files)}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadImage.isPending}
+              className="flex items-center gap-2 rounded-md border-2 border-dashed border-border px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            >
+              {uploadImage.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ImagePlus className="h-4 w-4" />
+              )}
+              Adicionar imagens
+            </button>
+            <p className="mt-1 text-xs text-muted-foreground">
+              JPG, PNG ou WebP. Max 10MB por imagem.
+            </p>
           </div>
         </div>
       )}

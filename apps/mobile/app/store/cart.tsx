@@ -12,14 +12,17 @@ import {
   useRemoveCartItem,
   useClearCart,
 } from '@/features/store/hooks/useCart';
+import { useStoreTheme } from '@/features/store/hooks/useStoreTheme';
 import { CartItem } from '@/features/store/components/CartItem';
 import { CartSummary } from '@/features/store/components/CartSummary';
 import { CartExpirationTimer } from '@/features/store/components/CartExpirationTimer';
 
 export default function CartScreen() {
-  const { addProductId, addVariantId } = useLocalSearchParams<{
+  const st = useStoreTheme();
+  const { addProductId, addVariantId, buyNow } = useLocalSearchParams<{
     addProductId?: string;
     addVariantId?: string;
+    buyNow?: string;
   }>();
   const { data: cart, isLoading } = useCart();
   const addToCart = useAddToCart();
@@ -36,9 +39,16 @@ export default function CartScreen() {
         addVariantId
           ? { productId: addProductId, variantId: addVariantId, quantity: 1 }
           : { productId: addProductId, quantity: 1 },
+        {
+          onSuccess: () => {
+            if (buyNow === 'true') {
+              router.push('/store/checkout' as any);
+            }
+          },
+        },
       );
     }
-  }, [addProductId, addVariantId, addToCart]);
+  }, [addProductId, addVariantId, addToCart, buyNow]);
 
   const handleExpired = () => {
     Alert.alert(
@@ -67,7 +77,7 @@ export default function CartScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center">
           <Spinner />
         </YStack>
@@ -78,7 +88,7 @@ export default function CartScreen() {
   const hasItems = cart && cart.items.length > 0;
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>
       <YStack flex={1}>
         {/* Header */}
         <ScreenHeader
@@ -94,9 +104,9 @@ export default function CartScreen() {
           }
         >
           <XStack gap="$2" alignItems="center" flex={1}>
-            <Heading level={4}>Carrinho</Heading>
+            <Heading level={4} style={{ color: st.textPrimary }}>Carrinho</Heading>
             {cart && cart.itemCount > 0 && (
-              <Text size="sm" color="secondary">
+              <Text size="sm" style={{ color: st.textSecondary }}>
                 ({cart.itemCount})
               </Text>
             )}
@@ -121,8 +131,8 @@ export default function CartScreen() {
             padding="$4"
           >
             <Icon icon={ShoppingCart} size="xl" color="muted" weight="duotone" />
-            <Text weight="semibold">Carrinho vazio</Text>
-            <Text color="secondary" size="sm" align="center">
+            <Text weight="semibold" style={{ color: st.textPrimary }}>Carrinho vazio</Text>
+            <Text size="sm" align="center" style={{ color: st.textSecondary }}>
               Adicione produtos da loja ao seu carrinho
             </Text>
             <Button
@@ -144,16 +154,38 @@ export default function CartScreen() {
                   onUpdateQuantity={(id, qty) =>
                     updateItem.mutate({ itemId: id, quantity: qty })
                   }
-                  onRemove={(id) => removeItem.mutate(id)}
+                  onRemove={(id) => {
+                    if (cart.items.length === 1) {
+                      Alert.alert(
+                        'Remover item',
+                        'Este é o último item do carrinho. Deseja removê-lo?',
+                        [
+                          { text: 'Cancelar', style: 'cancel' },
+                          {
+                            text: 'Remover',
+                            style: 'destructive',
+                            onPress: () => removeItem.mutate(id),
+                          },
+                        ],
+                      );
+                    } else {
+                      removeItem.mutate(id);
+                    }
+                  }}
                   disabled={isMutating}
                 />
               )}
-              ItemSeparatorComponent={() => <View style={styles.separator} />}
+              ItemSeparatorComponent={() => (
+                <View style={[styles.separator, { backgroundColor: st.separatorColor }]} />
+              )}
               contentContainerStyle={styles.list}
             />
 
             {/* Bottom bar */}
-            <View style={styles.bottomBar}>
+            <View style={[styles.bottomBar, {
+              backgroundColor: st.bottomBarBg,
+              borderTopColor: st.bottomBarBorder,
+            }]}>
               <CartSummary
                 subtotalPoints={cart.subtotalPoints}
                 subtotalMoney={cart.subtotalMoney}
@@ -180,15 +212,12 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: '#F3F4F6',
     marginHorizontal: 16,
   },
   bottomBar: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    backgroundColor: '#fff',
     gap: 12,
   },
   checkoutButton: {

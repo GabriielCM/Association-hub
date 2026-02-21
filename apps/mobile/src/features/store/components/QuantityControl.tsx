@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet } from 'react-native';
 import { XStack } from 'tamagui';
 import { Text } from '@ahub/ui';
+import { useStoreTheme } from '../hooks/useStoreTheme';
 
 interface QuantityControlProps {
   value: number;
@@ -17,6 +18,7 @@ export function QuantityControl({
   max = 99,
   disabled = false,
 }: QuantityControlProps) {
+  const st = useStoreTheme();
   const canDecrease = value > min && !disabled;
   const canIncrease = value < max && !disabled;
 
@@ -25,32 +27,40 @@ export function QuantityControl({
       <Pressable
         onPress={() => canDecrease && onChange(value - 1)}
         disabled={!canDecrease}
-        style={[styles.button, !canDecrease && styles.buttonDisabled]}
+        style={[
+          styles.button,
+          { borderColor: st.chipBorder, backgroundColor: st.chipBg },
+          !canDecrease && styles.buttonDisabled,
+        ]}
         hitSlop={4}
       >
         <Text
           size="sm"
           weight="bold"
-          style={!canDecrease ? styles.textDisabled : undefined}
+          style={{ color: !canDecrease ? st.textTertiary : st.textPrimary }}
         >
           −
         </Text>
       </Pressable>
 
-      <Text size="sm" weight="semibold" style={styles.value}>
+      <Text size="sm" weight="semibold" style={[styles.value, { color: st.textPrimary }]}>
         {value}
       </Text>
 
       <Pressable
         onPress={() => canIncrease && onChange(value + 1)}
         disabled={!canIncrease}
-        style={[styles.button, !canIncrease && styles.buttonDisabled]}
+        style={[
+          styles.button,
+          { borderColor: st.chipBorder, backgroundColor: st.chipBg },
+          !canIncrease && styles.buttonDisabled,
+        ]}
         hitSlop={4}
       >
         <Text
           size="sm"
           weight="bold"
-          style={!canIncrease ? styles.textDisabled : undefined}
+          style={{ color: !canIncrease ? st.textTertiary : st.textPrimary }}
         >
           +
         </Text>
@@ -65,16 +75,11 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#F9FAFB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonDisabled: {
     opacity: 0.4,
-  },
-  textDisabled: {
-    color: '#9CA3AF',
   },
   value: {
     minWidth: 24,

@@ -6,10 +6,12 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { Text, Spinner, ScreenHeader, Icon } from '@ahub/ui';
 import { useProducts } from '@/features/store/hooks/useProducts';
 import { useCategoryBySlug } from '@/features/store/hooks/useCategories';
+import { useStoreTheme } from '@/features/store/hooks/useStoreTheme';
 import { ProductCard } from '@/features/store/components/ProductCard';
 import type { StoreProductsFilter } from '@ahub/shared/types';
 import { MagnifyingGlass } from 'phosphor-react-native';
 export default function CategoryScreen() {
+  const st = useStoreTheme();
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const [page, setPage] = useState(1);
 
@@ -28,14 +30,14 @@ export default function CategoryScreen() {
   }, [data, page]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>
       <YStack flex={1}>
         {/* Header */}
         <ScreenHeader title={category?.name || 'Categoria'} onBack={() => router.back()} />
 
         {category?.description && (
           <YStack paddingHorizontal="$4" paddingBottom="$2">
-            <Text size="sm" color="secondary">
+            <Text size="sm" style={{ color: st.textSecondary }}>
               {category.description}
             </Text>
           </YStack>
@@ -54,7 +56,7 @@ export default function CategoryScreen() {
             gap="$3"
           >
             <Icon icon={MagnifyingGlass} size="xl" color="muted" weight="duotone" />
-            <Text color="secondary">Nenhum produto nesta categoria</Text>
+            <Text style={{ color: st.textSecondary }}>Nenhum produto nesta categoria</Text>
           </YStack>
         ) : (
           <FlatList

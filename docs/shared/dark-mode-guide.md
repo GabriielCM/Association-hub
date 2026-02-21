@@ -456,7 +456,7 @@ Após implementar, verificar **ambos os modos**:
 | Messages | Tokens diretos | Implementado |
 | Card (carteirinha) | `useCardTheme` | Implementado |
 | Events | `useEventsTheme` | Implementado |
-| **Store** | — | **Pendente** |
+| Store | `useStoreTheme` | Implementado |
 | **Subscriptions** | — | **Pendente** |
 | **Bookings/Spaces** | — | **Pendente** |
 | **Notifications** | — | **Pendente** |

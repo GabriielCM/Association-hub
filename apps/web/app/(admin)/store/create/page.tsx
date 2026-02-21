@@ -7,6 +7,7 @@ import { Button } from '@/components/ui';
 import { useToast } from '@/components/ui/use-toast';
 import { ProductForm } from '@/components/admin/store/ProductForm';
 import { useCreateProduct } from '@/lib/hooks/useAdminStore';
+import { uploadProductImage } from '@/lib/api/store.api';
 
 export default function CreateProductPage() {
   const router = useRouter();
@@ -33,9 +34,22 @@ export default function CreateProductPage() {
       {/* Form */}
       <div className="rounded-lg border bg-card p-6">
         <ProductForm
-          onSubmit={(data) => {
+          onSubmit={(data, pendingFiles) => {
             createProduct.mutate(data, {
-              onSuccess: () => {
+              onSuccess: async (product) => {
+                // Upload pending images after product creation
+                if (pendingFiles && pendingFiles.length > 0) {
+                  try {
+                    await Promise.all(
+                      pendingFiles.map((file) => uploadProductImage(product.id, file))
+                    );
+                  } catch {
+                    toast({
+                      title: 'Produto criado, mas houve erro ao enviar imagens',
+                      variant: 'error',
+                    });
+                  }
+                }
                 toast({ title: 'Produto criado com sucesso!' });
                 router.push('/store');
               },

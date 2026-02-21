@@ -13,6 +13,7 @@ import { CheckoutService } from './services/checkout.service';
 import { FavoritesService } from './services/favorites.service';
 import { ReviewsService } from './services/reviews.service';
 import { StoreReportsService } from './services/reports.service';
+import { UploadService } from '../../common/services/upload.service';
 
 // Controllers
 import { StoreController } from './controllers/store.controller';
@@ -40,6 +41,7 @@ import { CartScheduler } from './schedulers/cart.scheduler';
     FavoritesService,
     ReviewsService,
     StoreReportsService,
+    UploadService,
     CartScheduler,
   ],
   exports: [

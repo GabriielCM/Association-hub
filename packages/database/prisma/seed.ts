@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, UserStatus, AudienceType } from '@prisma/client';
+import { PrismaClient, UserRole, UserStatus, AudienceType, ProductType, PaymentOptions } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -419,7 +419,7 @@ async function main() {
   ];
 
   for (const p of partnersData) {
-    const catId = categories[p.categorySlug];
+    const catId = categories[p.categorySlug]!;
     await prisma.partner.upsert({
       where: {
         id: `seed-partner-${p.categorySlug}-${p.name.toLowerCase().replace(/\s+/g, '-').slice(0, 20)}`,
@@ -454,6 +454,430 @@ async function main() {
       },
     });
     console.log(`   ✅ ${p.name} (${p.categorySlug})`);
+  }
+
+  // 7. Criar categorias da loja
+  console.log('\n🛒 Criando categorias da loja...\n');
+
+  const storeCategoriesData = [
+    { name: 'Vestuário', slug: 'vestuario', displayOrder: 1 },
+    { name: 'Acessórios', slug: 'acessorios', displayOrder: 2 },
+    { name: 'Suplementos', slug: 'suplementos', displayOrder: 3 },
+    { name: 'Vouchers', slug: 'vouchers', displayOrder: 4 },
+    { name: 'Brindes', slug: 'brindes', displayOrder: 5 },
+  ];
+
+  const storeCategories: Record<string, string> = {};
+  for (const sc of storeCategoriesData) {
+    const cat = await prisma.storeCategory.upsert({
+      where: { associationId_slug: { associationId: association.id, slug: sc.slug } },
+      update: { name: sc.name, displayOrder: sc.displayOrder },
+      create: {
+        associationId: association.id,
+        name: sc.name,
+        slug: sc.slug,
+        displayOrder: sc.displayOrder,
+      },
+    });
+    storeCategories[sc.slug] = cat.id;
+    console.log(`   ✅ ${sc.name}`);
+  }
+
+  // 8. Criar produtos da loja
+  console.log('\n📦 Criando produtos da loja...\n');
+
+  const productsData = [
+    {
+      id: 'seed-prod-camiseta',
+      slug: 'camiseta-oficial',
+      name: 'Camiseta Oficial',
+      shortDescription: 'Camiseta oficial da associação em algodão premium',
+      longDescription: 'Camiseta oficial da Associação Demo, confeccionada em algodão 100% penteado, com estampa serigrafada de alta qualidade. Disponível em vários tamanhos.',
+      categorySlug: 'vestuario',
+      type: ProductType.PHYSICAL,
+      pricePoints: 500,
+      priceMoney: 49.90,
+      paymentOptions: PaymentOptions.BOTH,
+      stockType: 'limited',
+      stockCount: 100,
+      limitPerUser: 5,
+      cashbackPercent: 5.0,
+      isFeatured: true,
+      isPromotional: false,
+      averageRating: 4.7,
+      reviewCount: 23,
+      soldCount: 85,
+      pickupLocation: 'Sede da Associação - Recepção',
+    },
+    {
+      id: 'seed-prod-bone',
+      slug: 'bone-bordado',
+      name: 'Boné Bordado',
+      shortDescription: 'Boné com logo bordado, ajuste snapback',
+      categorySlug: 'acessorios',
+      type: ProductType.PHYSICAL,
+      pricePoints: 300,
+      priceMoney: 29.90,
+      paymentOptions: PaymentOptions.BOTH,
+      stockType: 'limited',
+      stockCount: 60,
+      limitPerUser: 3,
+      cashbackPercent: 5.0,
+      isFeatured: true,
+      averageRating: 4.5,
+      reviewCount: 12,
+      soldCount: 45,
+    },
+    {
+      id: 'seed-prod-whey',
+      slug: 'whey-protein-900g',
+      name: 'Whey Protein 900g',
+      shortDescription: 'Whey concentrado sabor chocolate, 900g',
+      longDescription: 'Whey Protein Concentrado com 24g de proteína por dose. Sabor chocolate. Ideal para recuperação muscular pós-treino.',
+      categorySlug: 'suplementos',
+      type: ProductType.PHYSICAL,
+      pricePoints: 1200,
+      priceMoney: 119.90,
+      paymentOptions: PaymentOptions.BOTH,
+      stockType: 'limited',
+      stockCount: 30,
+      limitPerUser: 2,
+      cashbackPercent: 5.0,
+      averageRating: 4.8,
+      reviewCount: 31,
+      soldCount: 120,
+    },
+    {
+      id: 'seed-prod-creatina',
+      slug: 'creatina-300g',
+      name: 'Creatina 300g',
+      shortDescription: 'Creatina monoidratada pura, 300g',
+      categorySlug: 'suplementos',
+      type: ProductType.PHYSICAL,
+      pricePoints: 600,
+      priceMoney: 59.90,
+      paymentOptions: PaymentOptions.BOTH,
+      stockType: 'limited',
+      stockCount: 40,
+      cashbackPercent: 5.0,
+      isPromotional: true,
+      promotionalPricePoints: 450,
+      promotionalPriceMoney: 44.90,
+      promotionalEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 dias
+      averageRating: 4.6,
+      reviewCount: 18,
+      soldCount: 75,
+    },
+    {
+      id: 'seed-prod-garrafa',
+      slug: 'garrafa-termica',
+      name: 'Garrafa Térmica',
+      shortDescription: 'Garrafa inox 750ml, mantém temperatura por 12h',
+      categorySlug: 'acessorios',
+      type: ProductType.PHYSICAL,
+      pricePoints: 400,
+      priceMoney: 39.90,
+      paymentOptions: PaymentOptions.BOTH,
+      stockType: 'limited',
+      stockCount: 50,
+      limitPerUser: 3,
+      cashbackPercent: 5.0,
+      isFeatured: true,
+      averageRating: 4.9,
+      reviewCount: 8,
+      soldCount: 35,
+    },
+    {
+      id: 'seed-prod-voucher-restaurante',
+      slug: 'voucher-restaurante',
+      name: 'Voucher Restaurante',
+      shortDescription: 'Vale-refeição de R$ 30 nos parceiros',
+      categorySlug: 'vouchers',
+      type: ProductType.VOUCHER,
+      pricePoints: 200,
+      priceMoney: 19.90,
+      paymentOptions: PaymentOptions.BOTH,
+      stockType: 'unlimited',
+      voucherValidityDays: 30,
+      cashbackPercent: 0,
+      soldCount: 200,
+    },
+    {
+      id: 'seed-prod-voucher-cinema',
+      slug: 'voucher-cinema',
+      name: 'Voucher Cinema',
+      shortDescription: 'Ingresso de cinema válido em qualquer sessão',
+      categorySlug: 'vouchers',
+      type: ProductType.VOUCHER,
+      pricePoints: 350,
+      priceMoney: null,
+      paymentOptions: PaymentOptions.POINTS_ONLY,
+      stockType: 'unlimited',
+      voucherValidityDays: 30,
+      cashbackPercent: 0,
+      soldCount: 150,
+    },
+    {
+      id: 'seed-prod-adesivo',
+      slug: 'adesivo-logo',
+      name: 'Adesivo Logo',
+      shortDescription: 'Adesivo vinil com logo da associação',
+      categorySlug: 'brindes',
+      type: ProductType.PHYSICAL,
+      pricePoints: 50,
+      priceMoney: null,
+      paymentOptions: PaymentOptions.POINTS_ONLY,
+      stockType: 'limited',
+      stockCount: 200,
+      cashbackPercent: 0,
+      soldCount: 180,
+    },
+    {
+      id: 'seed-prod-chaveiro',
+      slug: 'chaveiro-metal',
+      name: 'Chaveiro Metal',
+      shortDescription: 'Chaveiro em metal com acabamento premium',
+      categorySlug: 'brindes',
+      type: ProductType.PHYSICAL,
+      pricePoints: 100,
+      priceMoney: 9.90,
+      paymentOptions: PaymentOptions.BOTH,
+      stockType: 'limited',
+      stockCount: 80,
+      cashbackPercent: 5.0,
+      soldCount: 60,
+    },
+    {
+      id: 'seed-prod-regata',
+      slug: 'regata-treino',
+      name: 'Regata Treino',
+      shortDescription: 'Regata dry-fit para treinos, leve e respirável',
+      categorySlug: 'vestuario',
+      type: ProductType.PHYSICAL,
+      pricePoints: 400,
+      priceMoney: 39.90,
+      paymentOptions: PaymentOptions.BOTH,
+      stockType: 'limited',
+      stockCount: 70,
+      limitPerUser: 5,
+      cashbackPercent: 5.0,
+      isPromotional: true,
+      promotionalPricePoints: 300,
+      promotionalPriceMoney: 29.90,
+      promotionalEndsAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 dias
+      averageRating: 4.4,
+      reviewCount: 9,
+      soldCount: 55,
+    },
+    {
+      id: 'seed-prod-meia',
+      slug: 'meia-esportiva-3-pares',
+      name: 'Meia Esportiva (3 pares)',
+      shortDescription: 'Kit com 3 pares de meias esportivas cano médio',
+      categorySlug: 'vestuario',
+      type: ProductType.PHYSICAL,
+      pricePoints: 150,
+      priceMoney: 14.90,
+      paymentOptions: PaymentOptions.BOTH,
+      stockType: 'limited',
+      stockCount: 90,
+      cashbackPercent: 5.0,
+      soldCount: 40,
+    },
+    {
+      id: 'seed-prod-toalha',
+      slug: 'toalha-microfibra',
+      name: 'Toalha Microfibra',
+      shortDescription: 'Toalha de secagem rápida para academia',
+      categorySlug: 'acessorios',
+      type: ProductType.PHYSICAL,
+      pricePoints: null,
+      priceMoney: 24.90,
+      paymentOptions: PaymentOptions.MONEY_ONLY,
+      stockType: 'limited',
+      stockCount: 45,
+      cashbackPercent: 5.0,
+      averageRating: 4.3,
+      reviewCount: 5,
+      soldCount: 25,
+    },
+  ];
+
+  const productIds: Record<string, string> = {};
+  for (const p of productsData) {
+    const catId = storeCategories[p.categorySlug]!;
+    const product = await prisma.storeProduct.upsert({
+      where: { id: p.id },
+      update: { name: p.name, pricePoints: p.pricePoints, priceMoney: p.priceMoney },
+      create: {
+        id: p.id,
+        categoryId: catId,
+        name: p.name,
+        slug: p.slug,
+        shortDescription: p.shortDescription,
+        longDescription: p.longDescription || null,
+        type: p.type,
+        pricePoints: p.pricePoints,
+        priceMoney: p.priceMoney,
+        paymentOptions: p.paymentOptions,
+        allowMixedPayment: p.paymentOptions === PaymentOptions.BOTH,
+        stockType: p.stockType,
+        stockCount: p.stockCount || null,
+        limitPerUser: p.limitPerUser || null,
+        cashbackPercent: p.cashbackPercent || null,
+        voucherValidityDays: p.voucherValidityDays || null,
+        isFeatured: p.isFeatured || false,
+        isPromotional: p.isPromotional || false,
+        promotionalPricePoints: p.promotionalPricePoints || null,
+        promotionalPriceMoney: p.promotionalPriceMoney || null,
+        promotionalEndsAt: p.promotionalEndsAt || null,
+        averageRating: p.averageRating || null,
+        reviewCount: p.reviewCount || 0,
+        soldCount: p.soldCount || 0,
+        pickupLocation: p.pickupLocation || null,
+      },
+    });
+    productIds[p.slug] = product.id;
+    console.log(`   ✅ ${p.name} (${p.pricePoints ? p.pricePoints + ' pts' : ''}${p.pricePoints && p.priceMoney ? ' / ' : ''}${p.priceMoney ? 'R$ ' + Number(p.priceMoney).toFixed(2) : ''})`);
+  }
+
+  // 9. Criar imagens dos produtos
+  console.log('\n🖼️  Criando imagens dos produtos...\n');
+
+  const imagesData = [
+    { productSlug: 'camiseta-oficial', images: [
+      { url: 'https://placehold.co/600x600/8B5CF6/FFFFFF?text=Camiseta+Frente', altText: 'Camiseta Oficial - Frente', displayOrder: 0 },
+      { url: 'https://placehold.co/600x600/7C3AED/FFFFFF?text=Camiseta+Costas', altText: 'Camiseta Oficial - Costas', displayOrder: 1 },
+    ]},
+    { productSlug: 'bone-bordado', images: [
+      { url: 'https://placehold.co/600x600/1F2937/FFFFFF?text=Bone+Bordado', altText: 'Boné Bordado', displayOrder: 0 },
+    ]},
+    { productSlug: 'whey-protein-900g', images: [
+      { url: 'https://placehold.co/600x600/92400E/FFFFFF?text=Whey+Protein', altText: 'Whey Protein 900g', displayOrder: 0 },
+      { url: 'https://placehold.co/600x600/78350F/FFFFFF?text=Whey+Tabela', altText: 'Whey Protein - Tabela Nutricional', displayOrder: 1 },
+    ]},
+    { productSlug: 'creatina-300g', images: [
+      { url: 'https://placehold.co/600x600/3B82F6/FFFFFF?text=Creatina', altText: 'Creatina 300g', displayOrder: 0 },
+    ]},
+    { productSlug: 'garrafa-termica', images: [
+      { url: 'https://placehold.co/600x600/6B7280/FFFFFF?text=Garrafa+Termica', altText: 'Garrafa Térmica 750ml', displayOrder: 0 },
+    ]},
+    { productSlug: 'voucher-restaurante', images: [
+      { url: 'https://placehold.co/600x600/F97316/FFFFFF?text=Voucher+Restaurante', altText: 'Voucher Restaurante', displayOrder: 0 },
+    ]},
+    { productSlug: 'voucher-cinema', images: [
+      { url: 'https://placehold.co/600x600/EF4444/FFFFFF?text=Voucher+Cinema', altText: 'Voucher Cinema', displayOrder: 0 },
+    ]},
+    { productSlug: 'adesivo-logo', images: [
+      { url: 'https://placehold.co/600x600/22C55E/FFFFFF?text=Adesivo+Logo', altText: 'Adesivo Logo', displayOrder: 0 },
+    ]},
+    { productSlug: 'chaveiro-metal', images: [
+      { url: 'https://placehold.co/600x600/EAB308/FFFFFF?text=Chaveiro+Metal', altText: 'Chaveiro Metal', displayOrder: 0 },
+    ]},
+    { productSlug: 'regata-treino', images: [
+      { url: 'https://placehold.co/600x600/06B6D4/FFFFFF?text=Regata+Treino', altText: 'Regata Treino', displayOrder: 0 },
+    ]},
+    { productSlug: 'meia-esportiva-3-pares', images: [
+      { url: 'https://placehold.co/600x600/9CA3AF/FFFFFF?text=Meia+Esportiva', altText: 'Meia Esportiva 3 pares', displayOrder: 0 },
+    ]},
+    { productSlug: 'toalha-microfibra', images: [
+      { url: 'https://placehold.co/600x600/14B8A6/FFFFFF?text=Toalha+Microfibra', altText: 'Toalha Microfibra', displayOrder: 0 },
+    ]},
+  ];
+
+  for (const item of imagesData) {
+    const pid = productIds[item.productSlug]!;
+    // Delete existing seed images to avoid duplicates on re-run
+    await prisma.productImage.deleteMany({ where: { productId: pid } });
+    for (const img of item.images) {
+      await prisma.productImage.create({
+        data: {
+          productId: pid,
+          url: img.url,
+          altText: img.altText,
+          displayOrder: img.displayOrder,
+        },
+      });
+    }
+  }
+  console.log(`   ✅ ${imagesData.reduce((sum, i) => sum + i.images.length, 0)} imagens criadas`);
+
+  // 10. Criar variantes de vestuário
+  console.log('\n👕 Criando variantes de produtos...\n');
+
+  const variantsData = [
+    { productSlug: 'camiseta-oficial', variants: [
+      { sku: 'CAM-OF-P', name: 'P', attributes: { size: 'P' }, stockCount: 25 },
+      { sku: 'CAM-OF-M', name: 'M', attributes: { size: 'M' }, stockCount: 30 },
+      { sku: 'CAM-OF-G', name: 'G', attributes: { size: 'G' }, stockCount: 25 },
+      { sku: 'CAM-OF-GG', name: 'GG', attributes: { size: 'GG' }, stockCount: 20 },
+    ]},
+    { productSlug: 'regata-treino', variants: [
+      { sku: 'REG-TR-P', name: 'P', attributes: { size: 'P' }, stockCount: 25 },
+      { sku: 'REG-TR-M', name: 'M', attributes: { size: 'M' }, stockCount: 25 },
+      { sku: 'REG-TR-G', name: 'G', attributes: { size: 'G' }, stockCount: 20 },
+    ]},
+  ];
+
+  for (const item of variantsData) {
+    const pid = productIds[item.productSlug]!;
+    for (const v of item.variants) {
+      await prisma.productVariant.upsert({
+        where: { sku: v.sku },
+        update: { name: v.name, stockCount: v.stockCount },
+        create: {
+          productId: pid,
+          sku: v.sku,
+          name: v.name,
+          attributes: v.attributes,
+          stockCount: v.stockCount,
+        },
+      });
+    }
+    console.log(`   ✅ ${item.productSlug}: ${item.variants.length} variantes`);
+  }
+
+  // 11. Criar especificações de produtos
+  console.log('\n📋 Criando especificações de produtos...\n');
+
+  const specsData = [
+    { productSlug: 'whey-protein-900g', specs: [
+      { key: 'Tipo', value: 'Whey Concentrado', displayOrder: 0 },
+      { key: 'Peso', value: '900g', displayOrder: 1 },
+      { key: 'Sabor', value: 'Chocolate', displayOrder: 2 },
+      { key: 'Proteína por dose', value: '24g', displayOrder: 3 },
+    ]},
+    { productSlug: 'creatina-300g', specs: [
+      { key: 'Tipo', value: 'Monoidratada', displayOrder: 0 },
+      { key: 'Peso', value: '300g', displayOrder: 1 },
+      { key: 'Doses', value: '60 doses de 5g', displayOrder: 2 },
+    ]},
+    { productSlug: 'garrafa-termica', specs: [
+      { key: 'Material', value: 'Aço Inox 304', displayOrder: 0 },
+      { key: 'Capacidade', value: '750ml', displayOrder: 1 },
+      { key: 'Isolamento', value: '12h quente / 24h frio', displayOrder: 2 },
+    ]},
+    { productSlug: 'camiseta-oficial', specs: [
+      { key: 'Material', value: '100% Algodão Penteado', displayOrder: 0 },
+      { key: 'Gramatura', value: '160g/m²', displayOrder: 1 },
+      { key: 'Estampa', value: 'Serigrafia', displayOrder: 2 },
+    ]},
+  ];
+
+  for (const item of specsData) {
+    const pid = productIds[item.productSlug]!;
+    await prisma.productSpecification.deleteMany({ where: { productId: pid } });
+    for (const spec of item.specs) {
+      await prisma.productSpecification.create({
+        data: {
+          productId: pid,
+          key: spec.key,
+          value: spec.value,
+          displayOrder: spec.displayOrder,
+        },
+      });
+    }
+    console.log(`   ✅ ${item.productSlug}: ${item.specs.length} specs`);
   }
 
   console.log('\n🎉 Seed concluído!\n');

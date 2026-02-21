@@ -7,12 +7,14 @@ import { Text, Card, Button, Spinner, ScreenHeader, Icon } from '@ahub/ui';
 import { MISC_ICONS } from '@ahub/ui/src/icons';
 import { formatPoints } from '@ahub/shared/utils';
 import { useValidateCheckout } from '@/features/store/hooks/useCheckout';
+import { useStoreTheme } from '@/features/store/hooks/useStoreTheme';
 import { CartSummary } from '@/features/store/components/CartSummary';
 import { PaymentOptions } from '@/features/store/components/PaymentOptions';
 import { MixedPaymentSlider } from '@/features/store/components/MixedPaymentSlider';
 import type { CheckoutValidation, OrderPaymentMethod } from '@ahub/shared/types';
 
 export default function CheckoutScreen() {
+  const st = useStoreTheme();
   const validateCheckout = useValidateCheckout();
   const [validation, setValidation] = useState<CheckoutValidation | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<OrderPaymentMethod | null>(
@@ -40,10 +42,10 @@ export default function CheckoutScreen() {
 
   if (validateCheckout.isPending) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$3">
           <Spinner />
-          <Text size="sm" color="secondary">
+          <Text size="sm" style={{ color: st.textSecondary }}>
             Validando carrinho...
           </Text>
         </YStack>
@@ -53,11 +55,11 @@ export default function CheckoutScreen() {
 
   if (validateCheckout.isError) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$3" padding="$4">
           <Icon icon={MISC_ICONS.warning} size="xl" color="muted" weight="duotone" />
-          <Text weight="semibold">Erro ao validar</Text>
-          <Text color="secondary" size="sm" align="center">
+          <Text weight="semibold" style={{ color: st.textPrimary }}>Erro ao validar</Text>
+          <Text size="sm" align="center" style={{ color: st.textSecondary }}>
             {validateCheckout.error?.message || 'Tente novamente'}
           </Text>
           <Button onPress={() => router.back()} size="sm">
@@ -70,17 +72,25 @@ export default function CheckoutScreen() {
 
   if (validation && !validation.isValid) {
     return (
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>
         <ScreenHeader title="Checkout" onBack={() => router.back()} />
         <YStack flex={1} padding="$4" gap="$4">
 
-          <Card variant="flat">
+          <Card
+            variant="flat"
+            {...(st.cardBg ? {
+              backgroundColor: st.cardBg,
+              borderWidth: 1,
+              borderColor: st.cardBorder,
+              shadowOpacity: 0,
+            } : {})}
+          >
             <YStack gap="$2">
               <Text weight="semibold" color="error">
                 Não é possível finalizar a compra
               </Text>
               {validation.errors?.map((error, i) => (
-                <Text key={i} size="sm" color="secondary">
+                <Text key={i} size="sm" style={{ color: st.textSecondary }}>
                   • {error}
                 </Text>
               ))}
@@ -102,7 +112,7 @@ export default function CheckoutScreen() {
     (selectedMethod !== 'POINTS' || validation.canPayWithPoints);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>
       {/* Header */}
       <ScreenHeader title="Checkout" onBack={() => router.back()} />
 
@@ -119,12 +129,20 @@ export default function CheckoutScreen() {
         />
 
         {/* User balance */}
-        <Card variant="flat">
+        <Card
+          variant="flat"
+          {...(st.cardBg ? {
+            backgroundColor: st.cardBg,
+            borderWidth: 1,
+            borderColor: st.cardBorder,
+            shadowOpacity: 0,
+          } : {})}
+        >
           <XStack justifyContent="space-between" alignItems="center">
-            <Text size="sm" color="secondary">
+            <Text size="sm" style={{ color: st.textSecondary }}>
               Seu saldo
             </Text>
-            <Text weight="bold" color="accent" size="sm">
+            <Text weight="bold" size="sm" style={{ color: st.accent }}>
               {formatPoints(validation.userBalance)} pts
             </Text>
           </XStack>
@@ -152,8 +170,14 @@ export default function CheckoutScreen() {
         )}
       </ScrollView>
 
-      {/* Bottom CTA */}
-      <YStack style={styles.bottomBar}>
+      {/* Terms + Bottom CTA */}
+      <YStack style={[styles.bottomBar, {
+        backgroundColor: st.bottomBarBg,
+        borderTopColor: st.bottomBarBorder,
+      }]} gap="$2">
+        <Text size="xs" align="center" style={{ color: st.textSecondary }}>
+          Ao confirmar, você concorda com os termos de compra
+        </Text>
         <Button onPress={handleContinue} disabled={!canContinue}>
           Continuar para pagamento
         </Button>
@@ -172,7 +196,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    backgroundColor: '#fff',
   },
 });

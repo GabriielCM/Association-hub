@@ -107,6 +107,11 @@ export class CreateProductDto {
   @IsString({ each: true })
   @IsOptional()
   eligiblePlans?: string[];
+
+  @ApiPropertyOptional({ description: 'Produto em destaque', default: false })
+  @IsBoolean()
+  @IsOptional()
+  isFeatured?: boolean;
 }
 
 export class UpdateProductDto {
@@ -120,6 +125,11 @@ export class UpdateProductDto {
   @IsOptional()
   name?: string;
 
+  @ApiPropertyOptional({ description: 'Slug único' })
+  @IsString()
+  @IsOptional()
+  slug?: string;
+
   @ApiPropertyOptional({ description: 'Descrição curta' })
   @IsString()
   @IsOptional()
@@ -129,6 +139,11 @@ export class UpdateProductDto {
   @IsString()
   @IsOptional()
   longDescription?: string;
+
+  @ApiPropertyOptional({ description: 'Tipo do produto', enum: ProductType })
+  @IsEnum(ProductType)
+  @IsOptional()
+  type?: ProductType;
 
   @ApiPropertyOptional({ description: 'Preço em pontos' })
   @IsInt()
@@ -142,11 +157,55 @@ export class UpdateProductDto {
   @IsOptional()
   priceMoney?: number;
 
+  @ApiPropertyOptional({ description: 'Opções de pagamento', enum: PaymentOptions })
+  @IsEnum(PaymentOptions)
+  @IsOptional()
+  paymentOptions?: PaymentOptions;
+
+  @ApiPropertyOptional({ description: 'Permitir pagamento misto' })
+  @IsBoolean()
+  @IsOptional()
+  allowMixedPayment?: boolean;
+
+  @ApiPropertyOptional({ description: 'Tipo de estoque' })
+  @IsString()
+  @IsOptional()
+  stockType?: string;
+
   @ApiPropertyOptional({ description: 'Quantidade em estoque' })
   @IsInt()
   @Min(0)
   @IsOptional()
   stockCount?: number;
+
+  @ApiPropertyOptional({ description: 'Limite por usuário' })
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  limitPerUser?: number;
+
+  @ApiPropertyOptional({ description: 'Percentual de cashback' })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  cashbackPercent?: number;
+
+  @ApiPropertyOptional({ description: 'Dias de validade do voucher' })
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  voucherValidityDays?: number;
+
+  @ApiPropertyOptional({ description: 'Local de retirada' })
+  @IsString()
+  @IsOptional()
+  pickupLocation?: string;
+
+  @ApiPropertyOptional({ description: 'IDs dos planos elegíveis', type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  eligiblePlans?: string[];
 
   @ApiPropertyOptional({ description: 'Produto ativo' })
   @IsBoolean()

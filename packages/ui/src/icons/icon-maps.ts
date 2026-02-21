@@ -26,7 +26,7 @@ import {
   Crown, ShareNetwork, BookmarkSimple, ListBullets, MapTrifold,
   MagnifyingGlass, ArrowBendUpLeft, CopySimple, Plus, ImageSquare,
   File, PushPin, BellSlash, Archive, DotsThreeVertical,
-  Eye, EyeSlash, FingerprintSimple, WifiSlash,
+  Eye, EyeSlash, FingerprintSimple, WifiSlash, CaretDown,
 } from 'phosphor-react-native';
 
 // ─── TAB BAR ────────────────────────────────────────
@@ -338,4 +338,5 @@ export {
   EyeSlash,
   FingerprintSimple,
   WifiSlash,
+  CaretDown,
 };

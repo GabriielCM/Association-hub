@@ -4,6 +4,7 @@ import { Text, Icon } from '@ahub/ui';
 import { PAYMENT_ICONS } from '@ahub/ui/src/icons';
 import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import { formatPoints, formatCurrency } from '@ahub/shared/utils';
+import { useStoreTheme } from '../hooks/useStoreTheme';
 import type { OrderPaymentMethod } from '@ahub/shared/types';
 
 interface PaymentOptionsProps {
@@ -14,6 +15,7 @@ interface PaymentOptionsProps {
   userBalance: number;
   totalPoints: number;
   totalMoney: number;
+  cashbackPercent?: number;
 }
 
 const METHOD_CONFIG: Record<
@@ -31,8 +33,14 @@ const METHOD_CONFIG: Record<
   MONEY: {
     label: 'Pagar com Cartão',
     icon: PAYMENT_ICONS.MONEY,
-    getDescription: (props) =>
-      `Pagar ${formatCurrency(props.totalMoney)} no cartão`,
+    getDescription: (props) => {
+      const base = `Pagar ${formatCurrency(props.totalMoney)} no cartão`;
+      if (props.cashbackPercent && props.cashbackPercent > 0) {
+        const cashbackPts = Math.round(props.totalMoney * 100 * (props.cashbackPercent / 100));
+        return `${base} — Ganhe ${formatPoints(cashbackPts)} pts de cashback (${props.cashbackPercent}%)`;
+      }
+      return base;
+    },
   },
   MIXED: {
     label: 'Pagamento Misto',
@@ -42,11 +50,12 @@ const METHOD_CONFIG: Record<
 };
 
 export function PaymentOptions(props: PaymentOptionsProps) {
+  const st = useStoreTheme();
   const { availableMethods, selectedMethod, onSelect, canPayWithPoints } = props;
 
   return (
     <YStack gap="$3">
-      <Text weight="semibold" size="sm">
+      <Text weight="semibold" size="sm" style={{ color: st.textPrimary }}>
         Forma de pagamento
       </Text>
 
@@ -64,28 +73,41 @@ export function PaymentOptions(props: PaymentOptionsProps) {
             disabled={isDisabled}
             style={[
               styles.option,
-              isSelected && styles.optionSelected,
+              {
+                borderColor: st.optionBorder,
+                backgroundColor: st.optionBg,
+              },
+              isSelected && {
+                borderColor: st.optionSelectedBorder,
+                backgroundColor: st.optionSelectedBg,
+              },
               isDisabled && styles.optionDisabled,
             ]}
           >
             <XStack gap="$3" alignItems="center">
-              <View style={[styles.radio, isSelected && styles.radioSelected]}>
-                {isSelected && <View style={styles.radioDot} />}
+              <View style={[
+                styles.radio,
+                { borderColor: st.radioBorder },
+                isSelected && { borderColor: st.radioSelectedBorder },
+              ]}>
+                {isSelected && (
+                  <View style={[styles.radioDot, { backgroundColor: st.radioSelectedFill }]} />
+                )}
               </View>
 
-              <Icon icon={config.icon} size="lg" color={isSelected ? 'primary' : 'secondary'} />
+              <Icon icon={config.icon} size="lg" color={isSelected ? st.accent : st.iconColor} />
 
               <YStack flex={1}>
                 <Text
                   weight={isSelected ? 'bold' : 'medium'}
                   size="sm"
-                  style={isDisabled ? styles.textDisabled : undefined}
+                  style={{ color: isDisabled ? st.textTertiary : st.textPrimary }}
                 >
                   {config.label}
                 </Text>
                 <Text
                   size="xs"
-                  color={isDisabled ? 'error' : 'secondary'}
+                  style={{ color: isDisabled ? '#EF4444' : st.textSecondary }}
                 >
                   {config.getDescription(props)}
                 </Text>
@@ -103,12 +125,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#fff',
-  },
-  optionSelected: {
-    borderColor: '#7C3AED',
-    backgroundColor: '#F5F3FF',
   },
   optionDisabled: {
     opacity: 0.6,
@@ -118,20 +134,12 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  radioSelected: {
-    borderColor: '#7C3AED',
   },
   radioDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#7C3AED',
-  },
-  textDisabled: {
-    color: '#9CA3AF',
   },
 });
