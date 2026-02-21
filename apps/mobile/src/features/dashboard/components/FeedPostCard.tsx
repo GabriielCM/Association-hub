@@ -177,6 +177,13 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
           </Pressable>
         )}
 
+        {/* Description */}
+        {content.description && (
+          <Text size="sm" numberOfLines={3} style={{ color: dt.textPrimary }}>
+            {content.description}
+          </Text>
+        )}
+
         {/* Actions */}
         <XStack gap="$4">
           <Pressable onPress={handleLike}>
@@ -201,13 +208,6 @@ export const FeedPostCard = memo(function FeedPostCard({ post, onCommentPress }:
             <Icon icon={ShareNetwork} size="lg" color={dt.textSecondary} />
           </Pressable>
         </XStack>
-
-        {/* Description */}
-        {content.description && (
-          <Text size="sm" numberOfLines={3} style={{ color: dt.textPrimary }}>
-            {content.description}
-          </Text>
-        )}
       </YStack>
 
       <PostOptionsMenu

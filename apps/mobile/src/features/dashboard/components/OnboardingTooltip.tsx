@@ -1,28 +1,29 @@
 import { View, Pressable, StyleSheet } from 'react-native';
 import { YStack, XStack } from 'tamagui';
-import { useCopilot } from 'react-native-copilot';
 
 import { Text } from '@ahub/ui';
 import { useDashboardTheme } from '../hooks/useDashboardTheme';
 
-const STEP_TITLES: Record<string, string> = {
-  'points-card': 'Seus Pontos',
-  'quick-access': 'Acesso Rápido',
-  'stories-row': 'Stories',
-  'feed-area': 'Feed',
-};
+interface OnboardingTooltipProps {
+  title: string;
+  text: string;
+  stepIndex: number;
+  totalSteps: number;
+  isLastStep: boolean;
+  onNext: () => void;
+  onSkip: () => void;
+}
 
-const TOTAL_STEPS = 4;
-
-export function OnboardingTooltip() {
-  const { isLastStep, goToNext, stop, currentStep } = useCopilot();
-  const handleNext = () => { void goToNext(); };
-  const handleStop = () => { void stop(); };
+export function OnboardingTooltip({
+  title,
+  text,
+  stepIndex,
+  totalSteps,
+  isLastStep,
+  onNext,
+  onSkip,
+}: OnboardingTooltipProps) {
   const dt = useDashboardTheme();
-
-  const stepName = currentStep?.name ?? '';
-  const title = STEP_TITLES[stepName] ?? '';
-  const currentOrder = currentStep?.order ?? 1;
 
   return (
     <YStack
@@ -41,7 +42,7 @@ export function OnboardingTooltip() {
         {title}
       </Text>
       <Text size="sm" style={styles.description}>
-        {currentStep?.text}
+        {text}
       </Text>
 
       <XStack
@@ -49,14 +50,14 @@ export function OnboardingTooltip() {
         alignItems="center"
         marginTop={8}
       >
-        <Pressable onPress={handleStop} hitSlop={8}>
+        <Pressable onPress={onSkip} hitSlop={8}>
           <Text size="sm" style={styles.skipText}>
             Pular tutorial
           </Text>
         </Pressable>
 
         <Pressable
-          onPress={isLastStep ? handleStop : handleNext}
+          onPress={isLastStep ? onSkip : onNext}
           style={[styles.nextBtn, { backgroundColor: dt.accent }]}
         >
           <Text weight="semibold" size="sm" style={styles.nextBtnText}>
@@ -67,12 +68,12 @@ export function OnboardingTooltip() {
 
       {/* Step dots */}
       <XStack justifyContent="center" gap={6} marginTop={8}>
-        {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+        {Array.from({ length: totalSteps }, (_, i) => (
           <View
             key={i}
             style={[
               styles.dot,
-              i + 1 === currentOrder ? styles.dotActive : styles.dotInactive,
+              i === stepIndex ? styles.dotActive : styles.dotInactive,
             ]}
           />
         ))}

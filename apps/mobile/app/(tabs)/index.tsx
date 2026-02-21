@@ -1,9 +1,8 @@
 import React, { useCallback, useRef } from 'react';
-import { FlatList, Pressable, ActivityIndicator, RefreshControl, View } from 'react-native';
+import { FlatList, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { YStack, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { CopilotProvider, CopilotStep } from 'react-native-copilot';
 
 import { Text, Heading, Avatar, Icon } from '@ahub/ui';
 import { Note } from '@ahub/ui/src/icons';
@@ -15,8 +14,6 @@ import { useNotificationWebSocket } from '@/features/notifications/hooks/useNoti
 import { CelebrationOverlay } from '@/features/points/components/CelebrationOverlay';
 import { NotificationBadge } from '@/features/notifications/components/NotificationBadge';
 import { useDashboardTheme } from '@/features/dashboard/hooks/useDashboardTheme';
-import { OnboardingTooltip } from '@/features/dashboard/components/OnboardingTooltip';
-import { useOnboardingTour } from '@/features/dashboard/hooks/useOnboardingTour';
 
 import { PointsBalanceCard } from '@/features/dashboard/components/PointsBalanceCard';
 import { QuickAccessCarousel } from '@/features/dashboard/components/QuickAccessCarousel';
@@ -35,48 +32,9 @@ import {
 
 import type { FeedPost } from '@ahub/shared/types';
 import { Plus } from 'phosphor-react-native';
-function CopilotView({ copilot, children }: { copilot?: any; children: React.ReactNode }) {
-  const setRef = React.useCallback(
-    (node: View | null) => {
-      if (copilot?.ref) {
-        copilot.ref.current = node;
-      }
-    },
-    [copilot?.ref],
-  );
-
-  return (
-    <View ref={setRef} onLayout={copilot?.onLayout}>
-      {children}
-    </View>
-  );
-}
 
 export default function HomeScreen() {
-  const dt = useDashboardTheme();
-
-  return (
-    <CopilotProvider
-      overlay="svg"
-      animated
-      animationDuration={400}
-      backdropColor={dt.isDark ? 'rgba(13,5,32,0.85)' : 'rgba(0,0,0,0.7)'}
-      tooltipComponent={OnboardingTooltip}
-      arrowColor={dt.isDark ? 'rgba(13,5,32,0.95)' : 'rgba(0,0,0,0.88)'}
-      arrowSize={8}
-      margin={8}
-      stopOnOutsideClick={false}
-      verticalOffset={0}
-      tooltipStyle={{
-        backgroundColor: 'transparent',
-        paddingTop: 0,
-        paddingHorizontal: 0,
-        borderRadius: 0,
-      }}
-    >
-      <HomeScreenContent />
-    </CopilotProvider>
-  );
+  return <HomeScreenContent />;
 }
 
 function HomeScreenContent() {
@@ -99,8 +57,6 @@ function HomeScreenContent() {
   usePointsSocket();
   useNotificationWebSocket();
   useDashboardWebSocket();
-
-  const { isTourActive } = useOnboardingTour(!summaryLoading);
 
   const feedPosts = feedData?.pages.flatMap((page) => page.posts) ?? [];
 
@@ -135,60 +91,23 @@ function HomeScreenContent() {
   const ListHeader = useCallback(
     () => (
       <YStack padding="$4" gap="$4">
-        {/* Step 1: Points Card */}
-        <CopilotStep
-          text="Aqui você vê seu saldo de pontos, variação diária e gráfico dos últimos 7 dias."
-          order={1}
-          name="points-card"
-        >
-          <CopilotView>
-            {summaryLoading ? <SkeletonPointsCard /> : (
-              <PointsBalanceCard user={summary?.user} isLoading={summaryLoading} />
-            )}
-          </CopilotView>
-        </CopilotStep>
+        {summaryLoading ? <SkeletonPointsCard /> : (
+          <PointsBalanceCard user={summary?.user} isLoading={summaryLoading} />
+        )}
 
-        {/* Step 2: Quick Access Carousel */}
-        <CopilotStep
-          text="Deslize para acessar todos os módulos: Eventos, Loja, Reservas, Rankings e mais!"
-          order={2}
-          name="quick-access"
-        >
-          <CopilotView>
-            {summaryLoading ? <SkeletonQuickAccess /> : <QuickAccessCarousel />}
-          </CopilotView>
-        </CopilotStep>
+        {summaryLoading ? <SkeletonQuickAccess /> : <QuickAccessCarousel />}
 
-        {/* Step 3: Stories Row */}
-        <CopilotStep
-          text="Veja os stories da comunidade e compartilhe os seus. Toque no + para criar!"
-          order={3}
-          name="stories-row"
-        >
-          <CopilotView>
-            {summaryLoading ? <SkeletonStories /> : <StoriesRow />}
-          </CopilotView>
-        </CopilotStep>
+        {summaryLoading ? <SkeletonStories /> : <StoriesRow />}
 
-        {/* Step 4: Feed area */}
-        <CopilotStep
-          text="Acompanhe posts, enquetes e eventos da comunidade. Role para ver mais!"
-          order={4}
-          name="feed-area"
-        >
-          <CopilotView>
-            <YStack paddingVertical="$2">
-              <Text weight="semibold" size="lg" style={{ color: dt.textPrimary }}>
-                Feed da Comunidade
-              </Text>
-              <Text size="sm" style={{ color: dt.textSecondary }}>
-                Posts, enquetes e eventos
-              </Text>
-            </YStack>
-          </CopilotView>
-        </CopilotStep>
+        <YStack paddingVertical="$2">
+          <Text weight="semibold" size="lg" style={{ color: dt.textPrimary }}>
+            Feed da Comunidade
+          </Text>
+          <Text size="sm" style={{ color: dt.textSecondary }}>
+            Posts, enquetes e eventos
+          </Text>
+        </YStack>
 
-        {/* New Posts Banner */}
         <NewPostsBanner onPress={scrollToTop} />
       </YStack>
     ),
@@ -301,7 +220,6 @@ function HomeScreenContent() {
         contentContainerStyle={{ paddingBottom: 80 }}
         ItemSeparatorComponent={() => <YStack height={12} />}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!isTourActive}
       />
 
       {/* FAB - New Post */}
