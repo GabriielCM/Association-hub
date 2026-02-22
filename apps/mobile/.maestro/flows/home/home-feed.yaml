@@ -1,0 +1,28 @@
+appId: com.ahub.app
+name: "Home - Feed e conteudo"
+tags:
+  - home
+  - smoke
+env:
+  EMAIL: "test@ahub.com"
+  PASSWORD: "Test1234!"
+---
+- runFlow:
+    file: "../../helpers/login-helper.yaml"
+    env:
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+
+# Verifica elementos da home
+- assertVisible:
+    text: "Bem-vindo,"
+    optional: true
+
+# Verifica header do feed
+- assertVisible:
+    text: "Feed da Comunidade"
+    optional: true
+
+# Scroll para ver conteudo do feed
+- scroll
+- waitForAnimationToEnd

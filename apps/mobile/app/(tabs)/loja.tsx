@@ -1,6 +1,10 @@
 import { useState, useCallback } from 'react';
-import { FlatList, StyleSheet, RefreshControl } from 'react-native';
+import { FlatList, StyleSheet, RefreshControl, Dimensions } from 'react-native';
 import { YStack, XStack } from 'tamagui';
+
+const CARD_GAP = 12;
+const HORIZONTAL_PADDING = 16;
+const CARD_WIDTH = (Dimensions.get('window').width - HORIZONTAL_PADDING * 2 - CARD_GAP) / 2;
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Text, Heading, Card, Spinner, Icon, Badge } from '@ahub/ui';
@@ -226,12 +230,12 @@ export default function LojaScreen() {
               return (
                 <XStack
                   flexWrap="wrap"
-                  gap="$3"
-                  paddingHorizontal="$4"
+                  gap={CARD_GAP}
+                  paddingHorizontal={HORIZONTAL_PADDING}
                   paddingTop="$2"
                 >
                   {section.data?.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard key={product.id} product={product} width={CARD_WIDTH} />
                   ))}
                 </XStack>
               );
@@ -247,12 +251,12 @@ export default function LojaScreen() {
               return (
                 <XStack
                   flexWrap="wrap"
-                  gap="$3"
-                  paddingHorizontal="$4"
+                  gap={CARD_GAP}
+                  paddingHorizontal={HORIZONTAL_PADDING}
                   paddingTop="$2"
                 >
                   {section.data?.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard key={product.id} product={product} width={CARD_WIDTH} />
                   ))}
                 </XStack>
               );
@@ -273,13 +277,13 @@ export default function LojaScreen() {
               return (
                 <XStack
                   flexWrap="wrap"
-                  gap="$3"
-                  paddingHorizontal="$4"
+                  gap={CARD_GAP}
+                  paddingHorizontal={HORIZONTAL_PADDING}
                   paddingTop="$2"
                   paddingBottom="$4"
                 >
                   {section.data?.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard key={product.id} product={product} width={CARD_WIDTH} />
                   ))}
                 </XStack>
               );

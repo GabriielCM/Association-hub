@@ -67,8 +67,8 @@ describe('ProductsService', () => {
       const result = await service.findAll({ page: 1, limit: 20 });
 
       expect(result.data).toHaveLength(1);
-      expect(result.pagination.total).toBe(1);
-      expect(result.pagination.page).toBe(1);
+      expect(result.meta.totalCount).toBe(1);
+      expect(result.meta.currentPage).toBe(1);
     });
 
     it('should filter by categoryId', async () => {

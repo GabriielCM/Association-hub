@@ -50,9 +50,30 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: 'Pedido não encontrado' })
   async getOrder(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     const order = await this.ordersService.getOrderById(id, user.sub);
+
+    const STATUS_LABELS: Record<string, string> = {
+      PENDING: 'Pedido realizado',
+      CONFIRMED: 'Em preparação',
+      READY: 'Pronto para retirada',
+      COMPLETED: 'Entregue',
+      CANCELLED: 'Cancelado',
+    };
+
+    const timeline = ((order as any).statusHistory ?? []).map((entry: any) => ({
+      status: entry.status,
+      label: STATUS_LABELS[entry.status] ?? entry.status,
+      description: entry.notes ?? undefined,
+      createdAt: entry.createdAt,
+    }));
+
+    const { statusHistory, ...orderData } = order as any;
+
     return {
       success: true,
-      data: order,
+      data: {
+        ...orderData,
+        timeline,
+      },
     };
   }
 
@@ -61,10 +82,47 @@ export class OrdersController {
   @ApiParam({ name: 'id', description: 'ID do pedido' })
   @ApiResponse({ status: 200, description: 'Comprovante gerado' })
   async getReceipt(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
-    const receipt = await this.ordersService.getReceipt(id, user.sub);
+    const result = await this.ordersService.getReceipt(id, user.sub);
+    const { receipt, order, user: orderUser } = result;
+    const receiptData = receipt.data as any;
+
+    const formatPrice = (points: number, money: number) => {
+      if (points > 0 && money > 0) return `${points} pts + R$ ${money.toFixed(2)}`;
+      if (points > 0) return `${points} pts`;
+      if (money > 0) return `R$ ${money.toFixed(2)}`;
+      return 'Grátis';
+    };
+
     return {
       success: true,
-      data: receipt,
+      data: {
+        receiptNumber: receipt.receiptNumber,
+        order: {
+          code: order.code,
+          createdAt: order.createdAt,
+        },
+        user: {
+          name: orderUser.name,
+          email: orderUser.email,
+          memberSince: orderUser.createdAt,
+        },
+        items: (receiptData.items ?? order.items).map((item: any) => ({
+          name: item.name ?? item.productName,
+          quantity: item.quantity,
+          unitPrice: formatPrice(item.unitPricePoints, Number(item.unitPriceMoney ?? 0)),
+          total: formatPrice(item.totalPoints, Number(item.totalMoney ?? 0)),
+        })),
+        subtotal: formatPrice(
+          receiptData.subtotalPoints ?? order.subtotalPoints,
+          Number(receiptData.subtotalMoney ?? order.subtotalMoney ?? 0),
+        ),
+        payment: {
+          pointsUsed: receiptData.pointsUsed ?? order.pointsUsed ?? 0,
+          moneyPaid: Number(receiptData.moneyPaid ?? order.moneyPaid ?? 0),
+          cashback: receiptData.cashbackEarned ?? order.cashbackEarned ?? 0,
+        },
+        pickupLocation: order.pickupLocation ?? undefined,
+      },
     };
   }
 

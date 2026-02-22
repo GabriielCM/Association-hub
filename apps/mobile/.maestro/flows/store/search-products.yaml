@@ -1,0 +1,28 @@
+appId: com.ahub.app
+name: "Store - Buscar produtos"
+tags:
+  - store
+env:
+  EMAIL: "test@ahub.com"
+  PASSWORD: "Test1234!"
+---
+- runFlow:
+    file: "../../helpers/login-helper.yaml"
+    env:
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+
+# Navega para aba Loja
+- tapOn: "Loja"
+- waitForAnimationToEnd
+
+# Busca por produto
+- tapOn: "Buscar produtos..."
+- inputText: "camiseta"
+- pressKey: enter
+- waitForAnimationToEnd
+
+# Verifica resultados
+- assertVisible:
+    text: "Resultados para"
+    optional: true

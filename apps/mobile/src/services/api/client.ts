@@ -12,7 +12,6 @@ import {
   clearTokens,
 } from '@/services/storage/secure-store';
 import type { AuthTokens, ApiResponse } from '@ahub/shared/types';
-import { useAuthStore } from '@/stores/auth.store';
 
 // Queue for failed requests during token refresh
 interface QueueItem {
@@ -51,6 +50,9 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
     // Add association ID header for multi-tenant filtering
+    // Use require() to break circular dependency:
+    // auth.store -> auth.api -> client -> auth.store
+    const { useAuthStore } = require('@/stores/auth.store');
     const user = useAuthStore.getState().user;
     if (user?.associationId && config.headers) {
       config.headers['x-association-id'] = user.associationId;

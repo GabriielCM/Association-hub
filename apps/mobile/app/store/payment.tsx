@@ -261,10 +261,7 @@ export default function PaymentScreen() {
 
   // Biometric modal for POINTS / MIXED
   if (step === 'biometric') {
-    const biometricAmount =
-      paymentMethod === 'POINTS'
-        ? 0
-        : pointsAmount ?? 0;
+    const biometricAmount = pointsAmount ?? 0;
 
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: st.screenBg }} edges={['top', 'bottom']}>

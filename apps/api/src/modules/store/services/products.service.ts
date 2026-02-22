@@ -188,7 +188,7 @@ export class ProductsService {
    * Get products with filters
    */
   async getProducts(query: ProductQueryDto, associationId?: string) {
-    const { categoryId, type, search, featured, promotional, page = 1, limit = 20 } = query;
+    const { categoryId, type, search, featured, promotional, page = 1, limit = 20, sort } = query;
 
     const where: any = {
       isActive: true,
@@ -207,6 +207,26 @@ export class ProductsService {
       ];
     }
 
+    let orderBy: any[];
+    switch (sort) {
+      case 'price_asc':
+        orderBy = [{ pricePoints: 'asc' }];
+        break;
+      case 'price_desc':
+        orderBy = [{ pricePoints: 'desc' }];
+        break;
+      case 'best_selling':
+        orderBy = [{ averageRating: 'desc' }, { createdAt: 'desc' }];
+        break;
+      case 'name_asc':
+        orderBy = [{ name: 'asc' }];
+        break;
+      case 'recent':
+      default:
+        orderBy = [{ isFeatured: 'desc' }, { createdAt: 'desc' }];
+        break;
+    }
+
     const [products, total] = await Promise.all([
       this.prisma.storeProduct.findMany({
         where,
@@ -215,7 +235,7 @@ export class ProductsService {
           images: { take: 1, orderBy: { displayOrder: 'asc' } },
           _count: { select: { variants: true, reviews: { where: { status: 'APPROVED' } } } },
         },
-        orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
+        orderBy,
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -642,7 +662,7 @@ export class ProductsService {
    * Format product for listing
    */
   private formatProductSummary(product: any) {
-    const imageUrl = product.images?.[0]?.url;
+    const thumbnailUrl = product.images?.[0]?.url;
 
     // Check if promotional and if promotion is active
     const isPromotionalActive =
@@ -668,7 +688,7 @@ export class ProductsService {
       isPromotional: isPromotionalActive,
       promotionalEndsAt: isPromotionalActive ? product.promotionalEndsAt : null,
       isFeatured: product.isFeatured,
-      imageUrl,
+      thumbnailUrl,
       averageRating: product.averageRating ? Number(product.averageRating) : null,
       reviewCount: product._count?.reviews || 0,
       hasVariants: (product._count?.variants || 0) > 0,
@@ -689,6 +709,8 @@ export class ProductsService {
 
     return {
       ...product,
+      averageRating: product.averageRating ? Number(product.averageRating) : null,
+      cashbackPercent: product.cashbackPercent ? Number(product.cashbackPercent) : null,
       pricePoints: isPromotionalActive
         ? product.promotionalPricePoints
         : product.pricePoints,

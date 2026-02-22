@@ -23,10 +23,6 @@ module.exports = {
           'Permitir que A-hub acesse sua camera para escanear QR Codes.',
       },
     },
-    androidNavigationBar: {
-      barStyle: 'light-content',
-      backgroundColor: '#0D0520',
-    },
     android: {
       googleServicesFile: './google-services.json',
       adaptiveIcon: {

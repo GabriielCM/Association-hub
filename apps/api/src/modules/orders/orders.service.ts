@@ -290,7 +290,22 @@ export class OrdersService {
    * Get order receipt
    */
   async getReceipt(orderId: string, userId: string) {
-    const order = await this.getOrderById(orderId, userId);
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        items: true,
+        receipt: true,
+        user: { select: { name: true, email: true, createdAt: true } },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Pedido não encontrado');
+    }
+
+    if (order.userId !== userId) {
+      throw new ForbiddenException('Acesso negado');
+    }
 
     let receipt = order.receipt;
 
@@ -299,7 +314,7 @@ export class OrdersService {
       receipt = await this.generateReceipt(order);
     }
 
-    return receipt;
+    return { receipt, order, user: (order as any).user };
   }
 
   /**

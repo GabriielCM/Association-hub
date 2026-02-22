@@ -35,7 +35,12 @@ export default function CheckoutScreen() {
       pathname: '/store/payment' as any,
       params: {
         method: selectedMethod,
-        pointsToUse: selectedMethod === 'MIXED' ? String(pointsToUse) : undefined,
+        pointsToUse:
+          selectedMethod === 'POINTS'
+            ? String(validation!.totalPoints)
+            : selectedMethod === 'MIXED'
+              ? String(pointsToUse)
+              : undefined,
       },
     });
   };

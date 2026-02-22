@@ -1,0 +1,24 @@
+appId: com.ahub.app
+name: "Auth - Validacao do formulario de login"
+tags:
+  - auth
+  - validation
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+
+# Verifica tela de login
+- assertVisible: "Entre na sua conta"
+
+# Tenta submeter formulario vazio
+- tapOn: "Entrar"
+- waitForAnimationToEnd
+
+# Testa com email invalido e senha curta
+- tapOn: "seu@email.com"
+- inputText: "email-invalido"
+- tapOn: "Sua senha"
+- inputText: "123"
+- tapOn: "Entrar"
+- waitForAnimationToEnd

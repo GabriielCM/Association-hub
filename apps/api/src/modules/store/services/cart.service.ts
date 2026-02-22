@@ -138,15 +138,12 @@ export class CartService {
         : unitPriceMoney;
     }
 
-    // Upsert cart item
-    const variantIdValue = dto.variantId || Prisma.DbNull;
-    const existingItem = await this.prisma.cartItem.findUnique({
+    // Upsert cart item — use findFirst for nullable variantId in compound unique
+    const existingItem = await this.prisma.cartItem.findFirst({
       where: {
-        cartId_productId_variantId: {
-          cartId: cart.id,
-          productId: dto.productId,
-          variantId: variantIdValue as string,
-        },
+        cartId: cart.id,
+        productId: dto.productId,
+        variantId: dto.variantId || null,
       },
     });
 

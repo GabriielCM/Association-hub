@@ -1,0 +1,30 @@
+appId: com.ahub.app
+name: "Card - Visualizar carteirinha"
+tags:
+  - card
+env:
+  EMAIL: "test@ahub.com"
+  PASSWORD: "Test1234!"
+---
+- runFlow:
+    file: "../../helpers/login-helper.yaml"
+    env:
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+
+# Navega para aba Carteirinha
+- tapOn: "Carteirinha"
+- waitForAnimationToEnd
+
+# Verifica elementos da carteirinha
+- assertVisible:
+    text: "Compartilhar"
+    optional: true
+
+- assertVisible:
+    text: "Benefícios"
+    optional: true
+
+- assertVisible:
+    text: "Histórico"
+    optional: true

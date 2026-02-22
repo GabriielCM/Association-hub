@@ -1,0 +1,29 @@
+appId: com.ahub.app
+name: "Events - Listar eventos"
+tags:
+  - events
+env:
+  EMAIL: "test@ahub.com"
+  PASSWORD: "Test1234!"
+---
+- runFlow:
+    file: "../../helpers/login-helper.yaml"
+    env:
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+
+# Navega para aba Eventos
+- tapOn: "Eventos"
+- waitForAnimationToEnd
+
+# Verifica heading
+- assertVisible: "Eventos"
+
+# Se nao houver eventos, mostra empty state
+- assertVisible:
+    text: "Nenhum evento encontrado"
+    optional: true
+
+# Scroll para atualizar
+- scroll
+- waitForAnimationToEnd

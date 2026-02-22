@@ -1,0 +1,38 @@
+appId: com.ahub.app
+name: "Navigation - Navegacao entre todas as tabs"
+tags:
+  - navigation
+  - smoke
+env:
+  EMAIL: "test@ahub.com"
+  PASSWORD: "Test1234!"
+---
+# Login primeiro
+- runFlow:
+    file: "../../helpers/login-helper.yaml"
+    env:
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+
+# Verifica que esta na Home (Inicio)
+- assertVisible: "Início"
+
+# Navega para Carteirinha
+- tapOn: "Carteirinha"
+- waitForAnimationToEnd
+
+# Navega para Eventos
+- tapOn: "Eventos"
+- waitForAnimationToEnd
+
+# Navega para Loja
+- tapOn: "Loja"
+- waitForAnimationToEnd
+
+# Navega para Perfil
+- tapOn: "Perfil"
+- waitForAnimationToEnd
+
+# Volta para Inicio
+- tapOn: "Início"
+- waitForAnimationToEnd

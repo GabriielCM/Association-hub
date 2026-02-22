@@ -50,7 +50,7 @@ export default function ReceiptScreen() {
     );
   }
 
-  if (isError || !receipt) {
+  if (isError || !receipt || !receipt.order) {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$3" padding="$4">

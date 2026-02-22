@@ -396,15 +396,19 @@ describe('OrdersService', () => {
   describe('getReceipt', () => {
     it('should return existing receipt', async () => {
       const mockReceipt = { id: 'receipt-1', orderId: 'order-1', data: {} };
-      prisma.order.findUnique.mockResolvedValue({ ...mockOrder, receipt: mockReceipt });
+      const mockUser = { name: 'João', email: 'joao@test.com', createdAt: new Date() };
+      prisma.order.findUnique.mockResolvedValue({ ...mockOrder, receipt: mockReceipt, user: mockUser });
 
       const result = await service.getReceipt('order-1', 'user-1');
 
-      expect(result.id).toBe('receipt-1');
+      expect(result.receipt.id).toBe('receipt-1');
+      expect(result.order.code).toBe('ABC123');
+      expect(result.user.name).toBe('João');
     });
 
     it('should create receipt if not exists', async () => {
-      prisma.order.findUnique.mockResolvedValue({ ...mockOrder, receipt: null });
+      const mockUser = { name: 'João', email: 'joao@test.com', createdAt: new Date() };
+      prisma.order.findUnique.mockResolvedValue({ ...mockOrder, receipt: null, user: mockUser });
       prisma.orderReceipt.create.mockResolvedValue({ id: 'receipt-new', orderId: 'order-1', data: {} });
 
       const result = await service.getReceipt('order-1', 'user-1');

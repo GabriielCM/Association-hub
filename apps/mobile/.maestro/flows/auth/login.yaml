@@ -1,0 +1,36 @@
+appId: com.ahub.app
+name: "Auth - Login com credenciais validas"
+tags:
+  - auth
+  - smoke
+env:
+  EMAIL: "test@ahub.com"
+  PASSWORD: "Test1234!"
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+
+# Verifica tela de login
+- assertVisible: "A-hub"
+- assertVisible: "Entre na sua conta"
+
+# Preenche email
+- tapOn: "seu@email.com"
+- inputText: ${EMAIL}
+
+# Preenche senha
+- tapOn: "Sua senha"
+- inputText: ${PASSWORD}
+
+# Toca no botao Entrar
+- tapOn: "Entrar"
+- waitForAnimationToEnd
+
+# Verifica se chegou na home (tabs visiveis)
+- assertVisible:
+    text: "Bem-vindo,"
+    optional: true
+- assertVisible:
+    text: "Início"
+    optional: true

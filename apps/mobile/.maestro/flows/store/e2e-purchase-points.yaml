@@ -1,0 +1,153 @@
+appId: com.ahub.app
+name: "E2E - Comprar produto criado no admin com pontos"
+tags:
+  - e2e
+  - store
+---
+# === SETUP: Launch sem clearState (estado já limpo via ADB antes) ===
+- launchApp:
+    appId: "com.ahub.app"
+    clearState: false
+    stopApp: false
+
+# Aguardar app carregar
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Fechar bottom sheet do Dev Client com back
+- pressKey: back
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# === LOGIN ===
+- extendedWaitUntil:
+    visible: "Entre na sua conta"
+    timeout: 30000
+
+- tapOn: "seu@email.com"
+- inputText: "membro@ahub.test"
+- hideKeyboard
+
+- tapOn: "Sua senha"
+- inputText: "Membro@123"
+- hideKeyboard
+
+- tapOn: "Entrar"
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# === 1. Navegar para Loja ===
+- tapOn: "Loja"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# === 2. Pull-to-refresh (garantir que produto novo aparece) ===
+- swipe:
+    start: "50%,30%"
+    end: "50%,80%"
+    duration: 800
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# === 3. Buscar produto ===
+# Tap no TextInput da SearchBar (placeholder text)
+- tapOn: "Buscar produtos..."
+
+# Emulador pode mostrar popup "Try out your stylus" — fechar com back
+- pressKey: back
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Re-tap para focar o TextInput
+- tapOn: "Buscar produtos..."
+- inputText: "Produto E2E 1771767054"
+
+# Enter dispara onSubmitEditing e fecha teclado — NÃO usar hideKeyboard antes
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Aguardar resultado da busca
+- extendedWaitUntil:
+    visible: "Produto E2E 1771767054"
+    timeout: 15000
+
+# === 4. Abrir detalhe do produto ===
+# O heading "Resultados para 'Produto E2E...'" contém o texto do produto.
+# Usar "100 pts" que só existe no ProductCard (preço).
+- tapOn: "100 pts"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Verificar que estamos na tela de detalhe (heading do produto, não o card)
+- extendedWaitUntil:
+    visible: "Adicionar ao carrinho"
+    timeout: 10000
+
+# === 5. Adicionar ao carrinho ===
+- scrollUntilVisible:
+    element: "Adicionar ao carrinho"
+    direction: DOWN
+    timeout: 5000
+
+- tapOn: "Adicionar ao carrinho"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# === 6. Tela do Carrinho ===
+- extendedWaitUntil:
+    visible: "Carrinho"
+    timeout: 10000
+
+- assertVisible: "Produto E2E 1771767054"
+
+- scrollUntilVisible:
+    element: "Finalizar compra"
+    direction: DOWN
+    timeout: 5000
+
+- tapOn: "Finalizar compra"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# === 7. Checkout — Selecionar pagamento ===
+- extendedWaitUntil:
+    visible: "Forma de pagamento"
+    timeout: 15000
+
+- assertVisible: "Seu saldo"
+
+- tapOn: "Pagar com Pontos"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+- tapOn: "Continuar para pagamento"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# === 8. Pagamento — Confirmar (biometric fallback) ===
+- extendedWaitUntil:
+    visible: "Confirmar Pagamento"
+    timeout: 10000
+
+# Heading = "Confirmar Pagamento" (capital P), botão = "Confirmar pagamento" (lowercase p).
+# Usar seletor relativo para atingir o botão abaixo do heading.
+- tapOn:
+    text: "Confirmar pagamento"
+    below: "100 pts"
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# === 9. Confirmacao do pedido ===
+- extendedWaitUntil:
+    visible: "Pedido confirmado!"
+    timeout: 30000
+
+- assertVisible: "Pedido confirmado!"
+
+# === 10. Voltar para loja ===
+- tapOn: "Continuar comprando"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- assertVisible: "Loja"

@@ -1,13 +1,19 @@
-import { Pressable, StyleSheet, Image } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { YStack, XStack, View } from 'tamagui';
 import { router } from 'expo-router';
-import { Card, Text, Icon } from '@ahub/ui';
+import { Card, Text, Icon, Badge } from '@ahub/ui';
 import { Storefront, Star, Crown } from '@ahub/ui/src/icons';
 import { formatPoints, formatCurrency } from '@ahub/shared/utils';
-import { ProductTypeBadge } from './ProductTypeBadge';
 import { FavoriteButton } from './FavoriteButton';
 import { useStoreTheme } from '../hooks/useStoreTheme';
-import type { StoreProductListItem } from '@ahub/shared/types';
+import type { StoreProductListItem, ProductType } from '@ahub/shared/types';
+
+const typeConfig: Record<ProductType, { label: string; dotVariant: 'primary' | 'warning' | 'info' }> = {
+  PHYSICAL: { label: 'Produto', dotVariant: 'primary' },
+  VOUCHER: { label: 'Voucher', dotVariant: 'warning' },
+  SERVICE: { label: 'Serviço', dotVariant: 'info' },
+};
 
 interface ProductCardProps {
   product: StoreProductListItem;
@@ -48,11 +54,16 @@ export function ProductCard({ product, width = '47%' }: ProductCardProps) {
   const hasExclusivePlans =
     product.eligiblePlans != null && product.eligiblePlans.length > 0;
 
+  const typeInfo = typeConfig[product.type] || typeConfig.PHYSICAL;
+
   return (
     <Pressable onPress={handlePress} style={{ width: width as any }}>
       <Card
         variant="elevated"
-        style={styles.card}
+        style={[
+          styles.card,
+          hasExclusivePlans && { borderLeftWidth: 2, borderLeftColor: st.exclusiveBg },
+        ]}
         {...(st.cardBg ? {
           backgroundColor: st.cardBg,
           borderWidth: 1,
@@ -61,13 +72,14 @@ export function ProductCard({ product, width = '47%' }: ProductCardProps) {
         } : {})}
       >
         <YStack gap="$2">
-          {/* Product Image */}
+          {/* ===== IMAGE ZONE ===== */}
           <View style={styles.imageContainer}>
             {product.thumbnailUrl ? (
               <Image
-                source={{ uri: product.thumbnailUrl }}
+                source={product.thumbnailUrl}
                 style={styles.image}
-                resizeMode="cover"
+                contentFit="cover"
+                transition={200}
               />
             ) : (
               <View style={[styles.imagePlaceholder, { backgroundColor: st.placeholderBg }]}>
@@ -84,44 +96,33 @@ export function ProductCard({ product, width = '47%' }: ProductCardProps) {
               </View>
             )}
 
-            {/* Badges overlay */}
-            <View style={styles.badgeContainer}>
-              <ProductTypeBadge type={product.type} />
-            </View>
-
-            {/* Exclusive plan badge */}
-            {hasExclusivePlans && (
-              <View style={styles.exclusiveBadge}>
-                <XStack gap={3} alignItems="center" style={[styles.exclusivePill, { backgroundColor: st.exclusiveBg }]}>
-                  <Icon icon={Crown} size={10} weight="fill" color="#fff" />
-                  <Text size="xs" style={styles.exclusiveText}>
-                    EXCLUSIVO
-                  </Text>
-                </XStack>
+            {/* Discount badge - top left */}
+            {hasPromotion && discountPercent > 0 && (
+              <View style={styles.discountBadge}>
+                <Badge variant="error" size="sm">-{discountPercent}%</Badge>
               </View>
             )}
 
-            {/* Favorite button */}
+            {/* Favorite button - top right */}
             <View style={styles.favoriteContainer}>
               <FavoriteButton
                 productId={product.id}
                 isFavorited={product.isFavorited ?? false}
               />
             </View>
-
-            {/* Promotion ribbon */}
-            {hasPromotion && (
-              <View style={[styles.promoRibbon, { backgroundColor: st.promoBg }]}>
-                <Text size="xs" style={{ color: '#fff', fontWeight: '700' }}>
-                  {discountPercent > 0 ? `-${discountPercent}%` : 'PROMO'}
-                  {promoEndLabel ? ` ${promoEndLabel}` : ''}
-                </Text>
-              </View>
-            )}
           </View>
 
-          {/* Product Info */}
+          {/* ===== INFO ZONE ===== */}
           <YStack gap="$1" paddingHorizontal="$1">
+            {/* Product type - dot + label */}
+            <XStack gap={4} alignItems="center">
+              <Badge.Dot variant={typeInfo.dotVariant as any} size="sm" />
+              <Text size="xs" style={{ color: st.textSecondary, fontSize: 10 }}>
+                {typeInfo.label}
+              </Text>
+            </XStack>
+
+            {/* Product name */}
             <Text weight="semibold" size="sm" numberOfLines={2} style={{ color: st.textPrimary }}>
               {product.name}
             </Text>
@@ -148,7 +149,11 @@ export function ProductCard({ product, width = '47%' }: ProductCardProps) {
                       {formatPoints(product.pricePoints)}
                     </Text>
                   )}
-                  <Text weight="bold" size="sm" style={{ color: st.accent }}>
+                  <Text
+                    weight="bold"
+                    size="sm"
+                    style={{ color: hasPromotion ? st.promoBg : st.accent }}
+                  >
                     {formatPoints(displayPricePoints)} pts
                   </Text>
                 </XStack>
@@ -162,6 +167,23 @@ export function ProductCard({ product, width = '47%' }: ProductCardProps) {
                 </Text>
               )}
             </YStack>
+
+            {/* Promo end date */}
+            {hasPromotion && promoEndLabel !== '' && (
+              <Text style={{ fontSize: 9, color: st.promoBg, fontWeight: '600' }}>
+                PROMO {promoEndLabel}
+              </Text>
+            )}
+
+            {/* Exclusive plan indicator */}
+            {hasExclusivePlans && (
+              <XStack gap={3} alignItems="center">
+                <Icon icon={Crown} size={10} weight="fill" color={st.exclusiveBg} />
+                <Text style={{ fontSize: 9, color: st.exclusiveBg, fontWeight: '600' }}>
+                  Exclusivo
+                </Text>
+              </XStack>
+            )}
           </YStack>
         </YStack>
       </Card>
@@ -194,38 +216,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeContainer: {
+  discountBadge: {
     position: 'absolute',
     top: 6,
     left: 6,
   },
-  exclusiveBadge: {
-    position: 'absolute',
-    bottom: 28,
-    left: 6,
-  },
-  exclusivePill: {
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  exclusiveText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 9,
-  },
   favoriteContainer: {
     position: 'absolute',
-    top: 4,
-    right: 4,
-  },
-  promoRibbon: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingVertical: 2,
-    alignItems: 'center',
+    top: 6,
+    right: 6,
   },
   strikethrough: {
     textDecorationLine: 'line-through',

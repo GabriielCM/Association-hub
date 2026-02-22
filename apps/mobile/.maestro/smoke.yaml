@@ -1,0 +1,16 @@
+appId: com.ahub.app
+name: "Smoke Test Suite"
+tags:
+  - smoke
+env:
+  EMAIL: "test@ahub.com"
+  PASSWORD: "Test1234!"
+---
+# Roda os flows criticos em sequencia
+- runFlow:
+    file: "flows/auth/login.yaml"
+    env:
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+
+- runFlow: "flows/navigation/tab-navigation.yaml"

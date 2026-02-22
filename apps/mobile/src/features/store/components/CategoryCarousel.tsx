@@ -1,4 +1,5 @@
-import { FlatList, Pressable, StyleSheet, Image } from 'react-native';
+import { FlatList, Pressable, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { YStack, View } from 'tamagui';
 import { Text, Card, Icon } from '@ahub/ui';
 import { Tag } from '@ahub/ui/src/icons';
@@ -46,9 +47,10 @@ export function CategoryCarousel({
               <YStack alignItems="center" gap="$1">
                 {item.imageUrl ? (
                   <Image
-                    source={{ uri: item.imageUrl }}
+                    source={item.imageUrl}
                     style={styles.image}
-                    resizeMode="cover"
+                    contentFit="cover"
+                    transition={200}
                   />
                 ) : (
                   <View style={[styles.imagePlaceholder, { backgroundColor: st.placeholderBg }]}>

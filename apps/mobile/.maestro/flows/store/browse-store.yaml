@@ -1,0 +1,32 @@
+appId: com.ahub.app
+name: "Store - Navegar pela loja"
+tags:
+  - store
+  - smoke
+env:
+  EMAIL: "test@ahub.com"
+  PASSWORD: "Test1234!"
+---
+- runFlow:
+    file: "../../helpers/login-helper.yaml"
+    env:
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+
+# Navega para aba Loja
+- tapOn: "Loja"
+- waitForAnimationToEnd
+
+# Verifica tela da loja
+- assertVisible: "Loja"
+
+# Verifica saldo
+- assertVisible:
+    text: "Saldo:"
+    optional: true
+
+# Scroll para ver todos os produtos
+- scroll
+- assertVisible:
+    text: "Todos os Produtos"
+    optional: true

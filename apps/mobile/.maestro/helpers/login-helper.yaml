@@ -1,0 +1,16 @@
+appId: com.ahub.app
+env:
+  EMAIL: ${EMAIL}
+  PASSWORD: ${PASSWORD}
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- assertVisible: "A-hub"
+- assertVisible: "Entre na sua conta"
+- tapOn: "seu@email.com"
+- inputText: ${EMAIL}
+- tapOn: "Sua senha"
+- inputText: ${PASSWORD}
+- tapOn: "Entrar"
+- waitForAnimationToEnd

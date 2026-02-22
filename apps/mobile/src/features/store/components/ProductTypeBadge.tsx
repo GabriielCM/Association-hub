@@ -13,5 +13,5 @@ const typeConfig: Record<ProductType, { label: string; variant: string }> = {
 
 export function ProductTypeBadge({ type }: ProductTypeBadgeProps) {
   const config = typeConfig[type] || typeConfig.PHYSICAL;
-  return <Badge variant={config.variant as any}>{config.label}</Badge>;
+  return <Badge variant={config.variant as any} size="sm">{config.label}</Badge>;
 }

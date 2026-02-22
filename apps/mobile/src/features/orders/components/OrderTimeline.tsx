@@ -13,11 +13,13 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
 };
 
 interface OrderTimelineProps {
-  timeline: OrderStatusHistoryEntry[];
+  timeline?: OrderStatusHistoryEntry[];
   currentStatus: OrderStatus;
 }
 
 export function OrderTimeline({ timeline, currentStatus }: OrderTimelineProps) {
+  if (!timeline || timeline.length === 0) return null;
+
   return (
     <YStack gap="$0">
       {timeline.map((entry, index) => {

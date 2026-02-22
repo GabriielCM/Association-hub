@@ -1,0 +1,42 @@
+appId: com.ahub.app
+name: "Auth - Registro de nova conta"
+tags:
+  - auth
+env:
+  NAME: "Teste Usuario"
+  EMAIL: "novo@ahub.com"
+  PASSWORD: "Test1234!"
+  PHONE: "(11) 99999-9999"
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+
+# Navega para registro a partir do login
+- assertVisible: "Entre na sua conta"
+- tapOn: "Cadastre-se"
+- waitForAnimationToEnd
+
+# Verifica tela de registro
+- assertVisible: "Criar Conta"
+- assertVisible: "Junte-se ao A-hub"
+
+# Preenche nome
+- tapOn: "Seu nome"
+- inputText: ${NAME}
+
+# Preenche email
+- tapOn: "seu@email.com"
+- inputText: ${EMAIL}
+
+# Preenche telefone
+- tapOn: "(11) 99999-9999"
+- inputText: ${PHONE}
+
+# Preenche senha
+- tapOn: "Mínimo 8 caracteres"
+- inputText: ${PASSWORD}
+
+# Submete
+- tapOn: "Criar conta"
+- waitForAnimationToEnd

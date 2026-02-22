@@ -47,7 +47,8 @@ export class StoreUserController {
   @ApiOperation({ summary: 'Ver carrinho do usuário' })
   @ApiResponse({ status: 200, description: 'Carrinho atual' })
   async getCart(@Request() req: any) {
-    return this.cartService.getOrCreateCart(req.user.id);
+    const data = await this.cartService.getOrCreateCart(req.user.id);
+    return { success: true, data };
   }
 
   @Post('cart/items')
@@ -56,7 +57,8 @@ export class StoreUserController {
   @ApiResponse({ status: 400, description: 'Produto indisponível ou estoque insuficiente' })
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
   async addToCart(@Request() req: any, @Body() dto: AddToCartDto) {
-    return this.cartService.addItem(req.user.id, dto);
+    const data = await this.cartService.addItem(req.user.id, dto);
+    return { success: true, data };
   }
 
   @Patch('cart/items/:itemId')
@@ -69,7 +71,8 @@ export class StoreUserController {
     @Param('itemId') itemId: string,
     @Body() dto: UpdateCartItemDto,
   ) {
-    return this.cartService.updateItem(req.user.id, itemId, dto);
+    const data = await this.cartService.updateItem(req.user.id, itemId, dto);
+    return { success: true, data };
   }
 
   @Delete('cart/items/:itemId')
@@ -77,14 +80,16 @@ export class StoreUserController {
   @ApiResponse({ status: 200, description: 'Item removido' })
   @ApiResponse({ status: 404, description: 'Item não encontrado' })
   async removeCartItem(@Request() req: any, @Param('itemId') itemId: string) {
-    return this.cartService.removeItem(req.user.id, itemId);
+    const data = await this.cartService.removeItem(req.user.id, itemId);
+    return { success: true, data };
   }
 
   @Delete('cart')
   @ApiOperation({ summary: 'Limpar carrinho' })
   @ApiResponse({ status: 200, description: 'Carrinho limpo' })
   async clearCart(@Request() req: any) {
-    return this.cartService.clearCart(req.user.id);
+    const data = await this.cartService.clearCart(req.user.id);
+    return { success: true, data };
   }
 
   // =====================
@@ -95,7 +100,8 @@ export class StoreUserController {
   @ApiOperation({ summary: 'Validar carrinho para checkout' })
   @ApiResponse({ status: 200, description: 'Validação do carrinho' })
   async validateCheckout(@Request() req: any, @Body() dto: ValidateCheckoutDto) {
-    return this.checkoutService.validateCheckout(req.user.id, dto.subscriptionPlanId);
+    const data = await this.checkoutService.validateCheckout(req.user.id, dto.subscriptionPlanId);
+    return { success: true, data };
   }
 
   @Post('checkout')
@@ -103,7 +109,8 @@ export class StoreUserController {
   @ApiResponse({ status: 201, description: 'Pedido criado' })
   @ApiResponse({ status: 400, description: 'Saldo insuficiente ou carrinho inválido' })
   async processCheckout(@Request() req: any, @Body() dto: ProcessCheckoutDto) {
-    return this.checkoutService.processCheckout(req.user.id, dto);
+    const data = await this.checkoutService.processCheckout(req.user.id, dto);
+    return { success: true, data };
   }
 
   // =====================
@@ -114,7 +121,8 @@ export class StoreUserController {
   @ApiOperation({ summary: 'Listar favoritos do usuário' })
   @ApiResponse({ status: 200, description: 'Lista de favoritos' })
   async getFavorites(@Request() req: any) {
-    return this.favoritesService.getFavorites(req.user.id);
+    const data = await this.favoritesService.getFavorites(req.user.id);
+    return { success: true, data };
   }
 
   @Get('favorites/:productId/check')
@@ -122,7 +130,7 @@ export class StoreUserController {
   @ApiResponse({ status: 200, description: 'Status do favorito' })
   async checkFavorite(@Request() req: any, @Param('productId') productId: string) {
     const isFavorited = await this.favoritesService.isFavorited(req.user.id, productId);
-    return { isFavorited };
+    return { success: true, data: { isFavorited } };
   }
 
   @Post('favorites/:productId')
@@ -131,7 +139,8 @@ export class StoreUserController {
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
   @ApiResponse({ status: 409, description: 'Produto já está nos favoritos' })
   async addFavorite(@Request() req: any, @Param('productId') productId: string) {
-    return this.favoritesService.addFavorite(req.user.id, productId);
+    const data = await this.favoritesService.addFavorite(req.user.id, productId);
+    return { success: true, data };
   }
 
   @Delete('favorites/:productId')
@@ -139,14 +148,16 @@ export class StoreUserController {
   @ApiResponse({ status: 200, description: 'Removido dos favoritos' })
   @ApiResponse({ status: 404, description: 'Produto não está nos favoritos' })
   async removeFavorite(@Request() req: any, @Param('productId') productId: string) {
-    return this.favoritesService.removeFavorite(req.user.id, productId);
+    const data = await this.favoritesService.removeFavorite(req.user.id, productId);
+    return { success: true, data };
   }
 
   @Post('favorites/:productId/toggle')
   @ApiOperation({ summary: 'Alternar favorito (add/remove)' })
   @ApiResponse({ status: 200, description: 'Status atualizado' })
   async toggleFavorite(@Request() req: any, @Param('productId') productId: string) {
-    return this.favoritesService.toggleFavorite(req.user.id, productId);
+    const data = await this.favoritesService.toggleFavorite(req.user.id, productId);
+    return { success: true, data };
   }
 
   // =====================
@@ -164,6 +175,7 @@ export class StoreUserController {
     @Param('productId') productId: string,
     @Body() dto: CreateReviewDto,
   ) {
-    return this.reviewsService.createReview(req.user.id, productId, dto);
+    const data = await this.reviewsService.createReview(req.user.id, productId, dto);
+    return { success: true, data };
   }
 }

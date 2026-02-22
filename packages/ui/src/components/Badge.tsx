@@ -161,6 +161,12 @@ const DotBadge = styled(View, {
       success: {
         backgroundColor: '$success',
       },
+      warning: {
+        backgroundColor: '$warning',
+      },
+      info: {
+        backgroundColor: '$info',
+      },
     },
     size: {
       sm: {

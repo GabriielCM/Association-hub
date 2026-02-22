@@ -4,11 +4,11 @@ import {
   StyleSheet,
   Dimensions,
   ViewToken,
-  Image,
   Modal,
   Pressable,
   StatusBar,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { XStack, View } from 'tamagui';
 import { Text, Icon } from '@ahub/ui';
 import { Camera, X } from '@ahub/ui/src/icons';
@@ -83,9 +83,10 @@ export function ProductGallery({ images }: ProductGalleryProps) {
         renderItem={({ item, index }) => (
           <Pressable onPress={() => openFullscreen(index)}>
             <Image
-              source={{ uri: item.url }}
+              source={item.url}
               style={styles.image}
-              resizeMode="cover"
+              contentFit="cover"
+              transition={200}
               accessible
               accessibilityLabel={item.altText || 'Imagem do produto'}
             />
@@ -145,9 +146,10 @@ export function ProductGallery({ images }: ProductGalleryProps) {
             renderItem={({ item }) => (
               <View style={styles.fullscreenImageContainer}>
                 <Image
-                  source={{ uri: item.url }}
+                  source={item.url}
                   style={styles.fullscreenImage}
-                  resizeMode="contain"
+                  contentFit="contain"
+                  transition={200}
                 />
               </View>
             )}

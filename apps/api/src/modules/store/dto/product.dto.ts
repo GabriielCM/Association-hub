@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsInt,
+  IsIn,
   Min,
   IsBoolean,
   IsNumber,
@@ -257,6 +258,14 @@ export class ProductQueryDto {
   @Min(1)
   @IsOptional()
   limit?: number = 20;
+
+  @ApiPropertyOptional({
+    description: 'Ordenação',
+    enum: ['recent', 'price_asc', 'price_desc', 'best_selling', 'name_asc'],
+  })
+  @IsIn(['recent', 'price_asc', 'price_desc', 'best_selling', 'name_asc'])
+  @IsOptional()
+  sort?: string;
 }
 
 export class CreateVariantDto {

@@ -21,7 +21,8 @@ export class StoreController {
   @ApiOperation({ summary: 'Listar categorias ativas' })
   @ApiResponse({ status: 200, description: 'Lista de categorias' })
   async getCategories(@Headers('x-association-id') associationId: string) {
-    return this.categoriesService.getCategories(associationId);
+    const data = await this.categoriesService.getCategories(associationId);
+    return { success: true, data };
   }
 
   @Get('categories/:slug')
@@ -32,7 +33,8 @@ export class StoreController {
     @Headers('x-association-id') associationId: string,
     @Param('slug') slug: string,
   ) {
-    return this.categoriesService.getCategoryBySlug(associationId, slug);
+    const data = await this.categoriesService.getCategoryBySlug(associationId, slug);
+    return { success: true, data };
   }
 
   // =====================
@@ -53,7 +55,8 @@ export class StoreController {
     @Headers('x-association-id') associationId: string,
     @Query() query: ProductQueryDto,
   ) {
-    return this.productsService.findAll(query, associationId);
+    const data = await this.productsService.findAll(query, associationId);
+    return { success: true, data };
   }
 
   @Get('products/featured')
@@ -61,7 +64,7 @@ export class StoreController {
   @ApiResponse({ status: 200, description: 'Lista de produtos em destaque' })
   async getFeaturedProducts(@Headers('x-association-id') associationId: string) {
     const result = await this.productsService.findAll({ featured: true, limit: 10 }, associationId);
-    return result.data;
+    return { success: true, data: result.data };
   }
 
   @Get('products/promotional')
@@ -69,7 +72,7 @@ export class StoreController {
   @ApiResponse({ status: 200, description: 'Lista de produtos em promoção' })
   async getPromotionalProducts(@Headers('x-association-id') associationId: string) {
     const result = await this.productsService.findAll({ promotional: true, limit: 20 }, associationId);
-    return result.data;
+    return { success: true, data: result.data };
   }
 
   @Get('products/:slug')
@@ -77,14 +80,15 @@ export class StoreController {
   @ApiResponse({ status: 200, description: 'Produto encontrado' })
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
   async getProductBySlug(@Param('slug') slug: string) {
-    return this.productsService.findBySlug(slug);
+    const data = await this.productsService.findBySlug(slug);
+    return { success: true, data };
   }
 
   @Get('products/:id/reviews')
   @ApiOperation({ summary: 'Listar avaliações de um produto' })
   @ApiResponse({ status: 200, description: 'Lista de avaliações aprovadas' })
   async getProductReviews(@Param('id') productId: string) {
-    // Reviews aprovadas apenas
-    return this.productsService.getProductReviews(productId);
+    const data = await this.productsService.getProductReviews(productId);
+    return { success: true, data };
   }
 }

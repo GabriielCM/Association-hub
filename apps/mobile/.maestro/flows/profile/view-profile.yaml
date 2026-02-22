@@ -1,0 +1,21 @@
+appId: com.ahub.app
+name: "Profile - Visualizar perfil"
+tags:
+  - profile
+env:
+  EMAIL: "test@ahub.com"
+  PASSWORD: "Test1234!"
+---
+- runFlow:
+    file: "../../helpers/login-helper.yaml"
+    env:
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+
+# Navega para aba Perfil
+- tapOn: "Perfil"
+- waitForAnimationToEnd
+
+# Scroll para ver conteudo do perfil
+- scroll
+- waitForAnimationToEnd
